@@ -1,6 +1,7 @@
 // swift-tools-version: 5.9
 import PackageDescription
 let package = Package(name: "VibeBattery", platforms: [.macOS("15.0")], products: [
+    .executable(name: "VibeBattery", targets: ["VibeBattery"]),
     .executable(name: "vibebattery", targets: ["VibeCLI"]),
     .library(name: "BatteryCore", targets: ["BatteryCore"]),
     .library(name: "BatteryPlatform", targets: ["BatteryPlatform"])
@@ -8,6 +9,7 @@ let package = Package(name: "VibeBattery", platforms: [.macOS("15.0")], products
     .target(name: "BatteryCore"),
     .target(name: "MacBridge", linkerSettings: [.linkedLibrary("proc")]),
     .target(name: "BatteryPlatform", dependencies: ["BatteryCore", "MacBridge"], linkerSettings: [.linkedFramework("IOKit")]),
+    .executableTarget(name: "VibeBattery", dependencies: ["BatteryCore", "BatteryPlatform"]),
     .executableTarget(name: "VibeCLI", dependencies: ["BatteryCore", "BatteryPlatform", "MacBridge"]),
     .testTarget(name: "BatteryCoreTests", dependencies: ["BatteryCore", "BatteryPlatform"])
 ], swiftLanguageVersions: [.v5])

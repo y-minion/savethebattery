@@ -1,0 +1,15 @@
+name: macOS build and tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test policies and stores
+        run: swift test --disable-xctest
+      - name: Smoke test scoped terminal sessions
+        run: python3 scripts/smoke-sessions.py .build/debug/vibebattery
+      - name: Build app bundle
+        run: scripts/build-app.sh

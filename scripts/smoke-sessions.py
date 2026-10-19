@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""Controlled integration tests: only disposable processes started here are used."""
+import json, os, pathlib, signal, subprocess, sys, tempfile, time
+binary=str(pathlib.Path(sys.argv[1] if len(sys.argv)>1 else '.build/debug/vibebattery').resolve())
+with tempfile.TemporaryDirectory(prefix='vibebattery-test-') as root:
+    env={**os.environ,'VIBEBATTERY_DATA_DIR':root}
+    def run(*args): return subprocess.run([binary,*args],env=env,capture_output=True,text=True,timeout=20)
+    def records(): return [json.loads(f.read_text()) for f in pathlib.Path(root,'sessions').glob('*.json')]
+    r=run('run','--allow-battery','--','/bin/echo','hello world','$(touch not-executed)')
+    assert r.returncode==0 and '$(touch not-executed)' in r.stdout, r.stderr
+    assert not pathlib.Path('not-executed').exists()
+    assert run('run','--allow-battery','--','/bin/sh','-c','exit 7').returncode==7
+    r=run('run','--allow-battery','--hours','0.00005','--','/bin/sleep','1')
+    assert r.returncode==0 and any(x['outcome']=='expired' for x in records())
+    p=subprocess.Popen([binary,'run','--allow-battery','--','/bin/sleep','2'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+    line=p.stderr.readline(); sid=line.split('세션 ')[1].split(' ')[0]
+    assert run('release',sid).returncode==0
+    time.sleep(.7); assert p.poll() is None, 'release killed the task'
+    assert p.wait(timeout=5)==0
+    # A temporary registered resource is stopped only following successful completion.
+    pidfile=pathlib.Path(root,'child.pid')
+    code='import os,time;open('+repr(str(pidfile))+',"w").write(str(os.getpid()));time.sleep(20)'
+    env['VB_TEST_BINARY']=binary;env['VB_TEST_PYTHON']=sys.executable;env['VB_TEST_CODE']=code
+    command='"$VB_TEST_BINARY" resource -- "$VB_TEST_PYTHON" -c "$VB_TEST_CODE" >/dev/null 2>&1 & sleep 1'
+    r=subprocess.run([binary,'run','--allow-battery','--cleanup','--','/bin/sh','-c',command],env=env,capture_output=True,text=True,timeout=10)
+    assert r.returncode==0, r.stderr
+    child=int(pidfile.read_text()); deadline=time.monotonic()+5
+    while time.monotonic()<deadline:
+        try: os.kill(child,0)
+        except ProcessLookupError: break
+        time.sleep(.1)
+    else:
+        os.kill(child,signal.SIGTERM);raise AssertionError('registered resource not cleaned up')
+    print('PASS: argv, exit status, expiry, release, scoped cleanup')

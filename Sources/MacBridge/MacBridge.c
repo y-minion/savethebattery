@@ -25,3 +25,21 @@ int vb_signal(int32_t pid,uint64_t started,int sig) {
     for(int i=0;i<128&&ancestor>1;i++) { if(ancestor==pid) return EPERM; VBProcess a; if(!vb_process(ancestor,&a)) break; ancestor=a.ppid; }
     return kill(pid,sig)==0?0:errno;
 }
+#include <spawn.h>
+#include <sys/wait.h>
+static volatile sig_atomic_t pending_signal=0;
+static void receive_signal(int sig) { pending_signal=sig; }
+void vb_watch_signals(void) { struct sigaction a={0};a.sa_handler=receive_signal;sigemptyset(&a.sa_mask);sigaction(SIGINT,&a,0);sigaction(SIGTERM,&a,0);sigaction(SIGHUP,&a,0); }
+int vb_take_signal(void) { int s=pending_signal;pending_signal=0;return s; }
+int vb_spawn(char *const argv[],char *const env[],int32_t *pid) {
+    posix_spawnattr_t attr;posix_spawnattr_init(&attr);
+    sigset_t defaults;sigemptyset(&defaults);sigaddset(&defaults,SIGINT);sigaddset(&defaults,SIGTERM);sigaddset(&defaults,SIGHUP);
+    posix_spawnattr_setsigdefault(&attr,&defaults);posix_spawnattr_setflags(&attr,POSIX_SPAWN_SETSIGDEF);
+    int r=posix_spawnp(pid,argv[0],NULL,&attr,argv,env);posix_spawnattr_destroy(&attr);return r;
+}
+int vb_wait(int32_t pid,int32_t *status) {
+    int raw;pid_t r=waitpid(pid,&raw,WNOHANG);
+    if(r==0) return 0;
+    if(r<0) return errno==EINTR?0:-1;
+    *status=WIFEXITED(raw)?WEXITSTATUS(raw):128+WTERMSIG(raw);return 1;
+}

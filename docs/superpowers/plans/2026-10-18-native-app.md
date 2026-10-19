@@ -7,6 +7,8 @@
 **Tech Stack:** Swift 6 in Swift 5 language mode, macOS 15+, SwiftUI/AppKit, IOKit, a small C bridge for libproc/SMC, Foundation, Swift Testing.
 **Spec:** ../specs/2026-10-18-design.md
 
+**Progress (2026-10-20):** Tasks 1–4 delivered as a working development preview. Task 5 build, local verification, independent review fixes, and first GitHub CI run completed; publication is tracked in the PR. [Validation details](../../VALIDATION.md) and [capability limits](../../COMPATIBILITY.md) describe the actual shipped scope. Historical checklists below preserve the original plan; direct charging controls remain unimplemented.
+
 ## Global Constraints
 - First validation target: M4 Pro, macOS 27.0.1 (26A434).
 - All delivered functionality is free and source is public; no telemetry, account, or private machine samples in Git.

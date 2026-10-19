@@ -35,12 +35,13 @@ public final class ProcessReader {
         // Capture the application instance before rechecking process identity. AppKit
         // addresses that instance even if its process exits; no raw PID signal here.
         guard let app=NSRunningApplication(processIdentifier:sample.id),
+              app.activationPolicy == .regular,
               let current=one(sample.id),sample.identity.canTerminate(current:current.identity,user:geteuid(),name:current.name),
               !app.isTerminated else { throw PlatformError.message("앱이 변경되었거나 보호 대상입니다. 일반 백그라운드 프로세스는 활성 상태 보기에서 확인하세요.") }
         guard force ? app.forceTerminate():app.terminate() else { throw PlatformError.message("앱이 종료 요청을 수락하지 않았습니다.") }
     }
     public static func canRequestTermination(_ sample:ProcessSample) -> Bool {
-        sample.identity.canTerminate(current:sample.identity,user:geteuid(),name:sample.name) && NSRunningApplication(processIdentifier:sample.id) != nil
+        sample.identity.canTerminate(current:sample.identity,user:geteuid(),name:sample.name) && NSRunningApplication(processIdentifier:sample.id)?.activationPolicy == .regular
     }
 }
 public enum PlatformError: Error, LocalizedError {

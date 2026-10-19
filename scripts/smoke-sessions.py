@@ -27,10 +27,14 @@ with tempfile.TemporaryDirectory(prefix='vibebattery-test-') as root:
     deadline=time.monotonic()+3
     while not ignored.exists() and time.monotonic()<deadline: time.sleep(.02)
     assert ignored.exists()
+    assertions=subprocess.check_output(['/usr/bin/pmset','-g','assertions'],text=True)
+    assert 'pid '+str(a.pid)+'(' in assertions and 'pid '+str(b.pid)+'(' in assertions
     a.send_signal(signal.SIGTERM);time.sleep(.7)
     by_id={x['id']:x for x in records()}
     assert not by_id[aid]['protected'] and by_id[aid]['cleanup']=='observe' and by_id[aid]['outcome']=='cancelled'
     assert by_id[bid]['protected'] and a.poll() is None and b.poll() is None
+    assertions=subprocess.check_output(['/usr/bin/pmset','-g','assertions'],text=True)
+    assert 'pid '+str(a.pid)+'(' not in assertions and 'pid '+str(b.pid)+'(' in assertions
     assert a.wait(timeout=5)==0 and b.wait(timeout=5)==0
     # A temporary registered resource is stopped only following successful completion.
     pidfile=pathlib.Path(root,'child.pid')
@@ -46,4 +50,17 @@ with tempfile.TemporaryDirectory(prefix='vibebattery-test-') as root:
         time.sleep(.1)
     else:
         os.kill(child,signal.SIGTERM);raise AssertionError('registered resource not cleaned up')
-    print('PASS: argv, exit status, expiry, release, scoped cleanup')
+    # Failure and --keep preserve temporary children until their natural exit.
+    for keep,exit_code in [(False,7),(True,0)]:
+        ready=pathlib.Path(root,'preserved-'+str(exit_code)+'.ready')
+        finished=pathlib.Path(root,'preserved-'+str(exit_code)+'.finished')
+        code='import pathlib,time;pathlib.Path('+repr(str(ready))+').touch();time.sleep(2);pathlib.Path('+repr(str(finished))+').touch()'
+        env['VB_TEST_CODE']=code;env['VB_TEST_READY']=str(ready)
+        resource='"$VB_TEST_BINARY" resource '+('--keep ' if keep else '')+'-- "$VB_TEST_PYTHON" -c "$VB_TEST_CODE" >/dev/null 2>&1 & '
+        command=resource+'while [ ! -f "$VB_TEST_READY" ]; do sleep 0.02; done; exit '+str(exit_code)
+        r=subprocess.run([binary,'run','--allow-battery','--cleanup','--','/bin/sh','-c',command],env=env,capture_output=True,text=True,timeout=10)
+        assert r.returncode==exit_code,r.stderr
+        deadline=time.monotonic()+5
+        while not finished.exists() and time.monotonic()<deadline: time.sleep(.05)
+        assert finished.exists(),'failure or --keep incorrectly terminated a resource'
+    print('PASS: argv, exit status, expiry, release, cancellation, concurrent assertions, scoped cleanup, failure/keep preservation')

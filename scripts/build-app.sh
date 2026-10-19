@@ -24,7 +24,13 @@ cat > "$VB_APP/Contents/Info.plist" <<'PLIST'
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+# Finder may add presentation metadata after a previous local launch. Remove
+# only signing-incompatible metadata from this generated bundle.
+for VB_ATTRIBUTE in com.apple.FinderInfo com.apple.ResourceFork; do
+    xattr -dr "$VB_ATTRIBUTE" "$VB_APP" 2>/dev/null || true
+done
 codesign --force --sign - "$VB_APP/Contents/MacOS/vbctl"
 codesign --force --sign - "$VB_APP"
 codesign --verify --strict "$VB_APP"
+ditto -c -k --norsrc --noextattr --keepParent "$VB_APP" "$VB_OUTPUT_DIR/VibeBattery.zip"
 printf '%s\n' "$VB_APP"

@@ -26,7 +26,7 @@ scripts/build-app.sh
 open dist/VibeBattery.app
 ```
 
-앱은 로컬 실행용 임시 서명을 사용합니다. 일반 배포용 Developer ID 서명·공증은 아직 포함하지 않습니다. 현재 저장소에는 원본 코드만 있고 외부 패키지 의존성은 없습니다.
+빌드 결과는 `dist/VibeBattery.app`과 `dist/VibeBattery.zip`입니다. 앱은 로컬 실행용 임시 서명을 사용합니다. 일반 배포용 Developer ID 서명·공증은 아직 포함하지 않습니다. 현재 저장소에는 원본 코드만 있고 외부 패키지 의존성은 없습니다.
 
 ## 터미널 작업
 

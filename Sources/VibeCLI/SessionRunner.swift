@@ -4,6 +4,7 @@ import BatteryCore
 import BatteryPlatform
 func runSession(_ options:RunOptions) throws -> Int32 {
     let store=AppPaths.sessions;let lease=PowerLease()
+    try store.removeInactive(before:Date().addingTimeInterval(-30*86400))
     var record=SessionRecord();record.command=URL(fileURLWithPath:options.command[0]).lastPathComponent
     record.owner=ProcessReader.one(getpid())?.identity
     record.deadline=Date().addingTimeInterval(options.hours*3600)
@@ -17,16 +18,14 @@ func runSession(_ options:RunOptions) throws -> Int32 {
     vb_watch_signals()
     let child:ChildCommand
     do { child=try ChildCommand(options.command,environment:env) }
-    catch { record.outcome = .failed;record.ended=Date();try? store.save(record);throw error }
+    catch { lease.release();record.protected=false;record.outcome = .failed;record.ended=Date();try? store.save(record);throw error }
     if options.screenOff { do { try PowerLease.sleepDisplays() } catch { note(error.localizedDescription) } }
-    var cancelled=false;var lastPowerCheck=Date.distantPast
+    var lastPowerCheck=Date.distantPast
     while true {
         let signal=vb_take_signal()
-        if signal != 0 { cancelled=true;child.signal(signal) }
-        if let code=try child.exitStatus() {
-            if record.outcome == .running { record.outcome=cancelled ? .cancelled:(code==0 ? .succeeded:.failed) }
-            record.exitCode=code;record.protected=false;record.ended=Date();try store.save(record)
-            note("작업 종료: \(code) · \(record.outcome.rawValue)");return code
+        if signal != 0 {
+            lease.release();record.protected=false;record.cleanup = .observe;record.outcome = .cancelled
+            try store.save(record);child.signal(signal)
         }
         if record.outcome == .running {
             var reason:SessionOutcome?
@@ -40,6 +39,12 @@ func runSession(_ options:RunOptions) throws -> Int32 {
                 record.outcome=reason;record.protected=false;record.cleanup = .observe;lease.release();try store.save(record)
                 note("보호 해제 (\(reason.rawValue)). 명령은 계속 실행되며 자동 정리는 하지 않습니다.")
             }
+        }
+        // Revocation/expiry must win when completion occurs between polling ticks.
+        if let code=try child.exitStatus() {
+            if record.outcome == .running { record.outcome=code==0 ? .succeeded:.failed }
+            lease.release();record.exitCode=code;record.protected=false;record.ended=Date();try store.save(record)
+            note("작업 종료: \(code) · \(record.outcome.rawValue)");return code
         }
         Thread.sleep(forTimeInterval:0.5)
     }

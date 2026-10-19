@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import MacBridge
 public struct ProcessSample: Identifiable, Sendable {
     public var identity: ProcessIdentity; public var name: String
@@ -31,9 +32,15 @@ public final class ProcessReader {
         return result.sorted { $0.cpu>$1.cpu }
     }
     public static func terminate(_ sample: ProcessSample, force: Bool = false) throws {
-        guard let current=one(sample.id), sample.identity.canTerminate(current:current.identity,user:geteuid(),name:current.name) else { throw PlatformError.message("프로세스가 변경되었거나 보호 대상입니다.") }
-        let result=vb_signal(sample.id,sample.identity.started,force ? SIGKILL:SIGTERM)
-        guard result==0 else { throw PlatformError.message("종료 요청 실패: \(String(cString:strerror(result)))") }
+        // Capture the application instance before rechecking process identity. AppKit
+        // addresses that instance even if its process exits; no raw PID signal here.
+        guard let app=NSRunningApplication(processIdentifier:sample.id),
+              let current=one(sample.id),sample.identity.canTerminate(current:current.identity,user:geteuid(),name:current.name),
+              !app.isTerminated else { throw PlatformError.message("앱이 변경되었거나 보호 대상입니다. 일반 백그라운드 프로세스는 활성 상태 보기에서 확인하세요.") }
+        guard force ? app.forceTerminate():app.terminate() else { throw PlatformError.message("앱이 종료 요청을 수락하지 않았습니다.") }
+    }
+    public static func canRequestTermination(_ sample:ProcessSample) -> Bool {
+        sample.identity.canTerminate(current:sample.identity,user:geteuid(),name:sample.name) && NSRunningApplication(processIdentifier:sample.id) != nil
     }
 }
 public enum PlatformError: Error, LocalizedError {

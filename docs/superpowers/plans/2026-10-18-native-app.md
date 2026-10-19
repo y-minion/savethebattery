@@ -42,7 +42,7 @@
 
 ### Task 3: Terminal sessions and temporary resources
 **Files:** Sources/VibeCLI/{Main,SessionRunner,ResourceRunner}.swift; Sources/BatteryPlatform/SessionStore.swift; Tests/BatteryCoreTests/SessionTests.swift; scripts/smoke-sessions.sh.
-**Interfaces:** `vibebattery status [--json]`; `run [--hours N] [--screen-off] [--cleanup] -- command args`; `resource [--keep] -- command args` (requires managed session); `sessions`; `release ID`.
+**Interfaces:** `vbctl status [--json]`; `run [--hours N] [--screen-off] [--cleanup] -- command args`; `resource [--keep] -- command args` (requires managed session); `sessions`; `release ID`.
 - [ ] Write failing tests for argument validation, exit status, release without kill, timeout without cleanup, success-only cleanup, concurrent-session files and redacted metadata.
 - [ ] Implement run with inherited terminal IO and child exit propagation, per-session bounded sleep lease, AC disconnect handling, owner-only files.
 - [ ] Implement explicit resource registration and supervisor-owned graceful termination. No arbitrary PID termination from a session file. Unknown/background descendants are observation-only.

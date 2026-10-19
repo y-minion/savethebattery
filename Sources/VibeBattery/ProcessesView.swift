@@ -6,8 +6,9 @@ struct ProcessesView:View {
     var body:some View {
         PageTitle(title:"앱과 프로세스",subtitle:"CPU 활동을 기준으로 정렬합니다. 실제 앱별 소비 전력이나 배터리 열화 원인을 의미하지 않습니다.")
         Card {
-            Label("사용자가 선택한 프로세스만 종료",systemImage:"hand.raised").font(.headline)
-            Text("시스템과 터미널은 보호합니다. 종료하면 저장하지 않은 작업을 잃을 수 있습니다.").font(.callout).foregroundStyle(.secondary)
+            Label("선택한 앱에 종료 요청",systemImage:"hand.raised").font(.headline)
+            Text("시스템과 터미널은 보호합니다. 일반 백그라운드 프로세스는 활성 상태 보기에서 관리하세요. 앱을 종료하면 저장하지 않은 작업을 잃을 수 있습니다.").font(.callout).foregroundStyle(.secondary)
+            Button("활성 상태 보기 열기") { model.openActivityMonitor() }
         }
         Card {
             if !model.sampled { ProgressView("측정 중 · 최대 5초 후 갱신") }
@@ -17,7 +18,7 @@ struct ProcessesView:View {
                     Spacer()
                     Text(String(format:"%.1f%%",p.cpu)).monospacedDigit().frame(width:75,alignment:.trailing)
                     Text(String(format:"%.0f MB",Double(p.memory)/1048576)).font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width:80,alignment:.trailing)
-                    Button("종료…") { selection=p }.disabled(!p.identity.canTerminate(current:p.identity,user:geteuid(),name:p.name))
+                    Button("종료…") { selection=p }.disabled(!ProcessReader.canRequestTermination(p))
                 }.padding(.vertical,5)
                 Divider()
             }

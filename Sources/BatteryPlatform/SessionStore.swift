@@ -42,6 +42,14 @@ public struct SessionStore {
         let files=(try? FileManager.default.contentsOfDirectory(at:directory,includingPropertiesForKeys:nil)) ?? []
         return files.filter { $0.pathExtension=="json" }.compactMap { UUID(uuidString:$0.deletingPathExtension().lastPathComponent) }.compactMap(load).sorted { $0.started>$1.started }
     }
+    public func removeInactive(before cutoff:Date) throws {
+        for record in all() where (record.ended ?? record.started)<cutoff {
+            if let owner=record.owner,ProcessReader.one(owner.pid)?.identity==owner { continue }
+            try FileManager.default.removeItem(at:file(record.id))
+            let marker=directory.appendingPathComponent(record.id.uuidString+".release")
+            if FileManager.default.fileExists(atPath:marker.path) { try FileManager.default.removeItem(at:marker) }
+        }
+    }
     public func release(_ id:UUID) throws {
         guard load(id) != nil else { throw PlatformError.message("세션을 찾을 수 없습니다.") }
         try prepare();let f=directory.appendingPathComponent(id.uuidString+".release")

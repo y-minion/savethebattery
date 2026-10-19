@@ -13,6 +13,8 @@ struct SettingsView:View {
             Toggle("배터리 이력 기록 · 최대 7일",isOn:$model.preferences.backgroundHistory).onChange(of:model.preferences.backgroundHistory) { _,_ in model.savePreferences() }
             Text("측정값은 이 맥에 저장합니다. AI 대화, 명령 인수, 터미널 출력, API 키는 기록하지 않습니다.").foregroundStyle(.secondary)
             Button("배터리 이력 삭제",role:.destructive) { model.clearHistory() }
+            Text("종료된 세션 기록은 앱 실행 중 최대 30일간 보관합니다. 실행 중인 관리 세션은 삭제하지 않습니다.").font(.callout).foregroundStyle(.secondary)
+            Button("종료된 세션 기록 삭제",role:.destructive) { model.clearInactiveSessions() }
         }
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)

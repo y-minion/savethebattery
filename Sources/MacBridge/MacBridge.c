@@ -21,8 +21,9 @@ int vb_signal(int32_t pid,uint64_t started,int sig) {
     if (pid<=1) return EPERM;
     VBProcess p;
     if (!vb_process(pid,&p)||p.started!=started||p.uid!=geteuid()) return ESRCH;
-    int32_t ancestor=getpid();
-    for(int i=0;i<128&&ancestor>1;i++) { if(ancestor==pid) return EPERM; VBProcess a; if(!vb_process(ancestor,&a)) break; ancestor=a.ppid; }
+    // Only the single-threaded supervisor's unreaped child has a reserved PID.
+    // Never use this interface for arbitrary process-list selections.
+    if (p.ppid != getpid()) return EPERM;
     return kill(pid,sig)==0?0:errno;
 }
 #include <spawn.h>

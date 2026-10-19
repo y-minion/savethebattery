@@ -30,6 +30,7 @@ import BatteryPlatform
         if section=="sessions" && visible { sessions=AppPaths.sessions.all() }
     }
     func refresh() {
+        do { try AppPaths.sessions.removeInactive(before:Date().addingTimeInterval(-30*86400)) } catch { message=error.localizedDescription }
         battery=BatteryReader.read()
         if preferences.backgroundHistory { do { try historyStore.append(battery) } catch { message=error.localizedDescription } }
         history=historyStore.read();sessions=AppPaths.sessions.all()
@@ -44,6 +45,13 @@ import BatteryPlatform
     func clearHistory() {
         do { try historyStore.delete();history=[] } catch { message=error.localizedDescription }
     }
+    func clearInactiveSessions() {
+        do { try AppPaths.sessions.removeInactive(before:Date());sessions=AppPaths.sessions.all() }
+        catch { message=error.localizedDescription }
+    }
+    func openActivityMonitor() {
+        NSWorkspace.shared.open(URL(fileURLWithPath:"/System/Applications/Utilities/Activity Monitor.app"))
+    }
     func release(_ r:SessionRecord) {
         do { try AppPaths.sessions.release(r.id);sessions=AppPaths.sessions.all();message="보호 해제를 요청했습니다. 실행 중인 명령은 계속 실행됩니다." }
         catch { message=error.localizedDescription }
@@ -55,7 +63,7 @@ import BatteryPlatform
     func openBatterySettings() {
         NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.battery")!)
     }
-    var cliPath:String { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/vibebattery").path }
+    var cliPath:String { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/vbctl").path }
     func command(for executable:String) -> String {
         var parts=[ShellQuote.quote(cliPath),"run","--hours",String(format:"%g",preferences.hours)]
         if preferences.screenOff { parts.append("--screen-off") }

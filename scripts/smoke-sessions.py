@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Controlled integration tests: only disposable processes started here are used."""
 import json, os, pathlib, signal, subprocess, sys, tempfile, time
-binary=str(pathlib.Path(sys.argv[1] if len(sys.argv)>1 else '.build/debug/vibebattery').resolve())
+binary=str(pathlib.Path(sys.argv[1] if len(sys.argv)>1 else '.build/debug/vbctl').resolve())
 with tempfile.TemporaryDirectory(prefix='vibebattery-test-') as root:
     env={**os.environ,'VIBEBATTERY_DATA_DIR':root}
     def run(*args): return subprocess.run([binary,*args],env=env,capture_output=True,text=True,timeout=20)
@@ -10,13 +10,28 @@ with tempfile.TemporaryDirectory(prefix='vibebattery-test-') as root:
     assert r.returncode==0 and '$(touch not-executed)' in r.stdout, r.stderr
     assert not pathlib.Path('not-executed').exists()
     assert run('run','--allow-battery','--','/bin/sh','-c','exit 7').returncode==7
-    r=run('run','--allow-battery','--hours','0.00005','--','/bin/sleep','1')
-    assert r.returncode==0 and any(x['outcome']=='expired' for x in records())
+    r=run('run','--allow-battery','--hours','0.00005','--','/bin/sleep','0.3')
+    assert r.returncode==0 and any(x['outcome']=='expired' for x in records()), 'deadline must win over completion between polls'
     p=subprocess.Popen([binary,'run','--allow-battery','--','/bin/sleep','2'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
     line=p.stderr.readline(); sid=line.split('세션 ')[1].split(' ')[0]
     assert run('release',sid).returncode==0
     time.sleep(.7); assert p.poll() is None, 'release killed the task'
     assert p.wait(timeout=5)==0
+    # Cancellation releases only its own assertion even when the child ignores TERM.
+    ignored=pathlib.Path(root,'ignored.ready')
+    code='import signal,time,pathlib;signal.signal(signal.SIGTERM,signal.SIG_IGN);pathlib.Path('+repr(str(ignored))+').touch();time.sleep(3)'
+    a=subprocess.Popen([binary,'run','--allow-battery','--cleanup','--',sys.executable,'-c',code],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+    aid=a.stderr.readline().split('세션 ')[1].split(' ')[0]
+    b=subprocess.Popen([binary,'run','--allow-battery','--','/bin/sleep','3'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+    bid=b.stderr.readline().split('세션 ')[1].split(' ')[0]
+    deadline=time.monotonic()+3
+    while not ignored.exists() and time.monotonic()<deadline: time.sleep(.02)
+    assert ignored.exists()
+    a.send_signal(signal.SIGTERM);time.sleep(.7)
+    by_id={x['id']:x for x in records()}
+    assert not by_id[aid]['protected'] and by_id[aid]['cleanup']=='observe' and by_id[aid]['outcome']=='cancelled'
+    assert by_id[bid]['protected'] and a.poll() is None and b.poll() is None
+    assert a.wait(timeout=5)==0 and b.wait(timeout=5)==0
     # A temporary registered resource is stopped only following successful completion.
     pidfile=pathlib.Path(root,'child.pid')
     code='import os,time;open('+repr(str(pidfile))+',"w").write(str(os.getpid()));time.sleep(20)'

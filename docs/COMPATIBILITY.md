@@ -9,8 +9,9 @@ Target machine: Apple Silicon M4 Pro, macOS 27.0.1 (26A434). Other models and OS
 | Battery temperature | AppleSmartBatteryPack BatteryData Temperature fallback verified on target; no CPU-temperature substitution |
 | Battery power | Signed current × voltage; does not represent total adapter input power |
 | Process activity | Same-user processes ranked by sampled CPU activity; not per-process watts |
-| Selected process termination | Start time, UID and protected process guards; normal/force actions require explicit UI selection |
+| Selected application termination | Start time, UID and protected process guards; instance-bound NSRunningApplication normal/force requests require explicit selection. Bare workers are handed off to Activity Monitor |
 | Seven-day battery history | Local, optional, deletable; missing data stays unknown |
+| Session metadata | Inactive records pruned after 30 days on app refresh/session start; user-deletable; live supervisors preserved |
 | Terminal sessions | Direct argv execution, inherited terminal IO, real exit status, scoped bounded idle-sleep assertion |
 | Display sleep | Uses macOS display-sleep request; manual screen-off/physical-display test is separate from command success |
 | Safe resource cleanup | Opt-in; only supervisor-created explicitly registered resource; success-only SIGTERM; no automatic SIGKILL |

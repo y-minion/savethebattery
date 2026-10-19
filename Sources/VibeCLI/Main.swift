@@ -19,11 +19,11 @@ import BatteryPlatform
                 try AppPaths.sessions.release(id);print("보호 해제를 요청했습니다. 작업은 종료하지 않습니다.")
             default:print("""
             VibeBattery — 배터리와 터미널 작업 관리
-              vibebattery status [--json]
-              vibebattery run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
-              vibebattery resource [--keep] -- command args   (관리 세션 내부)
-              vibebattery sessions
-              vibebattery release UUID
+              vbctl status [--json]
+              vbctl run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
+              vbctl resource [--keep] -- command args   (관리 세션 내부)
+              vbctl sessions
+              vbctl release UUID
             자동 정리는 resource로 직접 등록한 임시 작업에만 적용됩니다.
             --hours 만료 시 보호만 해제됩니다. 명령은 계속 실행되지만 macOS가 잠들 수 있습니다.
             """)

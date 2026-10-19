@@ -2,7 +2,7 @@
 import PackageDescription
 let package = Package(name: "VibeBattery", platforms: [.macOS("15.0")], products: [
     .executable(name: "VibeBattery", targets: ["VibeBattery"]),
-    .executable(name: "vibebattery", targets: ["VibeCLI"]),
+    .executable(name: "vbctl", targets: ["VibeCLI"]),
     .library(name: "BatteryCore", targets: ["BatteryCore"]),
     .library(name: "BatteryPlatform", targets: ["BatteryPlatform"])
 ], targets: [

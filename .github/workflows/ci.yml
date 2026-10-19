@@ -10,6 +10,8 @@ jobs:
       - name: Test policies and stores
         run: swift test --disable-xctest
       - name: Smoke test scoped terminal sessions
-        run: python3 scripts/smoke-sessions.py .build/debug/vibebattery
+        run: python3 scripts/smoke-sessions.py .build/debug/vbctl
       - name: Build app bundle
         run: scripts/build-app.sh
+      - name: Smoke test embedded release tool
+        run: python3 scripts/smoke-sessions.py dist/VibeBattery.app/Contents/MacOS/vbctl

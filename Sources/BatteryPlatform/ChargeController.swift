@@ -19,6 +19,11 @@ public enum ChargeError: Error, Equatable, LocalizedError {
         }
     }
 }
+/// One attempted charge write, kept so an unexpected limit change can be traced to its source.
+public struct ChargeWrite: Codable, Equatable {
+    public enum Source: String, Codable { case user, heat, quit }
+    public var date:Date;public var command:String;public var source:Source;public var ok:Bool
+}
 public struct ChargeRecord: Codable, Equatable {
     public var lastWritten:Int?;public var heat=HeatState();public var heatPaused=false;public var topUpRequested:Date?
     /// Owner of the limit a hold replaced, so restoring it keeps the original origin.
@@ -26,6 +31,8 @@ public struct ChargeRecord: Codable, Equatable {
     public var topUpObservedOff=false
     /// Count of writes VibeBattery attempted, so its own changes are never reported as someone else's.
     public var writes=0
+    public var log:[ChargeWrite]=[]
+    public static let logLimit=20
     public init() {}
     public init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)
@@ -36,6 +43,7 @@ public struct ChargeRecord: Codable, Equatable {
         lastWrittenBeforeHold=try c.decodeIfPresent(Int.self,forKey:.lastWrittenBeforeHold)
         topUpObservedOff=try c.decodeIfPresent(Bool.self,forKey:.topUpObservedOff) ?? false
         writes=try c.decodeIfPresent(Int.self,forKey:.writes) ?? 0
+        log=(try? c.decodeIfPresent([ChargeWrite].self,forKey:.log)) ?? []
     }
 }
 public final class ChargeController {
@@ -60,7 +68,18 @@ public final class ChargeController {
         return s
     }
     public var topUpActive:Bool { record.topUpRequested != nil && record.topUpObservedOff }
-    @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true) -> Result<ChargeLimitState,ChargeError> {
+    @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true,source:ChargeWrite.Source?=nil) -> Result<ChargeLimitState,ChargeError> {
+        let r=write(c,byUser:byUser)
+        switch r { case .success,.failure(.notApplied),.failure(.rejected):logWrite(c,source ?? (byUser ? .user:.heat),r);default:break }
+        return r
+    }
+    private func logWrite(_ c:ChargeCommand,_ source:ChargeWrite.Source,_ r:Result<ChargeLimitState,ChargeError>) {
+        var ok=false;if case .success=r { ok=true }
+        record.log.append(ChargeWrite(date:Date(),command:"\(c)",source:source,ok:ok))
+        if record.log.count>ChargeRecord.logLimit { record.log.removeFirst(record.log.count-ChargeRecord.logLimit) }
+        save()
+    }
+    private func write(_ c:ChargeCommand,byUser:Bool) -> Result<ChargeLimitState,ChargeError> {
         guard c.isValid else { return .failure(.invalid) }
         let others=detect();guard others.isEmpty else { return .failure(.conflict(others.map(\.name))) }
         guard backend.read().supported==true else { return .failure(.unavailable) }
@@ -116,7 +135,7 @@ public final class ChargeController {
         guard let hold=record.heat.holdLimit else { return nil }
         let s=backend.read()
         guard s.enabled==true,s.limit==hold else { record.heat=HeatState();save();return nil }
-        let r=apply(record.heat.userLimit.map { .setLimit($0) } ?? .clearLimit,byUser:false)
+        let r=apply(record.heat.userLimit.map { .setLimit($0) } ?? .clearLimit,byUser:false,source:.quit)
         if case .success=r { record.heat=HeatState();record.lastWritten=record.lastWrittenBeforeHold;save() }
         return r
     }

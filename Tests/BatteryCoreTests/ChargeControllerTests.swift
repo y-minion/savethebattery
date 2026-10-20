@@ -174,6 +174,21 @@ struct ChargeControllerTests {
         #expect(ChargeLimitState(supported:true,enabled:true,limit:100).matches(.endTopUp)==false)
         #expect(ChargeLimitState(supported:true,enabled:true,limit:70).matches(.endTopUp)==true)
     }
+    @Test func everyWriteIsLoggedWithItsSourceAndKeptBounded() {
+        let b=FakeBackend();let c=make(b)
+        _=c.apply(.clearLimit)
+        #expect(c.record.log.last?.command=="clearLimit");#expect(c.record.log.last?.source == .user);#expect(c.record.log.last?.ok==true)
+        b.ignore=true;_=c.apply(.setLimit(85))
+        #expect(c.record.log.last?.ok==false)
+        b.ignore=false;for _ in 0..<30 { _=c.apply(.setLimit(90)) }
+        #expect(c.record.log.count==ChargeRecord.logLimit)
+    }
+    @Test func automaticWritesAreLoggedAsHeatOrQuit() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        #expect(c.record.log.last?.source == .heat)
+        _=c.releaseHold()
+        #expect(c.record.log.last?.source == .quit)
+    }
     @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
         var probes=0
         let probe={ probes+=1;return true }

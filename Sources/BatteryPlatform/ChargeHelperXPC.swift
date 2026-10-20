@@ -6,25 +6,32 @@ import BatteryCore
 }
 public final class XPCChargeHelper: ChargeHelperClient {
     public init() {}
-    public var isInstalled:Bool { FileManager.default.fileExists(atPath:HelperPolicy.daemonPlist) }
+    public var plistInstalled:Bool { FileManager.default.fileExists(atPath:HelperPolicy.daemonPlist) }
+    /// Usable for routing only when installed and this app runs where the helper accepts it.
+    public var isInstalled:Bool { status(probe:false) == .ready }
+    public func status(probe:Bool=true) -> HelperStatus {
+        HelperStatus.evaluate(installed:plistInstalled,appPath:Bundle.main.bundlePath,probe:{ !probe || readState() != nil })
+    }
     private func connect() -> NSXPCConnection {
         let c=NSXPCConnection(machServiceName:HelperPolicy.label,options:.privileged)
         c.remoteObjectInterface=NSXPCInterface(with:ChargeHelperProtocol.self)
         c.setCodeSigningRequirement(HelperPolicy.helperRequirement)
         c.resume();return c
     }
-    public func setLimit(_ percent:Int) -> String? {
+    // Bounded wait: a stalled helper must not freeze the app's main thread.
+    private func call<T>(_ fallback:T,_ body:(ChargeHelperProtocol,@escaping (T)->Void)->Void) -> T {
         let c=connect();defer { c.invalidate() }
-        var message:String?="헬퍼가 응답하지 않습니다."
-        let proxy=c.synchronousRemoteObjectProxyWithErrorHandler { message="헬퍼 연결 실패: \($0.localizedDescription)" } as? ChargeHelperProtocol
-        proxy?.setLimit(percent) { message=$0 }
-        return message
+        let done=DispatchSemaphore(value:0);let lock=NSLock();var result=fallback
+        let finish:(T)->Void={ v in lock.lock();result=v;lock.unlock();done.signal() }
+        guard let proxy=c.remoteObjectProxyWithErrorHandler({ _ in finish(fallback) }) as? ChargeHelperProtocol else { return fallback }
+        body(proxy,finish)
+        guard done.wait(timeout:.now()+3) == .success else { return fallback }
+        lock.lock();defer { lock.unlock() };return result
+    }
+    public func setLimit(_ percent:Int) -> String? {
+        call("헬퍼에 연결하지 못했거나 3초 안에 응답이 없습니다." as String?) { proxy,finish in proxy.setLimit(percent) { finish($0) } }
     }
     public func readState() -> [String:String]? {
-        let c=connect();defer { c.invalidate() }
-        var state:[String:String]?
-        let proxy=c.synchronousRemoteObjectProxyWithErrorHandler { _ in state=nil } as? ChargeHelperProtocol
-        proxy?.readState { state=$0 }
-        return state
+        call(nil as [String:String]?) { proxy,finish in proxy.readState { finish($0) } }
     }
 }

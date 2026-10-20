@@ -41,7 +41,9 @@ sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh
 sudo /Applications/VibeBattery.app/Contents/Resources/uninstall-helper.sh   # 제거, 현재 상한은 유지
 ```
 
-다른 충전 관리 앱(AlDente 등)이 실행 중이거나 설치되어 있으면 VibeBattery는 값을 바꾸지 않습니다.
+다른 충전 관리 앱(AlDente, batt, battery, Battery Toolkit)이 실행 중이거나 설치되어 있으면 VibeBattery는 값을 바꾸지 않습니다.
+
+현재 빌드는 임시(ad-hoc) 서명이라, 헬퍼의 호출자 확인은 보안 경계가 아닙니다. 같은 사용자 권한의 프로그램이 상한(50~100%)을 바꿀 수 있습니다. 설치 스크립트는 사용자가 쓸 수 있는 앱 번들 안에 있으므로, 직접 빌드했거나 내용을 확인한 사본만 sudo로 실행하세요.
 
 ## 터미널 작업
 

@@ -13,6 +13,15 @@ public enum HelperPolicy {
         return (clientPath as NSString).standardizingPath.hasPrefix(appPrefix)
     }
 }
+public enum HelperStatus: Equatable, Sendable {
+    case notInstalled, wrongLocation, unreachable, ready
+    /// The helper only answers the app in /Applications, so probing from elsewhere would only fail.
+    public static func evaluate(installed:Bool,appPath:String,probe:()->Bool) -> HelperStatus {
+        guard installed else { return .notInstalled }
+        guard ((appPath as NSString).standardizingPath+"/").hasPrefix(HelperPolicy.appPrefix) else { return .wrongLocation }
+        return probe() ? .ready:.unreachable
+    }
+}
 public enum TopoffDomain {
     public static let name="com.apple.smartcharging.topoffprotection"
     public static let limitKey="mclLimitValue",featureKey="MCLFeatureState"

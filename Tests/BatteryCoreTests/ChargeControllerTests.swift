@@ -72,7 +72,7 @@ struct ChargeControllerTests {
         let restarted=make(b,at:u)
         #expect(restarted.heatStep(snapshot:hot(30,at:t0+60),settings:heatOn,now:t0+60).action == HeatAction.none)
         let done=restarted.heatStep(snapshot:hot(30,at:t0+400),settings:heatOn,now:t0+400)
-        #expect(done.action == .restore(.setLimit(90)));#expect(b.state.limit==90);#expect(restarted.record.lastWritten==90)
+        #expect(done.action == .restore(.setLimit(90)));#expect(b.state.limit==90);#expect(restarted.record.lastWritten==nil)
     }
     @Test func failedHeatHoldPausesInsteadOfRetrying() {
         let b=FakeBackend();b.state.limit=90;b.ignore=true;let c=make(b);let t0=Date()
@@ -124,5 +124,32 @@ struct ChargeControllerTests {
         #expect(c.record.heat==HeatState())
         let other=make(b);holding(b,other,t0);b.state.limit=95
         #expect(other.releaseHold()==nil);#expect(b.state.limit==95);#expect(other.record.heat==HeatState())
+    }
+    @Test func restoredLimitKeepsItsOriginalOwner() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        _=c.heatStep(snapshot:hot(30,at:t0+60),settings:heatOn,now:t0+60)
+        _=c.heatStep(snapshot:hot(30,at:t0+400),settings:heatOn,now:t0+400)
+        #expect(b.state.limit==90);#expect(c.record.lastWritten==nil)
+        #expect(b.state.origin(lastWritten:c.record.lastWritten) == .external)
+        let own=make(b);_=own.apply(.setLimit(90));holding(b,own,t0)
+        #expect(own.releaseHold() != nil);#expect(own.record.lastWritten==90)
+    }
+    @Test func topUpEndsWhenMacOSReEnablesTheLimit() {
+        let b=FakeBackend();b.state.limit=80;let c=make(b)
+        _=c.apply(.startTopUp);#expect(c.record.topUpRequested != nil)
+        #expect(c.state().enabled==true);#expect(c.record.topUpRequested != nil)
+        b.state.enabled=false;_=c.state();#expect(c.topUpActive)
+        b.state.enabled=true;_=c.state()
+        #expect(c.record.topUpRequested==nil);#expect(!c.topUpActive)
+    }
+    @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
+        var probes=0
+        let probe={ probes+=1;return true }
+        #expect(HelperStatus.evaluate(installed:false,appPath:"/Applications/VibeBattery.app",probe:probe) == .notInstalled)
+        #expect(HelperStatus.evaluate(installed:true,appPath:"/Users/u/dist/VibeBattery.app",probe:probe) == .wrongLocation)
+        #expect(probes==0)
+        #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{ false }) == .unreachable)
+        #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app/",probe:probe) == .ready)
+        #expect(probes==1)
     }
 }

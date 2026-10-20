@@ -16,11 +16,14 @@ import BatteryPlatform
     @Published var charge=ChargeLimitState()
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
+    @Published var helperStatus=HelperStatus.notInstalled
+    private let helper=XPCChargeHelper()
     private var lastHeatAction=HeatAction.none
-    private let chargeController=ChargeController(backend:PowerUIChargeBackend(),helper:XPCChargeHelper(),detect:ChargeControllerScan.current,url:AppPaths.directory.appendingPathComponent("charge.json"))
+    private lazy var chargeController=ChargeController(backend:PowerUIChargeBackend(),helper:helper,detect:ChargeControllerScan.current,url:AppPaths.directory.appendingPathComponent("charge.json"))
     var chargeOrigin:LimitOrigin { charge.origin(lastWritten:chargeController.record.lastWritten) }
-    var helperInstalled:Bool { chargeController.helperInstalled }
     var topUpRequested:Date? { chargeController.record.topUpRequested }
+    var topUpActive:Bool { chargeController.topUpActive }
+    func checkHelper() { helperStatus=helper.status() }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     var heatStatus:String {
         let h=preferences.heat
@@ -31,7 +34,9 @@ import BatteryPlatform
         if let hold=chargeController.record.heat.holdLimit { return "보류 중 · 상한을 \(hold)%로 낮춤, \(Int(h.resumeAt))°C 이하 5분 유지 시 복원" }
         switch lastHeatAction {
         case .sensorUnavailable:return "중지됨 · 배터리 온도를 읽지 못함"
-        case .cannotHold:return "보류 불가 · 잔량 50% 미만이거나 80% 미만 보류에 헬퍼가 필요"
+        case .cannotHold(.lowCharge):return "보류 불가 · 잔량 50% 미만"
+        case .cannotHold(.needsHelper):return "보류 불가 · 80% 미만으로 낮추려면 헬퍼가 필요"
+        case .cannotHold(.limitUnknown):return "보류 불가 · 현재 충전 상한을 읽지 못함"
         default:return "감시 중 · \(Int(h.holdAt))°C 이상 충전 시 보류 (앱 실행 중에만)"
         }
     }
@@ -47,7 +52,9 @@ import BatteryPlatform
         case .success(let s):
             charge=s
             message = c == .startTopUp ? "한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다.":"적용을 확인했습니다. \(ChargeText.limit(s))"
-        case .failure(let e):message=e.localizedDescription
+        case .failure(let e):
+            message=e.localizedDescription
+            if c.requiresHelper { checkHelper() }
         }
     }
     func setHeatEnabled(_ on:Bool) {
@@ -66,6 +73,7 @@ import BatteryPlatform
     init() {
         if let d=try? Data(contentsOf:preferencesURL),let p=try? JSONDecoder().decode(UserPreferences.self,from:d) { preferences=p;preferences.validate() }
         refresh()
+        checkHelper()
         // A heat hold must not outlive the app that would restore it.
         NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
             MainActor.assumeIsolated { _=self?.chargeController.releaseHold() }

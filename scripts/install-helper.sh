@@ -10,10 +10,16 @@ DEST=/Library/PrivilegedHelperTools/$LABEL
 PLIST=/Library/LaunchDaemons/$LABEL.plist
 [ "$APP" = /Applications/VibeBattery.app ] || echo "주의: 헬퍼는 /Applications/VibeBattery.app의 요청만 받습니다." >&2
 codesign --verify --strict "$APP"
-codesign -dv "$SRC" 2>&1 | grep -q "^Identifier=$LABEL\$" || { echo "헬퍼 서명 식별자가 다릅니다." >&2; exit 1; }
-launchctl bootout "system/$LABEL" 2>/dev/null || true
 install -d -o root -g wheel -m 755 /Library/PrivilegedHelperTools
-install -o root -g wheel -m 755 "$SRC" "$DEST"
+# Copy first, then check the root-owned copy, so the bundle cannot change between check and install.
+TMP=$(mktemp /Library/PrivilegedHelperTools/.vbhelper.XXXXXX)
+trap 'rm -f "$TMP"' EXIT
+install -o root -g wheel -m 755 "$SRC" "$TMP"
+codesign --verify --strict "$TMP"
+codesign -dv "$TMP" 2>&1 | grep -q "^Identifier=$LABEL\$" || { echo "헬퍼 서명 식별자가 다릅니다." >&2; exit 1; }
+launchctl bootout "system/$LABEL" 2>/dev/null || true
+mv -f "$TMP" "$DEST"
+trap - EXIT
 cat > "$PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

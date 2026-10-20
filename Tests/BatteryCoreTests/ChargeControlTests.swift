@@ -70,15 +70,15 @@ struct ChargeControlTests {
     }
     @Test func lowChargeOrMissingHelperOnlyWarns() {
         let t0=Date();var st=HeatState()
-        #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:45,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:true,now:t0) == .cannotHold)
-        #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:70,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:false,now:t0) == .cannotHold)
+        #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:45,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:true,now:t0) == .cannotHold(.lowCharge))
+        #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:70,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:false,now:t0) == .cannotHold(.needsHelper))
         #expect(st==HeatState())
         #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:70,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:true,now:t0) == .hold(70))
         #expect(st.holdLimit==70);#expect(st.userLimit==90)
     }
     @Test func unknownLimitOrDisabledFeatureNeverHolds() {
         let t0=Date();var st=HeatState()
-        #expect(HeatHoldPolicy.step(snapshot:hot(40,at:t0),limit:ChargeLimitState(),settings:on,state:&st,helperAvailable:true,now:t0) == .cannotHold)
+        #expect(HeatHoldPolicy.step(snapshot:hot(40,at:t0),limit:ChargeLimitState(),settings:on,state:&st,helperAvailable:true,now:t0) == .cannotHold(.limitUnknown))
         #expect(HeatHoldPolicy.step(snapshot:hot(40,at:t0),limit:limit90,settings:HeatSettings(),state:&st,helperAvailable:true,now:t0) == HeatAction.none)
         var idle=hot(40,at:t0);idle.charging=false
         #expect(HeatHoldPolicy.step(snapshot:idle,limit:limit90,settings:on,state:&st,helperAvailable:true,now:t0) == HeatAction.none)

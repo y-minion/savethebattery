@@ -21,7 +21,19 @@ public enum ChargeError: Error, Equatable, LocalizedError {
 }
 public struct ChargeRecord: Codable, Equatable {
     public var lastWritten:Int?;public var heat=HeatState();public var heatPaused=false;public var topUpRequested:Date?
+    /// Owner of the limit a hold replaced, so restoring it keeps the original origin.
+    public var lastWrittenBeforeHold:Int?
+    public var topUpObservedOff=false
     public init() {}
+    public init(from decoder:Decoder) throws {
+        let c=try decoder.container(keyedBy:CodingKeys.self)
+        lastWritten=try c.decodeIfPresent(Int.self,forKey:.lastWritten)
+        heat=try c.decodeIfPresent(HeatState.self,forKey:.heat) ?? HeatState()
+        heatPaused=try c.decodeIfPresent(Bool.self,forKey:.heatPaused) ?? false
+        topUpRequested=try c.decodeIfPresent(Date.self,forKey:.topUpRequested)
+        lastWrittenBeforeHold=try c.decodeIfPresent(Int.self,forKey:.lastWrittenBeforeHold)
+        topUpObservedOff=try c.decodeIfPresent(Bool.self,forKey:.topUpObservedOff) ?? false
+    }
 }
 public final class ChargeController {
     private let backend:ChargeLimitBackend;private let helper:ChargeHelperClient?
@@ -32,7 +44,17 @@ public final class ChargeController {
         record=(try? JSONDecoder().decode(ChargeRecord.self,from:Data(contentsOf:url))) ?? ChargeRecord()
     }
     public var helperInstalled:Bool { helper?.isInstalled==true }
-    public func state() -> ChargeLimitState { backend.read() }
+    /// Reads the limit and ends top-up bookkeeping once macOS has turned the limit back on.
+    public func state() -> ChargeLimitState {
+        let s=backend.read()
+        if record.topUpRequested != nil {
+            if s.enabled==false { record.topUpObservedOff=true }
+            else if s.enabled==true,record.topUpObservedOff { record.topUpRequested=nil;record.topUpObservedOff=false }
+            save()
+        }
+        return s
+    }
+    public var topUpActive:Bool { record.topUpRequested != nil && record.topUpObservedOff }
     @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true) -> Result<ChargeLimitState,ChargeError> {
         guard c.isValid else { return .failure(.invalid) }
         let others=detect();guard others.isEmpty else { return .failure(.conflict(others.map(\.name))) }
@@ -50,8 +72,8 @@ public final class ChargeController {
         switch c {
         case .setLimit(let p):record.lastWritten=p
         case .clearLimit:record.lastWritten=nil
-        case .startTopUp:record.topUpRequested=Date()
-        case .endTopUp:record.topUpRequested=nil
+        case .startTopUp:record.topUpRequested=Date();record.topUpObservedOff=false
+        case .endTopUp:record.topUpRequested=nil;record.topUpObservedOff=false
         }
         return .success(s)
     }
@@ -62,7 +84,7 @@ public final class ChargeController {
         record.heat=h;save()
         let command:ChargeCommand
         switch a {
-        case .hold(let p):command = .setLimit(p)
+        case .hold(let p):command = .setLimit(p);record.lastWrittenBeforeHold=record.lastWritten
         case .restore(let c):command=c
         case .yielded:
             // Someone else changed the limit; stop automating until the user re-enables.
@@ -70,6 +92,7 @@ public final class ChargeController {
         default:return (a,nil)
         }
         let r=apply(command,byUser:false)
+        if case .success=r,case .restore=a { record.lastWritten=record.lastWrittenBeforeHold;save() }
         // A failed automatic write must not repeat every refresh. A failed restore
         // keeps the hold so the lowered limit and the user's value stay visible.
         if case .failure=r {
@@ -84,11 +107,14 @@ public final class ChargeController {
         let s=backend.read()
         guard s.enabled==true,s.limit==hold else { record.heat=HeatState();save();return nil }
         let r=apply(record.heat.userLimit.map { .setLimit($0) } ?? .clearLimit,byUser:false)
-        if case .success=r { record.heat=HeatState();save() }
+        if case .success=r { record.heat=HeatState();record.lastWritten=record.lastWrittenBeforeHold;save() }
         return r
     }
     public func resumeHeat() { record.heatPaused=false;save() }
+    private var saved:ChargeRecord?
     private func save() {
+        guard saved != record else { return }
+        saved=record
         try? FileManager.default.createDirectory(at:url.deletingLastPathComponent(),withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
         try? JSONEncoder().encode(record).write(to:url,options:[.atomic])
     }

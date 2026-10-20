@@ -27,7 +27,7 @@ struct SettingsView:View {
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)
             Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리.").foregroundStyle(.secondary)
-            Text("제공: 충전 상한 50~100%, 한 번 완충, 과열 시 충전 보류. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 개발 예정: 일정·단축어, MagSafe LED.").foregroundStyle(.secondary)
+            Text("구현됨(이 Mac에서 실제 쓰기 검증 대기): 충전 상한 50~100%, 한 번 완충, 과열 시 충전 보류. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 개발 예정: 일정·단축어, MagSafe LED.").foregroundStyle(.secondary)
             Link("GitHub에서 소스와 진행 상황 보기",destination:URL(string:"https://github.com/y-minion/vibebattery")!)
         }
     }

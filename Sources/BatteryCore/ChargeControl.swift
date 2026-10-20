@@ -41,7 +41,8 @@ public struct HeatState: Codable, Equatable, Sendable {
     public var holdLimit:Int?;public var userLimit:Int?;public var coolSince:Date?
     public init() {}
 }
-public enum HeatAction: Equatable, Sendable { case none, hold(Int), restore(ChargeCommand), yielded, cannotHold, sensorUnavailable }
+public enum HoldBlock: Equatable, Sendable { case lowCharge, needsHelper, limitUnknown }
+public enum HeatAction: Equatable, Sendable { case none, hold(Int), restore(ChargeCommand), yielded, cannotHold(HoldBlock), sensorUnavailable }
 public enum HeatHoldPolicy {
     public static let stableResume:TimeInterval=300, staleAfter:TimeInterval=120, minimumHold=50
     public static func step(snapshot b:BatterySnapshot,limit:ChargeLimitState,settings:HeatSettings,state:inout HeatState,helperAvailable:Bool,now:Date=Date()) -> HeatAction {
@@ -57,11 +58,12 @@ public enum HeatHoldPolicy {
         guard settings.enabled else { return .none }
         guard let t=fresh(b,now) else { return .sensorUnavailable }
         guard t>=settings.holdAt,b.onAC,b.charging,let p=b.percent else { return .none }
-        guard limit.supported==true,let enabled=limit.enabled else { return .cannotHold }
+        guard limit.supported==true,let enabled=limit.enabled else { return .cannotHold(.limitUnknown) }
         // Round up to a supported step so the hold never asks macOS to drain the battery.
         let hold=(p+ChargeCommand.step-1)/ChargeCommand.step*ChargeCommand.step
         if hold>=(enabled ? limit.limit ?? 100:100) { return .none }
-        guard p>=minimumHold,hold>=ChargeCommand.userFloor || helperAvailable else { return .cannotHold }
+        guard p>=minimumHold else { return .cannotHold(.lowCharge) }
+        guard hold>=ChargeCommand.userFloor || helperAvailable else { return .cannotHold(.needsHelper) }
         state.holdLimit=hold;state.userLimit=enabled ? limit.limit:nil;state.coolSince=nil
         return .hold(hold)
     }

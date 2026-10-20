@@ -19,4 +19,12 @@ struct ChargeControllerDetectorTests {
             "/Library/LaunchDaemons/com.docker.vmnetd.plist"])
         #expect(r.isEmpty)
     }
+    @Test func batteryCLIAndBatteryToolkitAreDetected() {
+        let home="/Users/u/Library/LaunchAgents/battery.plist"
+        #expect(ChargeControllerDetector.detect(runningBundleIDs:[],systemItems:[home]).map(\.name)==["battery"])
+        #expect(ChargeControllerDetector.detect(runningBundleIDs:["co.palokaj.battery"],systemItems:[]).map(\.name)==["battery"])
+        #expect(ChargeControllerDetector.detect(runningBundleIDs:[],systemItems:["/Applications/Battery Toolkit.app"]).map(\.name)==["Battery Toolkit"])
+        #expect(ChargeControllerDetector.detect(runningBundleIDs:["me.mhaeuser.BatteryToolkit"],systemItems:[]).map(\.name)==["Battery Toolkit"])
+        #expect(ChargeControllerDetector.detect(runningBundleIDs:[],systemItems:["/Applications/VibeBattery.app","/Applications/AlDente.app.bak/x"]).isEmpty)
+    }
 }

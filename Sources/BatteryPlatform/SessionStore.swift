@@ -13,6 +13,8 @@ public enum AppPaths {
         return FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("VibeBattery")
     }
     public static var sessions:SessionStore { SessionStore(directory:directory.appendingPathComponent("sessions")) }
+    public static var health:URL { directory.appendingPathComponent("health.json") }
+    public static var sleep:URL { directory.appendingPathComponent("sleep.json") }
 }
 public struct SessionStore {
     public let directory: URL

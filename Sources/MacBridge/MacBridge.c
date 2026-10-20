@@ -44,3 +44,6 @@ int vb_wait(int32_t pid,int32_t *status) {
     if(r<0) return errno==EINTR?0:-1;
     *status=WIFEXITED(raw)?WEXITSTATUS(raw):128+WTERMSIG(raw);return 1;
 }
+#include <notify.h>
+int vb_pid_path(int32_t pid,char *buffer,int size) { return proc_pidpath(pid,buffer,(uint32_t)size)>0?0:-1; }
+int vb_notify(const char *name) { return (int)notify_post(name); }

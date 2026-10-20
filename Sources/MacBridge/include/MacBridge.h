@@ -15,3 +15,5 @@ int vb_mcl_set_limit(int32_t percent);
 int vb_mcl_top_up(void);
 int vb_mcl_enable(void);
 int vb_mcl_disable(void);
+int vb_pid_path(int32_t pid, char *buffer, int size);
+int vb_notify(const char *name);

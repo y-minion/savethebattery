@@ -23,4 +23,22 @@ public enum NotificationText {
     static let heatSensor=("과열 보류가 동작하지 않습니다","배터리 온도를 10분 넘게 읽지 못했습니다.")
     static func heatHeld(_ p:Int) -> (String,String) { ("과열 보류 시작","배터리가 식을 때까지 충전 상한을 \(p)%로 낮췄습니다.") }
     static let heatRestored=("과열 보류 해제","배터리가 식어 원래 충전 상한으로 되돌렸습니다.")
+    static func sessionEnd(_ x:SessionSummary) -> (String,String) {
+        let name=x.command.isEmpty ? "작업":x.command,code=x.exitCode.map { " · 코드 \($0)" } ?? ""
+        let result:String
+        switch x.outcome {
+        case .cancelled:result="취소됨"
+        case .detached,.expired:result="보호 해제 후 종료"+code
+        default:result=x.exitCode==0 ? "완료":"실패"+code
+        }
+        return ("\(name) \(result)","걸린 시간 \(duration((x.ended ?? x.started).timeIntervalSince(x.started)))")
+    }
+    static func sessionBatch(_ xs:[SessionSummary]) -> (String,String) {
+        let ok=xs.filter { $0.exitCode==0 && $0.outcome != .cancelled }.count
+        return ("작업 \(xs.count)개 종료","성공 \(ok) · 그 외 \(xs.count-ok)")
+    }
+    static func protectionReleased(_ x:SessionSummary) -> (String,String) {
+        let why=x.outcome == .expired ? "보호 시간이 끝났습니다.":"어댑터가 분리되었습니다."
+        return ("\(x.command.isEmpty ? "작업":x.command) 잠자기 방지 해제","\(why) 작업은 계속되지만 맥이 잠들 수 있습니다.")
+    }
 }

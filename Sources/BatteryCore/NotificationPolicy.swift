@@ -9,6 +9,7 @@ public enum NotificationPolicy {
         let continuous=o.memory.evaluated.map { i.now.timeIntervalSince($0)<=gap } ?? false
         charge(i,s,&o,continuous:continuous)
         protect(i,s,&o);heat(i,s,&o)
+        sessions(i,s,&o)
         o.memory.evaluated=i.now
         return o
     }
@@ -116,6 +117,42 @@ public enum NotificationPolicy {
         } else {
             if o.memory.sensorNotified { o.remove("heat.sensor") }
             o.memory.sensorMissingSince=nil;o.memory.sensorNotified=false
+        }
+    }
+    public static let lateSession:TimeInterval=600, batchLimit=3
+    static func sessions(_ i:NotificationInput,_ s:NotificationSettings,_ o:inout NotificationOutcome) {
+        var ended:[SessionSummary]=[],marks:[String:SessionMark]=[:]
+        for x in i.sessions {
+            let key=x.id.uuidString
+            guard var m=o.memory.sessions[key] else {
+                // First sight: only a recent ending is news; an already released protection is not.
+                if let e=x.ended {
+                    let age=i.now.timeIntervalSince(e)
+                    if age>=0,age<=lateSession { ended.append(x) }
+                    marks[key]=SessionMark(ended:true,released:true)
+                } else { marks[key]=SessionMark(released:x.outcome != .running) }
+                continue
+            }
+            if x.ended==nil,!m.released,x.outcome != .running {
+                m.released=true
+                if x.outcome == .expired || (x.outcome == .detached && !x.released) {
+                    let t=NotificationText.protectionReleased(x)
+                    o.send(s.protectionReleased,AlertEvent(id:"session.released.\(key)",title:t.0,body:t.1,section:"sessions",thread:"session"))
+                }
+            }
+            if x.ended != nil,!m.ended { m.ended=true;m.released=true;ended.append(x) }
+            marks[key]=m
+        }
+        o.memory.sessions=marks
+        let wanted=ended.filter { $0.outcome == .cancelled ? s.sessionCancelled:s.sessionEnded }
+        if wanted.count>batchLimit {
+            let t=NotificationText.sessionBatch(wanted)
+            o.send(true,AlertEvent(id:"session.batch",title:t.0,body:t.1,section:"sessions",thread:"session"))
+        } else {
+            for x in wanted {
+                let t=NotificationText.sessionEnd(x)
+                o.send(true,AlertEvent(id:"session.end.\(x.id.uuidString)",title:t.0,body:t.1,section:"sessions",thread:"session"))
+            }
         }
     }
 }

@@ -17,5 +17,7 @@ jobs:
         run: sh -n scripts/install-helper.sh && sh -n scripts/uninstall-helper.sh
       - name: Read charge limit (read-only, runner may report unsupported)
         run: dist/VibeBattery.app/Contents/MacOS/vbctl charge status
+      - name: Read health report (read-only, runner may have no battery)
+        run: dist/VibeBattery.app/Contents/MacOS/vbctl health && dist/VibeBattery.app/Contents/MacOS/vbctl health --json
       - name: Smoke test embedded release tool
         run: python3 scripts/smoke-sessions.py dist/VibeBattery.app/Contents/MacOS/vbctl

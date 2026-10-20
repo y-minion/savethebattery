@@ -25,10 +25,19 @@ import BatteryPlatform
                     print("충전: \(ChargeText.limit(s))")
                     for o in ChargeControllerScan.current() { print("다른 충전 관리: \(o.name) (\(o.evidence))") }
                 }
-            default:print("""
+            case "health":
+                let b=BatteryReader.read(),s=PowerUIChargeBackend().read()
+                let prefs=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) } ?? UserPreferences()
+                let r=HealthReport.make(snapshot:b,days:HealthStore(url:AppPaths.health).read().days,sleeps:SleepStore(url:AppPaths.sleep).read(),
+                                        context:AdvisorContext(limit:s.enabled==true ? s.limit:nil,heatEnabled:prefs.heat.enabled),now:Date(),calendar:.current)
+                if args.contains("--json") {
+                    let e=JSONEncoder();e.dateEncodingStrategy = .iso8601;e.outputFormatting=[.prettyPrinted,.sortedKeys]
+                    print(String(data:try e.encode(r),encoding:.utf8)!)
+                } else { HealthText.lines(r,calendar:.current).forEach { print($0) } }            default:print("""
             VibeBattery — 배터리와 터미널 작업 관리
               vbctl status [--json]
               vbctl charge status [--json]
+              vbctl health [--json]
               vbctl run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
               vbctl resource [--keep] -- command args   (관리 세션 내부)
               vbctl sessions

@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import Combine
+import ServiceManagement
 import BatteryCore
 import BatteryPlatform
 @MainActor final class AppModel: ObservableObject {
@@ -12,6 +13,49 @@ import BatteryPlatform
     @Published var message:String?
     @Published var section="dashboard"
     @Published var sampled=false
+    @Published var charge=ChargeLimitState()
+    @Published var chargeConflicts:[OtherChargeController]=[]
+    @Published var loginItem=false
+    private var lastHeatAction=HeatAction.none
+    private let chargeController=ChargeController(backend:PowerUIChargeBackend(),helper:XPCChargeHelper(),detect:ChargeControllerScan.current,url:AppPaths.directory.appendingPathComponent("charge.json"))
+    var chargeOrigin:LimitOrigin { charge.origin(lastWritten:chargeController.record.lastWritten) }
+    var helperInstalled:Bool { chargeController.helperInstalled }
+    var topUpRequested:Date? { chargeController.record.topUpRequested }
+    var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
+    var heatStatus:String {
+        let h=preferences.heat
+        if !h.enabled { return "꺼짐" }
+        if chargeController.record.heatPaused { return "적용 실패로 멈춤 · 다시 켜거나 상한을 적용하면 재개" }
+        if let hold=chargeController.record.heat.holdLimit { return "보류 중 · 상한을 \(hold)%로 낮춤, \(Int(h.resumeAt))°C 이하 5분 유지 시 복원" }
+        switch lastHeatAction {
+        case .sensorUnavailable:return "중지됨 · 배터리 온도를 읽지 못함"
+        case .cannotHold:return "보류 불가 · 잔량 50% 미만이거나 80% 미만 보류에 헬퍼가 필요"
+        default:return "감시 중 · \(Int(h.holdAt))°C 이상 충전 시 보류 (앱 실행 중에만)"
+        }
+    }
+    func refreshCharge() {
+        let step=chargeController.heatStep(snapshot:battery,settings:preferences.heat)
+        lastHeatAction=step.action
+        if case .failure(let e)?=step.result { message="과열 보류를 멈췄습니다. \(e.localizedDescription)" }
+        charge=chargeController.state();chargeConflicts=ChargeControllerScan.current()
+        loginItem=SMAppService.mainApp.status == .enabled
+    }
+    func applyCharge(_ c:ChargeCommand) {
+        switch chargeController.apply(c) {
+        case .success(let s):
+            charge=s
+            message = c == .startTopUp ? "한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다.":"적용을 확인했습니다. \(ChargeText.limit(s))"
+        case .failure(let e):message=e.localizedDescription
+        }
+    }
+    func setHeatEnabled(_ on:Bool) {
+        preferences.heat.enabled=on;if on { chargeController.resumeHeat() };savePreferences();refreshCharge()
+    }
+    func setLoginItem(_ on:Bool) {
+        do { if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } }
+        catch { message="로그인 시 실행 설정 실패: \(error.localizedDescription)" }
+        loginItem=SMAppService.mainApp.status == .enabled
+    }
     private let reader=ProcessReader()
     private var timer:Timer?
     private var ticks=0
@@ -34,6 +78,7 @@ import BatteryPlatform
         battery=BatteryReader.read()
         if preferences.backgroundHistory { do { try historyStore.append(battery) } catch { message=error.localizedDescription } }
         history=historyStore.read();sessions=AppPaths.sessions.all()
+        refreshCharge()
     }
     func savePreferences() {
         preferences.validate()

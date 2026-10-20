@@ -33,11 +33,7 @@ struct DashboardView:View {
             if model.history.count<2 { Text("측정값이 쌓이면 잔량 변화를 표시합니다.").foregroundStyle(.secondary).frame(height:85) }
             else { BatteryGraph(values:model.history.suffix(120).compactMap { $0.percent.map(Double.init) }).frame(height:90) }
         }
-        Card {
-            Label("충전 보호 설정",systemImage:"shield.lefthalf.filled").font(.headline)
-            Text("충전 상한과 저전력 모드는 macOS 배터리 설정에서 선택하세요. 앱 내부 충전 제어·항해·과열 차단·교정은 현재 OS에서 검증 중입니다.").foregroundStyle(.secondary)
-            Button("macOS 배터리 설정 열기") { model.openBatterySettings() }.buttonStyle(.borderedProminent)
-        }
+        ChargeControlCard()
     }
     func metric(_ title:String,value:String,footnote:String,symbol:String)->some View {
         Card { Label(title,systemImage:symbol).font(.caption).foregroundStyle(.secondary);Text(value).font(.system(size:27,weight:.semibold,design:.rounded));Text(footnote).font(.caption2).foregroundStyle(.tertiary) }

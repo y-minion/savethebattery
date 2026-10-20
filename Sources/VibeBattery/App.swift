@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import BatteryPlatform
 @main struct VibeBatteryApp: App {
     @StateObject private var model=AppModel()
     var body:some Scene {
@@ -16,6 +17,7 @@ struct MenuContent:View {
     var body:some View {
         Text("VibeBattery · \(model.battery.percent.map(String.init) ?? "—")%")
         Text(model.battery.temperature.map { String(format:"배터리 %.1f°C",$0) } ?? "온도 조회 불가")
+        Text(ChargeText.limit(model.charge))
         Divider()
         Button("대시보드 열기") { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
         Button("Claude 실행 명령 복사") { model.copyCommand("claude") }

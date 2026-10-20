@@ -4,8 +4,16 @@ struct SettingsView:View {
     var body:some View {
         PageTitle(title:"내 방식대로",subtitle:"보호 방식과 기록을 직접 선택하세요.")
         Card {
-            Text("충전과 에너지 모드").font(.headline)
-            Text("배터리 / 어댑터별 저전력·자동·고전력 모드는 macOS가 지원하는 범위에서 선택합니다. 이 앱은 아직 시스템 전력 모드를 자동 변경하지 않습니다.").foregroundStyle(.secondary)
+            Text("과열 시 충전 보류").font(.headline)
+            Toggle("배터리 온도가 높으면 충전 보류",isOn:Binding(get:{ model.preferences.heat.enabled },set:{ model.setHeatEnabled($0) }))
+            Stepper("보류 온도 \(Int(model.preferences.heat.holdAt))°C",value:$model.preferences.heat.holdAt,in:30...45,step:1).onChange(of:model.preferences.heat.holdAt) { _,_ in model.savePreferences() }
+            Stepper("재개 온도 \(Int(model.preferences.heat.resumeAt))°C",value:$model.preferences.heat.resumeAt,in:25...44,step:1).onChange(of:model.preferences.heat.resumeAt) { _,_ in model.savePreferences() }
+            Text("기본값 35°C/32°C는 Apple 공식 기준이 아닌 보수적 설계값입니다. 잔량 50% 이상에서 충전 중일 때만 상한을 현재 잔량으로 낮추며, 앱이 실행 중일 때만 동작합니다. Apple의 하드웨어 보호를 대체하지 않습니다.").font(.caption).foregroundStyle(.secondary)
+        }
+        Card {
+            Text("시작과 에너지 모드").font(.headline)
+            Toggle("로그인 시 VibeBattery 실행",isOn:Binding(get:{ model.loginItem },set:{ model.setLoginItem($0) }))
+            Text("저전력·자동·고전력 모드는 macOS 배터리 설정에서 선택합니다.").foregroundStyle(.secondary)
             Button("시스템 배터리 설정 열기") { model.openBatterySettings() }
         }
         Card {
@@ -19,7 +27,7 @@ struct SettingsView:View {
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)
             Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리.").foregroundStyle(.secondary)
-            Text("개발 중: 앱 내부 충전 상한, 항해, 과열 충전 차단, 교정, 일정·단축어, MagSafe LED. 지원 여부가 확인되기 전에는 실행되지 않습니다.").foregroundStyle(.secondary)
+            Text("제공: 충전 상한 50~100%, 한 번 완충, 과열 시 충전 보류. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 개발 예정: 일정·단축어, MagSafe LED.").foregroundStyle(.secondary)
             Link("GitHub에서 소스와 진행 상황 보기",destination:URL(string:"https://github.com/y-minion/vibebattery")!)
         }
     }

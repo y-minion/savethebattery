@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 public struct BatterySnapshot: Codable, Sendable {
     public var timestamp: Date = Date()
     public var percent: Int?
@@ -9,6 +10,10 @@ public struct BatterySnapshot: Codable, Sendable {
     public var onAC = false
     public var charging = false
     public var temperatureSource: String?
+    public var healthPrecise: Double?
+    public var designCapacity: Int?
+    public var designCycles: Int?
+    public var batteryID: String?
     public init() {}
     public static func decode(_ values: [String: Any], now: Date = Date()) -> BatterySnapshot { 
         var result = BatterySnapshot(); result.timestamp = now
@@ -18,7 +23,14 @@ public struct BatterySnapshot: Codable, Sendable {
         result.cycles = (values["CycleCount"] as? NSNumber)?.intValue
         let design = (values["DesignCapacity"] as? NSNumber)?.doubleValue ?? (data["DesignCapacity"] as? NSNumber)?.doubleValue
         let full = (values["AppleRawMaxCapacity"] as? NSNumber)?.doubleValue ?? (data["NominalChargeCapacity"] as? NSNumber)?.doubleValue ?? (data["FullChargeCapacity"] as? NSNumber)?.doubleValue
-        if let design, let full, design > 0, full > 0 { result.health = min(100, Int(full / design * 100)) }
+        if let design, let full, design > 0, full > 0 {
+            result.health = min(100, Int(full / design * 100))
+            let precise = full / design * 100
+            if precise < 150 { result.healthPrecise = (precise * 10).rounded() / 10 }
+        }
+        if let design, design > 0 { result.designCapacity = Int(design) }
+        result.designCycles = (values["DesignCycleCount9C"] as? NSNumber)?.intValue
+        if let serial = values["Serial"] as? String, !serial.isEmpty { result.batteryID = BatteryIdentity.hash(serial) }
         if let raw = number("Temperature"), raw > 0, raw / 100 < 100 { result.temperature = raw / 100; result.temperatureSource = "IORegistry 배터리 센서" }
         if let voltage = number("Voltage"), let current = (values["InstantAmperage"] ?? values["Amperage"]) as? NSNumber {
             let signed = Int64(bitPattern: current.uint64Value)
@@ -28,4 +40,8 @@ public struct BatterySnapshot: Codable, Sendable {
         result.charging = values["IsCharging"] as? Bool ?? false
         return result
     }
+}
+/// Stable local identifier for battery replacement detection; the serial itself is never stored.
+enum BatteryIdentity {
+    static func hash(_ serial: String) -> String { SHA256.hash(data: Data(serial.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined() }
 }

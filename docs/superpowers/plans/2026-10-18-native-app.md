@@ -7,6 +7,8 @@
 **Tech Stack:** Swift 6 in Swift 5 language mode, macOS 15+, SwiftUI/AppKit, IOKit, a small C bridge for libproc/SMC, Foundation, Swift Testing.
 **Spec:** ../specs/2026-10-18-design.md
 
+**Progress (2026-10-20):** Tasks 1–4 delivered as a working development preview. Task 5 build, local verification, independent review fixes, and first GitHub CI run completed; publication is tracked in the PR. [Validation details](../../VALIDATION.md) and [capability limits](../../COMPATIBILITY.md) describe the actual shipped scope. Historical checklists below preserve the original plan; direct charging controls remain unimplemented.
+
 ## Global Constraints
 - First validation target: M4 Pro, macOS 27.0.1 (26A434).
 - All delivered functionality is free and source is public; no telemetry, account, or private machine samples in Git.
@@ -42,7 +44,7 @@
 
 ### Task 3: Terminal sessions and temporary resources
 **Files:** Sources/VibeCLI/{Main,SessionRunner,ResourceRunner}.swift; Sources/BatteryPlatform/SessionStore.swift; Tests/BatteryCoreTests/SessionTests.swift; scripts/smoke-sessions.sh.
-**Interfaces:** `vibebattery status [--json]`; `run [--hours N] [--screen-off] [--cleanup] -- command args`; `resource [--keep] -- command args` (requires managed session); `sessions`; `release ID`.
+**Interfaces:** `vbctl status [--json]`; `run [--hours N] [--screen-off] [--cleanup] -- command args`; `resource [--keep] -- command args` (requires managed session); `sessions`; `release ID`.
 - [ ] Write failing tests for argument validation, exit status, release without kill, timeout without cleanup, success-only cleanup, concurrent-session files and redacted metadata.
 - [ ] Implement run with inherited terminal IO and child exit propagation, per-session bounded sleep lease, AC disconnect handling, owner-only files.
 - [ ] Implement explicit resource registration and supervisor-owned graceful termination. No arbitrary PID termination from a session file. Unknown/background descendants are observation-only.

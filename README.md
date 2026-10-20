@@ -1,12 +1,84 @@
 # VibeBattery
 
-Free, open-source macOS battery care and terminal coding-session companion.
+**무료·오픈소스 macOS 배터리 관리와 터미널 코딩 작업 도우미.**
 
-**Status: in development.** Targets Apple Silicon; first validation target is M4 Pro on macOS 27.0.1. Hardware controls are capability-gated and will never be presented as working without verification.
+개발 미리보기입니다. M4 Pro / macOS 27.0.1에서 먼저 검증합니다. 모든 AlDente 기능을 구현한 상태가 아닙니다. [지원 현황과 제약](docs/COMPATIBILITY.md)을 확인하세요.
 
-- Battery health and power monitoring
-- Display sleep while registered terminal jobs keep running
-- Explicitly scoped cleanup of temporary task resources
-- User-selectable energy settings
+## 현재 기능
 
-Design and implementation plan live in `docs/superpowers/`. No telemetry or cloud account is required.
+- 실제 배터리 잔량·용량 기반 건강도·사이클·온도·충방전 전력
+- CPU 활동 기반 프로세스 목록과 사용자 선택 앱 종료 (일반 백그라운드 프로세스는 활성 상태 보기로 연결)
+- 로컬에 저장하는 선택적 7일 이력
+- 등록한 터미널 작업 동안 화면 끄기와 제한된 잠자기 방지
+- 작업 성공 후 명시적으로 등록한 임시 프로세스만 정상 종료
+- iTerm2와 Ghostty에서 기존 Claude/Codex 명령을 감싸 실행하는 CLI
+- 충전 상한 50~100% (80% 미만은 선택 설치하는 헬퍼 필요), 적용 후 다시 읽어 확인
+- 한 번만 100% 충전
+- 과열 시 충전 보류 (선택, 앱 실행 중)
+- AlDente·batt 등 다른 충전 관리 앱 감지 시 모든 변경 차단
+- 건강 분석: 하루 단위 충전 습관 기록(최대 1년, 이 맥에만 저장), 실측 건강도 추세로 80% 도달 시기를 범위로 추정(30일 이상 기록 후), 잔량·온도 기반 상대 스트레스와 "상한 80%였다면" 비교, 잠자기 중 소모, 규칙 기반 제안. `vbctl health [--json]`
+- 로컬 알림: 충전 상한 도달·꺼짐·외부 변경, 완충 끝남, 배터리 부족, 고온, 과열 보류 문제, 다른 충전 관리 앱, 바이브 코딩 작업 종료·잠자기 방지 해제, 잠자기 중 소모, 새 제안, 주간 요약. 이벤트별로 켜고 끄며 같은 상황은 한 번만 알림(앱 실행 중에만, 권한은 설정 화면에서 요청)
+
+macOS 27 펌웨어(20457.1.29)는 SMC 충전 중지 키를 막고 있어, 충전 상한은 macOS 기본 충전 상한 기능을 통해 적용합니다. 상한은 앱을 종료해도 macOS가 유지합니다. 항해의 재충전 하한 지정·강제 방전·교정은 어댑터 전원 차단 없이 불가능해 제공하지 않으며, MagSafe LED는 아직 지원하지 않습니다. 에너지 모드는 macOS 배터리 설정으로 연결합니다. 실제 쓰기 검증 현황은 [검증 기록](docs/VALIDATION.md)을 확인하세요.
+
+## 빌드
+
+Swift 6 도구 및 호환되는 macOS SDK가 필요합니다. 일반적인 최신 Xcode 환경:
+
+```sh
+swift test --disable-xctest
+python3 scripts/smoke-sessions.py .build/debug/vbctl
+scripts/build-app.sh
+open dist/VibeBattery.app
+```
+
+빌드 결과는 `dist/VibeBattery.app`과 `dist/VibeBattery.zip`입니다. 앱은 로컬 실행용 임시 서명을 사용합니다. 일반 배포용 Developer ID 서명·공증은 아직 포함하지 않습니다. 현재 저장소에는 원본 코드만 있고 외부 패키지 의존성은 없습니다.
+
+## 충전 헬퍼 (선택)
+
+80% 미만 상한에만 필요합니다. 앱을 `/Applications`에 복사한 뒤 설치합니다. 헬퍼는 현재 로그인 사용자가 실행한 `/Applications/VibeBattery.app`의 요청만 받고, 충전 상한 값 쓰기와 상태 읽기 외의 기능은 없습니다.
+
+```sh
+sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh
+sudo /Applications/VibeBattery.app/Contents/Resources/uninstall-helper.sh   # 제거, 현재 상한은 유지
+```
+
+다른 충전 관리 앱(AlDente, batt, battery, Battery Toolkit)이 실행 중이거나 설치되어 있으면 VibeBattery는 값을 바꾸지 않습니다.
+
+현재 빌드는 임시(ad-hoc) 서명이라, 헬퍼의 호출자 확인은 보안 경계가 아닙니다. 같은 사용자 권한의 프로그램이 상한(50~100%)을 바꿀 수 있습니다. 설치 스크립트는 사용자가 쓸 수 있는 앱 번들 안에 있으므로, 직접 빌드했거나 내용을 확인한 사본만 sudo로 실행하세요.
+
+## 터미널 작업
+
+앱의 **바이브 코딩** 화면에서 명령을 복사할 수 있습니다. 또는 빌드한 CLI를 직접 사용하세요.
+
+```sh
+.build/debug/vbctl status
+.build/debug/vbctl run --hours 4 --screen-off -- claude
+.build/debug/vbctl run --hours 4 --screen-off -- codex
+.build/debug/vbctl sessions
+.build/debug/vbctl release SESSION_UUID
+```
+
+명령 인수는 셸 문자열로 다시 해석하지 않습니다. 기존 터미널 입력/출력과 로그인 환경을 사용합니다. AI 대화, 명령 인수, 출력, API 키는 저장하지 않습니다.
+
+시간 만료 또는 어댑터 분리 시 기본적으로 **보호만 해제**합니다. 실행 중인 명령은 종료하지 않지만 macOS가 잠들 수 있습니다. 화면을 보며 조작하는 AI는 별도 호환성 검증이 필요합니다. 화면 끄기는 시스템 잠자기나 잠금 정책 해제와 다릅니다.
+
+## 명시적 임시 리소스 정리
+
+자동 정리는 기본적으로 꺼져 있습니다. `--cleanup`으로 시작한 관리 세션 안에서 다음 형태로 생성한 **작업 전용 임시 리소스**만 대상입니다.
+
+```sh
+/path/to/vbctl resource -- python3 -m http.server 8000
+/path/to/vbctl resource --keep -- python3 -m http.server 8001
+```
+
+명령은 `VIBEBATTERY_SESSION` 환경을 상속해야 합니다. 필요하면 터미널에서 리소스를 백그라운드로 실행할 수 있습니다. 성공한 주 작업이 종료되면 등록된 리소스에 SIGTERM을 보냅니다. 실패·취소·보호 해제·시간 만료에는 자동 정리하지 않습니다. 응답하지 않아도 자동 강제 종료하지 않습니다. 공유할 서버는 반드시 `--keep`을 사용하세요. 일반 프로세스를 이름만 보고 종료하거나 파일을 삭제하지 않습니다.
+
+기록은 `~/Library/Application Support/VibeBattery`에만 저장합니다. `VIBEBATTERY_DATA_DIR`는 테스트용 데이터 경로를 분리할 때 사용할 수 있습니다.
+종료된 세션 기록은 앱 갱신 또는 새 세션 시작 시 30일 기준으로 정리합니다. 설정에서 즉시 삭제할 수도 있으며 실행 중인 관리 세션은 보존합니다.
+
+## 개발
+
+설계와 계획은 [docs/superpowers](docs/superpowers)에 있습니다. 공개 기록에 개인 기기의 원본 센서 덤프나 대화 내용을 올리지 않습니다.
+
+MIT · [라이선스](LICENSE) · [참고 프로젝트](THIRD_PARTY_NOTICES.md)

@@ -26,12 +26,12 @@ public enum TopoffDomain {
     public static let name="com.apple.smartcharging.topoffprotection"
     public static let limitKey="mclLimitValue",featureKey="MCLFeatureState"
     public static let notification="com.apple.smartcharging.defaultschanged"
-    /// Keys to write for a limit. An existing feature state is left alone so an
-    /// encoding we have not observed is never replaced.
+    /// Keys to write for a limit. The feature state is set to 1 only when it is
+    /// missing or the observed "off" value 0, so an unknown encoding is never replaced.
     public static func writes(limit:Int,existingFeature:Any?) -> [String:Any]? {
         guard ChargeCommand.range.contains(limit) else { return nil }
         var w:[String:Any]=[limitKey:NSNumber(value:limit)]
-        if existingFeature==nil { w[featureKey]=NSNumber(value:1) }
+        if existingFeature==nil || (existingFeature as? NSNumber)?.intValue==0 { w[featureKey]=NSNumber(value:1) }
         return w
     }
 }

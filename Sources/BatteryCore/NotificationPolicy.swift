@@ -10,6 +10,7 @@ public enum NotificationPolicy {
         charge(i,s,&o,continuous:continuous)
         protect(i,s,&o);heat(i,s,&o)
         sessions(i,s,&o)
+        health(i,s,&o)
         o.memory.evaluated=i.now
         return o
     }
@@ -154,5 +155,33 @@ public enum NotificationPolicy {
                 o.send(true,AlertEvent(id:"session.end.\(x.id.uuidString)",title:t.0,body:t.1,section:"sessions",thread:"session"))
             }
         }
+    }
+    public static let suggestionRepeat:TimeInterval=7*86400, weeklyHour=9
+    static func health(_ i:NotificationInput,_ s:NotificationSettings,_ o:inout NotificationOutcome) {
+        let now=i.now
+        if let w=i.wake,w.isHigh,let r=w.drainPerHour {
+            let t=NotificationText.sleepDrain(r,w.end.timeIntervalSince(w.start))
+            o.send(s.sleepDrain,AlertEvent(id:"health.sleep",title:t.0,body:t.1,section:"health",thread:"health"))
+        }
+        for g in i.suggestions {
+            let key=g.kind.rawValue
+            guard o.memory.suggestionSent[key].map({ now.timeIntervalSince($0)>=suggestionRepeat }) ?? true else { continue }
+            o.memory.suggestionSent[key]=now
+            o.send(s.suggestions,AlertEvent(id:"health.suggestion.\(key)",title:"배터리 관리 제안",body:g.message,section:"health",thread:"health"))
+        }
+        if let u=i.week,u.observed>0,let w=week(now,i.calendar),now>=w.opens,o.memory.weekKey != w.key {
+            o.memory.weekKey=w.key
+            let t=NotificationText.weekly(u)
+            o.send(s.weeklySummary,AlertEvent(id:"health.weekly",title:t.0,body:t.1,section:"health",thread:"health"))
+        }
+    }
+    /// ISO week key and that week's Monday 09:00 in the calendar's time zone.
+    static func week(_ now:Date,_ cal:Calendar) -> (key:String,opens:Date)? {
+        var c=Calendar(identifier:.iso8601);c.timeZone=cal.timeZone
+        guard let start=c.dateInterval(of:.weekOfYear,for:now)?.start,
+              let opens=c.date(bySettingHour:weeklyHour,minute:0,second:0,of:start) else { return nil }
+        let w=c.dateComponents([.yearForWeekOfYear,.weekOfYear],from:now)
+        guard let y=w.yearForWeekOfYear,let n=w.weekOfYear else { return nil }
+        return (String(format:"%04d-W%02d",y,n),opens)
     }
 }

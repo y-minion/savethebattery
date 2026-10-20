@@ -41,4 +41,8 @@ public enum NotificationText {
         let why=x.outcome == .expired ? "보호 시간이 끝났습니다.":"어댑터가 분리되었습니다."
         return ("\(x.command.isEmpty ? "작업":x.command) 잠자기 방지 해제","\(why) 작업은 계속되지만 맥이 잠들 수 있습니다.")
     }
+    static func sleepDrain(_ rate:Double,_ seconds:TimeInterval) -> (String,String) {
+        ("잠자기 중 배터리가 많이 줄었습니다",String(format:"%@ 동안 시간당 %.1f%%. 잠자기를 막거나 깨우는 앱이 있는지 확인해 보세요.",duration(seconds),rate))
+    }
+    static func weekly(_ u:UsageSummary) -> (String,String) { ("주간 배터리 요약","최근 7일 잔량 95% 이상 \(HealthText.hours(u.soc95)) · \(HealthText.stress(u))") }
 }

@@ -10,6 +10,8 @@
 
 **Spec:** ../specs/2026-10-20-charge-control-design.md (parent: ../specs/2026-10-18-design.md)
 
+**Progress:** Tasks 1–7 complete; Task 8 (hardware) pending user presence.
+
 ## Global Constraints
 
 - Target: MacBook Pro M4 Pro (Mac16,8), macOS 27.0.1, firmware 20457.1.29. No claims for other machines.

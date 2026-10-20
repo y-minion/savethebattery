@@ -12,8 +12,12 @@
 - 등록한 터미널 작업 동안 화면 끄기와 제한된 잠자기 방지
 - 작업 성공 후 명시적으로 등록한 임시 프로세스만 정상 종료
 - iTerm2와 Ghostty에서 기존 Claude/Codex 명령을 감싸 실행하는 CLI
+- 충전 상한 50~100% (80% 미만은 선택 설치하는 헬퍼 필요), 적용 후 다시 읽어 확인
+- 한 번만 100% 충전
+- 과열 시 충전 보류 (선택, 앱 실행 중)
+- AlDente·batt 등 다른 충전 관리 앱 감지 시 모든 변경 차단
 
-충전 상한과 에너지 모드는 macOS 배터리 설정으로 연결합니다. 앱 내부 항해·과열 차단·교정·MagSafe LED는 검증된 제어 경로가 없어 제공하지 않습니다. 화면에 작동하는 것처럼 표시하지 않습니다.
+macOS 27 펌웨어(20457.1.29)는 SMC 충전 중지 키를 막고 있어, 충전 상한은 macOS 기본 충전 상한 기능을 통해 적용합니다. 상한은 앱을 종료해도 macOS가 유지합니다. 항해의 재충전 하한 지정·강제 방전·교정은 어댑터 전원 차단 없이 불가능해 제공하지 않으며, MagSafe LED는 아직 지원하지 않습니다. 에너지 모드는 macOS 배터리 설정으로 연결합니다. 실제 쓰기 검증 현황은 [검증 기록](docs/VALIDATION.md)을 확인하세요.
 
 ## 빌드
 
@@ -27,6 +31,17 @@ open dist/VibeBattery.app
 ```
 
 빌드 결과는 `dist/VibeBattery.app`과 `dist/VibeBattery.zip`입니다. 앱은 로컬 실행용 임시 서명을 사용합니다. 일반 배포용 Developer ID 서명·공증은 아직 포함하지 않습니다. 현재 저장소에는 원본 코드만 있고 외부 패키지 의존성은 없습니다.
+
+## 충전 헬퍼 (선택)
+
+80% 미만 상한에만 필요합니다. 앱을 `/Applications`에 복사한 뒤 설치합니다. 헬퍼는 현재 로그인 사용자가 실행한 `/Applications/VibeBattery.app`의 요청만 받고, 충전 상한 값 쓰기와 상태 읽기 외의 기능은 없습니다.
+
+```sh
+sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh
+sudo /Applications/VibeBattery.app/Contents/Resources/uninstall-helper.sh   # 제거, 현재 상한은 유지
+```
+
+다른 충전 관리 앱(AlDente 등)이 실행 중이거나 설치되어 있으면 VibeBattery는 값을 바꾸지 않습니다.
 
 ## 터미널 작업
 

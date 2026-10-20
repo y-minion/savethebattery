@@ -21,7 +21,7 @@ public enum ChargeError: Error, Equatable, LocalizedError {
 }
 /// One attempted charge write, kept so an unexpected limit change can be traced to its source.
 public struct ChargeWrite: Codable, Equatable {
-    public enum Source: String, Codable { case user, heat, quit }
+    public enum Source: String, Codable { case user, heat, quit, topUp }
     public var date:Date;public var command:String;public var source:Source;public var ok:Bool
 }
 public struct ChargeRecord: Codable, Equatable {
@@ -62,7 +62,10 @@ public final class ChargeController {
         let s=backend.read()
         if record.topUpRequested != nil {
             if s.allowsFullCharge { record.topUpObservedOff=true }
-            else if s.enabled==true,record.topUpObservedOff { record.topUpRequested=nil;record.topUpObservedOff=false }
+            else if s.enabled==true,record.topUpObservedOff {
+                record.topUpRequested=nil;record.topUpObservedOff=false;save()
+                if case .success(let r)?=reapplyAfterTopUp(s) { return r }
+            }
             save()
         }
         return s
@@ -71,7 +74,14 @@ public final class ChargeController {
     @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true,source:ChargeWrite.Source?=nil) -> Result<ChargeLimitState,ChargeError> {
         let r=write(c,byUser:byUser)
         switch r { case .success,.failure(.notApplied),.failure(.rejected):logWrite(c,source ?? (byUser ? .user:.heat),r);default:break }
+        if c == .endTopUp,case .success(let s)=r,let again=reapplyAfterTopUp(s) { return again }
         return r
+    }
+    /// macOS re-enables the limit at its own stored value, which never holds a
+    /// helper-written limit below 80%; put back the limit VibeBattery last set.
+    private func reapplyAfterTopUp(_ s:ChargeLimitState) -> Result<ChargeLimitState,ChargeError>? {
+        guard let want=record.lastWritten,s.enabled==true,s.limit != want else { return nil }
+        return apply(.setLimit(want),byUser:false,source:.topUp)
     }
     private func logWrite(_ c:ChargeCommand,_ source:ChargeWrite.Source,_ r:Result<ChargeLimitState,ChargeError>) {
         var ok=false;if case .success=r { ok=true }

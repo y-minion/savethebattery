@@ -5,13 +5,15 @@ import BatteryCore
 final class FakeBackend: ChargeLimitBackend {
     var state=ChargeLimitState(supported:true,enabled:true,limit:79);var accept=true;var ignore=false;var calls:[ChargeCommand]=[]
     var onRead:(()->Void)?
+    /// Observed on the target: re-enabling uses macOS's own stored limit, not a helper-written one.
+    var enableTo:Int?
     func read() -> ChargeLimitState { onRead?();return state }
     func perform(_ c:ChargeCommand) -> Bool {
         calls.append(c);guard accept else { return false };if ignore { return true }
         switch c {
         case .setLimit(let p):state.enabled=true;state.limit=p
         case .clearLimit:state.enabled=false
-        case .endTopUp:state.enabled=true
+        case .endTopUp:state.enabled=true;if let e=enableTo { state.limit=e }
         case .startTopUp:break
         }
         return true
@@ -188,6 +190,20 @@ struct ChargeControllerTests {
         #expect(c.record.log.last?.source == .heat)
         _=c.releaseHold()
         #expect(c.record.log.last?.source == .quit)
+    }
+    @Test func endingTopUpReappliesTheUsersLowLimit() {
+        let b=FakeBackend();b.enableTo=80;let h=FakeHelper(b);let c=make(b,helper:h)
+        _=c.apply(.setLimit(70));_=c.apply(.startTopUp)
+        b.state.limit=100;_=c.state()
+        #expect(c.apply(.endTopUp) == .success(ChargeLimitState(supported:true,enabled:true,limit:70)))
+        #expect(h.calls==[70,70]);#expect(c.record.lastWritten==70);#expect(c.record.log.last?.source == .topUp)
+    }
+    @Test func macOSEndingTopUpReappliesTheUsersLowLimit() {
+        let b=FakeBackend();let h=FakeHelper(b);let c=make(b,helper:h)
+        _=c.apply(.setLimit(70));_=c.apply(.startTopUp)
+        b.state.limit=100;_=c.state();#expect(c.topUpActive)
+        b.state.limit=80
+        #expect(c.state().limit==70);#expect(c.record.topUpRequested==nil);#expect(h.calls==[70,70])
     }
     @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
         var probes=0

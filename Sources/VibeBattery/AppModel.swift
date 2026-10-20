@@ -17,6 +17,11 @@ import BatteryPlatform
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled
+    @Published var healthReport:HealthReport?
+    @Published var sleeps:[SleepEvent]=[]
+    private lazy var healthRecorder=HealthRecorder(store:HealthStore(url:AppPaths.health))
+    private let sleepStore=SleepStore(url:AppPaths.sleep)
+    private var sleepStart:BatterySnapshot?
     private let helper=XPCChargeHelper()
     private var lastHeatAction=HeatAction.none
     private lazy var chargeController=ChargeController(backend:PowerUIChargeBackend(),helper:helper,detect:ChargeControllerScan.current,url:AppPaths.directory.appendingPathComponent("charge.json"))
@@ -24,6 +29,22 @@ import BatteryPlatform
     var topUpRequested:Date? { chargeController.record.topUpRequested }
     var topUpActive:Bool { chargeController.topUpActive }
     func checkHelper() { helperStatus=helper.status() }
+    func updateHealthReport() {
+        healthReport=HealthReport.make(snapshot:battery,days:healthRecorder.file.days,sleeps:sleeps,context:AdvisorContext(limit:charge.enabled==true ? charge.limit:nil,heatEnabled:preferences.heat.enabled),now:Date(),calendar:.current)
+    }
+    func clearHealth() {
+        do { try healthRecorder.reset();try sleepStore.delete();sleeps=[];updateHealthReport() } catch { message=error.localizedDescription }
+    }
+    func willSleep() {
+        guard preferences.backgroundHistory else { return }
+        sleepStart=BatteryReader.read();try? healthRecorder.flush()
+    }
+    func didWake() {
+        if let s=sleepStart, preferences.backgroundHistory {
+            do { try sleepStore.append(SleepEvent(before:s,after:BatteryReader.read()));sleeps=sleepStore.read() } catch { message=error.localizedDescription }
+        }
+        sleepStart=nil;refresh()
+    }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     var heatStatus:String {
         let h=preferences.heat
@@ -72,12 +93,16 @@ import BatteryPlatform
     private let preferencesURL=AppPaths.directory.appendingPathComponent("preferences.json")
     init() {
         if let d=try? Data(contentsOf:preferencesURL),let p=try? JSONDecoder().decode(UserPreferences.self,from:d) { preferences=p;preferences.validate() }
+        sleeps=sleepStore.read()
         refresh()
         checkHelper()
         // A heat hold must not outlive the app that would restore it.
         NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
-            MainActor.assumeIsolated { _=self?.chargeController.releaseHold() }
+            MainActor.assumeIsolated { _=self?.chargeController.releaseHold();try? self?.healthRecorder.flush() }
         }
+        let ws=NSWorkspace.shared.notificationCenter
+        ws.addObserver(forName:NSWorkspace.willSleepNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.willSleep() } }
+        ws.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } }
         timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true) { [weak self] _ in Task { @MainActor in self?.tick() } }
     }
     func tick() {
@@ -90,9 +115,10 @@ import BatteryPlatform
     func refresh() {
         do { try AppPaths.sessions.removeInactive(before:Date().addingTimeInterval(-30*86400)) } catch { message=error.localizedDescription }
         battery=BatteryReader.read()
-        if preferences.backgroundHistory { do { try historyStore.append(battery) } catch { message=error.localizedDescription } }
+        if preferences.backgroundHistory { do { try historyStore.append(battery);try healthRecorder.record(battery) } catch { message=error.localizedDescription } }
         history=historyStore.read();sessions=AppPaths.sessions.all()
         refreshCharge()
+        updateHealthReport()
     }
     func savePreferences() {
         preferences.validate()

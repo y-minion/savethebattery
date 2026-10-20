@@ -29,7 +29,7 @@ struct MenuContent:View {
 }
 struct RootView:View {
     @EnvironmentObject var model:AppModel
-    private let items=[("dashboard","대시보드","square.grid.2x2"),("processes","앱과 프로세스","waveform.path.ecg"),("sessions","바이브 코딩","terminal"),("settings","설정","slider.horizontal.3")]
+    private let items=[("dashboard","대시보드","square.grid.2x2"),("health","건강 분석","heart.text.square"),("processes","앱과 프로세스","waveform.path.ecg"),("sessions","바이브 코딩","terminal"),("settings","설정","slider.horizontal.3")]
     var body:some View {
         HStack(spacing:0) {
             VStack(alignment:.leading,spacing:26) {
@@ -50,6 +50,7 @@ struct RootView:View {
             ScrollView {
                 VStack(alignment:.leading,spacing:24) {
                     switch model.section {
+                    case "health":HealthView()
                     case "processes":ProcessesView()
                     case "sessions":SessionsView()
                     case "settings":SettingsView()

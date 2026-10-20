@@ -1,4 +1,5 @@
 import SwiftUI
+import BatteryCore
 struct DashboardView:View {
     @EnvironmentObject var model:AppModel
     var body:some View {
@@ -23,6 +24,14 @@ struct DashboardView:View {
             metric("용량 기반 건강도",value:model.battery.health.map { "\($0)%" } ?? "—",footnote:"설계 용량 대비 추정치",symbol:"heart.fill")
             metric("배터리 온도",value:model.battery.temperature.map { String(format:"%.1f°C",$0) } ?? "—",footnote:model.battery.temperatureSource ?? "센서 조회 불가",symbol:"thermometer.medium")
             metric("충전 사이클",value:model.battery.cycles.map(String.init) ?? "—",footnote:"시스템이 보고한 누적 횟수",symbol:"arrow.trianglehead.2.clockwise.rotate.90")
+        }
+        Card {
+            HStack {
+                Label("건강 분석",systemImage:"heart.text.square").font(.headline)
+                Text(model.healthReport.map { HealthText.trend($0.trend,calendar:.current) } ?? "측정 중").foregroundStyle(.secondary)
+                Spacer()
+                Button("자세히") { model.section="health" }.buttonStyle(.bordered)
+            }
         }
         Card {
             HStack { Label("배터리 전력 흐름",systemImage:"bolt.horizontal").font(.headline);Spacer();Text(model.battery.watts.map { String(format:"%+.2f W",$0) } ?? "조회 불가").font(.title2.monospacedDigit()) }

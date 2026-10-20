@@ -18,7 +18,7 @@ struct SettingsView:View {
         }
         Card {
             Text("기록과 개인정보").font(.headline)
-            Toggle("배터리 이력 기록 · 최대 7일",isOn:$model.preferences.backgroundHistory).onChange(of:model.preferences.backgroundHistory) { _,_ in model.savePreferences() }
+            Toggle("배터리 이력 기록 (잔량 7일 · 건강 분석 1년)",isOn:$model.preferences.backgroundHistory).onChange(of:model.preferences.backgroundHistory) { _,_ in model.savePreferences() }
             Text("측정값은 이 맥에 저장합니다. AI 대화, 명령 인수, 터미널 출력, API 키는 기록하지 않습니다.").foregroundStyle(.secondary)
             Button("배터리 이력 삭제",role:.destructive) { model.clearHistory() }
             Text("종료된 세션 기록은 앱 실행 중 최대 30일간 보관합니다. 실행 중인 관리 세션은 삭제하지 않습니다.").font(.callout).foregroundStyle(.secondary)
@@ -27,7 +27,7 @@ struct SettingsView:View {
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)
             Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리.").foregroundStyle(.secondary)
-            Text("구현됨(이 Mac에서 실제 쓰기 검증 대기): 충전 상한 50~100%, 한 번 완충, 과열 시 충전 보류. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 개발 예정: 일정·단축어, MagSafe LED.").foregroundStyle(.secondary)
+            Text("구현됨(이 Mac에서 실제 쓰기 검증 대기): 충전 상한 50~100%, 한 번 완충, 과열 시 충전 보류. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 건강 분석: 하루 기록과 잠자기 소모를 이 맥에 최대 1년 보관하며 수명 추세는 30일 이상 기록 후 표시. 개발 예정: 알림, 일정·단축어, MagSafe LED.").foregroundStyle(.secondary)
             Link("GitHub에서 소스와 진행 상황 보기",destination:URL(string:"https://github.com/y-minion/vibebattery")!)
         }
     }

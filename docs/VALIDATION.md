@@ -20,4 +20,10 @@ The independent review found PID-reuse risk in arbitrary raw signals, delayed as
 - The release bundle embeds `VBChargeHelper` signed with identifier `io.github.y-minion.vibebattery.helper` and the install/uninstall scripts; both scripts refuse to run without root.
 - Pending (requires the user at the Mac after removing AlDente): helper installation, 80–100% and sub-80 writes, one-time full charge and its return, persistence across app quit, sleep and reboot.
 
+## Health insights (2026-10-20)
+
+- Swift Testing now runs 91 tests in 15 suites, adding precise health and hashed battery identity decoding (legacy history still loads), BU-808 table reproduction, monotonicity and clamping of the stress model, time-weighted daily accumulation (five-minute gap, local-midnight split, clock going backwards, missing sensors, 400-day retention), battery replacement segments, Theil–Sen trend gating, exact and outlier-robust projections, nearly flat declines beyond the 15-year horizon, cycle projections, sleep drain rules, suggestion thresholds, report windows, Korean text, corrupt-file recovery, private file permissions, five-minute save throttling and sleep-record limits.
+- On the target Mac, `vbctl health` and `vbctl health --json` ran from the release bundle against an empty scratch data directory and exited 0; a release build launched with a scratch data directory and wrote a private `health.json` on its first refresh. The user's running instance and data were not touched. The screen could not be captured remotely, so the health screen layout has not been visually inspected.
+- Pending: a month of real records before the trend projection can be checked against the device.
+
 Not claimed as validated: hardware charge-limit writes, real high-temperature heat hold, physical display behavior across external monitors, lid-close/background automation compatibility, manual termination of the user's apps, or support across other hardware/OS combinations. See [the capability report](COMPATIBILITY.md) for unimplemented features.

@@ -910,4 +910,4 @@ In the `willTerminate` observer also call `try? self?.healthRecorder.flush()`. I
 - [ ] **Step 4: Docs** — README feature bullet; COMPATIBILITY rows for health history, trend, stress comparison, sleep drain (implemented; trend needs 30+ days); VALIDATION section with the new test count; plan progress line.
 - [ ] **Step 5: Run** full suite — Expected: green. **Commit** `feat: add health insights screen and collection`.
 
-Progress: (update as tasks complete)
+Progress: Tasks 1–8 complete; trend projection awaits 30+ days of real records.

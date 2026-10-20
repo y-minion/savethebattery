@@ -4,7 +4,8 @@ import BatteryCore
 @testable import BatteryPlatform
 final class FakeBackend: ChargeLimitBackend {
     var state=ChargeLimitState(supported:true,enabled:true,limit:79);var accept=true;var ignore=false;var calls:[ChargeCommand]=[]
-    func read() -> ChargeLimitState { state }
+    var onRead:(()->Void)?
+    func read() -> ChargeLimitState { onRead?();return state }
     func perform(_ c:ChargeCommand) -> Bool {
         calls.append(c);guard accept else { return false };if ignore { return true }
         switch c {
@@ -21,10 +22,16 @@ final class FakeHelper: ChargeHelperClient {
     init(_ b:FakeBackend) { backend=b }
     func setLimit(_ p:Int) -> String? { calls.append(p);backend.state.enabled=true;backend.state.limit=p;return nil }
 }
+/// Applies a helper write only after a few reads, as macOS does after the domain-change notification.
+final class LateHelper: ChargeHelperClient {
+    var isInstalled=true;let backend:FakeBackend;var lateReads:Int
+    init(_ b:FakeBackend,lateReads:Int) { backend=b;self.lateReads=lateReads }
+    func setLimit(_ p:Int) -> String? { let b=backend;b.onRead={ if self.lateReads==0 { b.state.enabled=true;b.state.limit=p } else { self.lateReads-=1 } };return nil }
+}
 struct ChargeControllerTests {
     func url() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("charge.json") }
     func make(_ b:FakeBackend,helper:FakeHelper?=nil,others:[OtherChargeController]=[],at u:URL?=nil) -> ChargeController {
-        ChargeController(backend:b,helper:helper,detect:{ others },url:u ?? url())
+        ChargeController(backend:b,helper:helper,detect:{ others },url:u ?? url(),pause:{ _ in })
     }
     func hot(_ t:Double,at now:Date) -> BatterySnapshot {
         var b=BatterySnapshot();b.timestamp=now;b.temperature=t;b.percent=85;b.onAC=true;b.charging=true;return b
@@ -55,6 +62,18 @@ struct ChargeControllerTests {
         let b=FakeBackend();b.ignore=true;let c=make(b)
         #expect(c.apply(.setLimit(85)) == .failure(.notApplied))
         #expect(b.calls==[.setLimit(85)]);#expect(c.record.lastWritten==nil)
+    }
+    @Test func helperWriteIsAcceptedOnceMacOSAppliesItLate() {
+        let b=FakeBackend();b.state.limit=85;var pauses:[TimeInterval]=[]
+        let c=ChargeController(backend:b,helper:LateHelper(b,lateReads:3),detect:{ [] },url:url(),pause:{ pauses.append($0) })
+        #expect(c.apply(.setLimit(75)) == .success(ChargeLimitState(supported:true,enabled:true,limit:75)))
+        #expect(c.record.lastWritten==75);#expect(pauses.count==3)
+    }
+    @Test func readbackGivesUpAfterBoundedWait() {
+        let b=FakeBackend();b.ignore=true;var waited:TimeInterval=0
+        let c=ChargeController(backend:b,helper:nil,detect:{ [] },url:url(),pause:{ waited+=$0 })
+        #expect(c.apply(.setLimit(85)) == .failure(.notApplied))
+        #expect(waited>0);#expect(waited<=5)
     }
     @Test func rejectedWriteIsReported() {
         let b=FakeBackend();b.accept=false

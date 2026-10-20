@@ -40,10 +40,12 @@ public struct ChargeRecord: Codable, Equatable {
 }
 public final class ChargeController {
     private let backend:ChargeLimitBackend;private let helper:ChargeHelperClient?
-    private let detect:()->[OtherChargeController];private let url:URL
+    private let detect:()->[OtherChargeController];private let url:URL;private let pause:(TimeInterval)->Void
     public private(set) var record:ChargeRecord
-    public init(backend:ChargeLimitBackend,helper:ChargeHelperClient?,detect:@escaping ()->[OtherChargeController],url:URL) {
-        self.backend=backend;self.helper=helper;self.detect=detect;self.url=url
+    /// macOS applies a helper write after its domain-change notification, so read-back polls briefly.
+    static let settleStep:TimeInterval=0.5,settleSteps=8
+    public init(backend:ChargeLimitBackend,helper:ChargeHelperClient?,detect:@escaping ()->[OtherChargeController],url:URL,pause:@escaping (TimeInterval)->Void={ Thread.sleep(forTimeInterval:$0) }) {
+        self.backend=backend;self.helper=helper;self.detect=detect;self.url=url;self.pause=pause
         record=(try? JSONDecoder().decode(ChargeRecord.self,from:Data(contentsOf:url))) ?? ChargeRecord()
     }
     public var helperInstalled:Bool { helper?.isInstalled==true }
@@ -72,7 +74,8 @@ public final class ChargeController {
             record.writes+=1
             if !backend.perform(c) { return .failure(.rejected("macOS가 요청을 거부했습니다.")) }
         }
-        let s=backend.read()
+        var s=backend.read()
+        for _ in 0..<Self.settleSteps where s.matches(c)==false { pause(Self.settleStep);s=backend.read() }
         guard s.matches(c) != false else { return .failure(.notApplied) }
         // A user's own successful choice replaces any hold; a failed one keeps it.
         if byUser { record.heat=HeatState();record.heatPaused=false }

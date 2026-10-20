@@ -14,7 +14,7 @@ struct NotificationReviewFixTests {
     }
     @Test func chargeWritesCountEveryAttempt() {
         let b=FakeBackend();let u=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("charge.json")
-        let c=ChargeController(backend:b,helper:nil,detect:{ [] },url:u)
+        let c=ChargeController(backend:b,helper:nil,detect:{ [] },url:u,pause:{ _ in })
         _=c.apply(.setLimit(80));#expect(c.record.writes==1)
         b.ignore=true;#expect(c.apply(.setLimit(85)) == .failure(.notApplied));#expect(c.record.writes==2)
         #expect(c.apply(.setLimit(83)) == .failure(.invalid));#expect(c.record.writes==2)

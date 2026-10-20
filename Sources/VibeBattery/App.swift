@@ -3,12 +3,22 @@ import AppKit
 import BatteryPlatform
 @main struct VibeBatteryApp: App {
     @StateObject private var model=AppModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     var body:some Scene {
         WindowGroup("VibeBattery",id:"main") { RootView().environmentObject(model).frame(minWidth:900,minHeight:650).tint(.mint) }
             .defaultSize(width:1050,height:740)
         MenuBarExtra {
             MenuContent().environmentObject(model)
-        } label: { Label("\(model.battery.percent.map(String.init) ?? "—")%",systemImage:model.battery.onAC ? "bolt.batteryblock":"battery.75percent") }
+        } label: { MenuLabel().environmentObject(model) }
+    }
+}
+/// Always rendered, so it is where the app keeps a way to reopen the window for notification clicks.
+struct MenuLabel:View {
+    @EnvironmentObject var model:AppModel
+    @Environment(\.openWindow) var openWindow
+    var body:some View {
+        Label("\(model.battery.percent.map(String.init) ?? "—")%",systemImage:model.battery.onAC ? "bolt.batteryblock":"battery.75percent")
+            .onAppear { model.openMain={ openWindow(id:"main") } }
     }
 }
 struct MenuContent:View {

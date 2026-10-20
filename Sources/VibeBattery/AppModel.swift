@@ -19,6 +19,12 @@ import BatteryPlatform
     @Published var helperStatus=HelperStatus.notInstalled
     @Published var healthReport:HealthReport?
     @Published var sleeps:[SleepEvent]=[]
+    @Published var notificationAccess=NotificationAccess.unavailable
+    var openMain:(()->Void)?
+    private let notifier=NotificationRuntime.makeSink()
+    private let notificationStore=NotificationStore(url:AppPaths.notify)
+    private lazy var notificationMemory=notificationStore.read()
+    private var pendingHeatEvent:HeatEvent?
     private lazy var healthRecorder=HealthRecorder(store:HealthStore(url:AppPaths.health))
     private let sleepStore=SleepStore(url:AppPaths.sleep)
     private var sleepStart:BatterySnapshot?
@@ -43,10 +49,12 @@ import BatteryPlatform
         sleepStart=BatteryReader.read();try? healthRecorder.flush()
     }
     func didWake() {
+        var wake:SleepEvent?
         if let s=sleepStart, preferences.backgroundHistory {
-            do { try sleepStore.append(SleepEvent(before:s,after:BatteryReader.read()));sleeps=sleepStore.read() } catch { message=error.localizedDescription }
+            let e=SleepEvent(before:s,after:BatteryReader.read());wake=e
+            do { try sleepStore.append(e);sleeps=sleepStore.read() } catch { message=error.localizedDescription }
         }
-        sleepStart=nil;refresh()
+        sleepStart=nil;refresh(wake:wake)
     }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     var heatStatus:String {
@@ -67,6 +75,8 @@ import BatteryPlatform
     func refreshCharge() {
         let step=chargeController.heatStep(snapshot:battery,settings:preferences.heat)
         lastHeatAction=step.action
+        var failed=false;if case .failure?=step.result { failed=true }
+        if let e=HeatEvent.from(action:step.action,failed:failed) { pendingHeatEvent=e }
         if case .failure(let e)?=step.result { message="과열 보류를 멈췄습니다. \(e.localizedDescription) 현재 상태: \(heatStatus)" }
         charge=chargeController.state();chargeConflicts=ChargeControllerScan.current()
         loginItem=SMAppService.mainApp.status == .enabled
@@ -99,6 +109,8 @@ import BatteryPlatform
         sleeps=sleepStore.read()
         refresh()
         checkHelper()
+        checkNotifications()
+        NotificationRouter.shared.open={ [weak self] in self?.show($0) }
         // A heat hold must not outlive the app that would restore it.
         NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
             MainActor.assumeIsolated { _=self?.chargeController.releaseHold();try? self?.healthRecorder.flush() }
@@ -115,14 +127,43 @@ import BatteryPlatform
         if section=="processes" && visible { processes=reader.snapshot();sampled=true }
         if section=="sessions" && visible { sessions=AppPaths.sessions.all() }
     }
-    func refresh() {
+    func refresh(wake:SleepEvent?=nil) {
         do { try AppPaths.sessions.removeInactive(before:Date().addingTimeInterval(-30*86400)) } catch { message=error.localizedDescription }
         battery=BatteryReader.read()
         if preferences.backgroundHistory { do { try historyStore.append(battery);try healthRecorder.record(battery) } catch { message=error.localizedDescription } }
         history=historyStore.read();sessions=AppPaths.sessions.all()
         refreshCharge()
         updateHealthReport()
+        notify(wake:wake)
     }
+    func notify(wake:SleepEvent?=nil) {
+        var i=NotificationInput(now:Date(),battery:battery)
+        let r=chargeController.record
+        i.limit=charge;i.lastWritten=r.lastWritten;i.topUpRequested=r.topUpRequested
+        i.heatEnabled=preferences.heat.enabled;i.heatHolding=r.heat.holdLimit != nil
+        i.heatStuckLimit=r.heatPaused ? r.heat.holdLimit:nil
+        i.heatSensorMissing=preferences.heat.enabled && lastHeatAction == .sensorUnavailable
+        i.heatEvent=pendingHeatEvent;pendingHeatEvent=nil
+        i.conflicts=chargeConflicts.map(\.name)
+        let store=AppPaths.sessions
+        i.sessions=sessions.map { SessionSummary(id:$0.id,command:$0.command,outcome:$0.outcome,started:$0.started,ended:$0.ended,exitCode:$0.exitCode,released:store.isReleased($0.id)) }
+        i.wake=wake;i.suggestions=healthReport?.suggestions ?? [];i.week=healthReport?.week
+        let o=NotificationPolicy.evaluate(i,settings:preferences.notifications,memory:notificationMemory)
+        notificationMemory=o.memory
+        // A failed write only risks one repeated alert; the next refresh retries.
+        _=try? notificationStore.save(o.memory)
+        if !o.removals.isEmpty { notifier.remove(o.removals) }
+        // NSApp may not exist yet during the first refresh from init.
+        let front=NSApplication.shared.isActive
+        for e in o.events where !(front && e.duplicatesAppMessage) { notifier.deliver(e) }
+    }
+    func checkNotifications() { notifier.access { [weak self] in self?.notificationAccess=$0 } }
+    func requestNotifications() { notifier.request { [weak self] in self?.notificationAccess=$0 } }
+    func sendTestNotification() {
+        notifier.deliver(AlertEvent(id:"test",title:"VibeBattery 테스트 알림",body:"알림이 정상적으로 표시됩니다. 누르면 설정 화면이 열립니다.",section:"settings",thread:"test"))
+    }
+    func openNotificationSettings() { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.notifications")!) }
+    func show(_ s:String) { section=s;openMain?();NSApp.activate(ignoringOtherApps:true) }
     func savePreferences() {
         preferences.validate()
         do {

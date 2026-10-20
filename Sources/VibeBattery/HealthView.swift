@@ -79,6 +79,7 @@ struct HealthView:View {
                         Button(t.1) { model.section=t.0 }.buttonStyle(.bordered)
                     }
                 }
+                Toggle("새 제안이 생기면 알림 (같은 제안은 7일에 한 번)",isOn:Binding(get:{ model.preferences.notifications.suggestions },set:{ model.preferences.notifications.suggestions=$0;model.savePreferences() }))
             }
             Card {
                 Text("건강 분석 기록").font(.headline)

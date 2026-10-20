@@ -35,8 +35,9 @@ int vb_mcl_read(VBChargeLimit *out) {
     return 0;
 }
 int vb_mcl_set_limit(int32_t percent) {
-    // PowerUI crashes below 80; lower limits go through the root helper.
-    if (percent<80 || percent>100) return -3;
+    // PowerUI crashes below 80 (lower limits go through the root helper); only
+    // the 5% steps System Settings offers have been observed.
+    if (percent<80 || percent>100 || percent%5) return -3;
     id<VBSmartChargeClient> c=vb_client(@selector(setMCLLimit:error:));
     if (!c) return -1;
     NSError *e=nil; return [c setMCLLimit:(unsigned char)percent error:&e] && !e ? 0 : -2;

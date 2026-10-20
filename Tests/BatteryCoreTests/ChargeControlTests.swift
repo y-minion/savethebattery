@@ -10,8 +10,10 @@ struct ChargeControlTests {
     @Test func commandRangeAndHelperRouting() {
         #expect(ChargeCommand.setLimit(50).isValid);#expect(ChargeCommand.setLimit(100).isValid)
         #expect(!ChargeCommand.setLimit(49).isValid);#expect(!ChargeCommand.setLimit(101).isValid)
-        #expect(ChargeCommand.setLimit(79).requiresHelper);#expect(!ChargeCommand.setLimit(80).requiresHelper)
+        #expect(ChargeCommand.setLimit(75).requiresHelper);#expect(!ChargeCommand.setLimit(80).requiresHelper)
         #expect(!ChargeCommand.startTopUp.requiresHelper);#expect(ChargeCommand.clearLimit.isValid)
+        // macOS offers 5% steps; other values are unverified for the private setter.
+        #expect(!ChargeCommand.setLimit(79).isValid);#expect(!ChargeCommand.setLimit(83).isValid);#expect(ChargeCommand.setLimit(75).requiresHelper)
     }
     @Test func originDistinguishesOwnExternalAndUnknown() {
         #expect(ChargeLimitState(supported:true,enabled:true,limit:79).origin(lastWritten:nil) == .external)
@@ -46,7 +48,15 @@ struct ChargeControlTests {
         let t0=Date();var st=HeatState()
         _=HeatHoldPolicy.step(snapshot:hot(36,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:false,now:t0)
         let changed=ChargeLimitState(supported:true,enabled:true,limit:95)
-        #expect(HeatHoldPolicy.step(snapshot:hot(30,at:t0+600),limit:changed,settings:on,state:&st,helperAvailable:false,now:t0+600) == HeatAction.none)
+        #expect(HeatHoldPolicy.step(snapshot:hot(36,at:t0+30),limit:changed,settings:on,state:&st,helperAvailable:false,now:t0+30) == .yielded)
+        #expect(st==HeatState())
+    }
+    @Test func holdRoundsUpToSupportedStepAndSkipsWhenLimitIsNear() {
+        let t0=Date();var st=HeatState()
+        let limit100=ChargeLimitState(supported:true,enabled:true,limit:100)
+        #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:87,at:t0),limit:limit100,settings:on,state:&st,helperAvailable:false,now:t0) == .hold(90))
+        st=HeatState()
+        #expect(HeatHoldPolicy.step(snapshot:hot(40,percent:87,at:t0),limit:limit90,settings:on,state:&st,helperAvailable:false,now:t0) == HeatAction.none)
         #expect(st==HeatState())
     }
     @Test func staleOrMissingTemperatureNeverHoldsOrResumes() {

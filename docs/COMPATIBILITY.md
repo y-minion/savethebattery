@@ -15,10 +15,10 @@ Target machine: Apple Silicon M4 Pro, macOS 27.0.1 (26A434). Other models and OS
 | Terminal sessions | Direct argv execution, inherited terminal IO, real exit status, scoped bounded idle-sleep assertion |
 | Display sleep | Uses macOS display-sleep request; manual screen-off/physical-display test is separate from command success |
 | Safe resource cleanup | Opt-in; only supervisor-created explicitly registered resource; success-only SIGTERM; no automatic SIGKILL |
-| Charge limit 80–100% | macOS charge limit through the private PowerUI client; each write is verified by reading it back. Read path verified on target; hardware write validation pending (see VALIDATION.md) |
+| Charge limit 80–100% (5% steps) | macOS charge limit through the private PowerUI client; each write is verified by reading it back. Read path verified on target; hardware write validation pending (see VALIDATION.md) |
 | Charge limit 50–79% | Optional root helper writing `com.apple.smartcharging.topoffprotection`; accepts only `setLimit(50…100)` and `readState`; clients must be the console user running `/Applications/VibeBattery.app` with the app's signing identifier (ad-hoc builds: identifier only, no team ID). Hardware validation pending |
 | One-time full charge | PowerUI temporary disable; when the limit returns is decided by macOS. Hardware validation pending |
-| Heat charging hold | Opt-in. At or above the hold temperature while charging and at ≥ 50%, lowers the limit to the current charge; restores only its own value after 5 minutes at or below the resume temperature. Works only while the app runs. Policy tested with injected temperatures; real high-temperature behavior not validated |
+| Heat charging hold | Opt-in. At or above the hold temperature while charging and at ≥ 50%, lowers the limit to the current charge; restores only its own value after 5 minutes at or below the resume temperature, or when the app quits. Stops automating if anyone else changes the limit. Works only while the app runs. Policy tested with injected temperatures; real high-temperature behavior not validated |
 | Other charge managers | AlDente and batt are detected by running app or installed daemon; all writes and heat hold are blocked while present |
 | Sailing lower bound / forced discharge / calibration | Not available: firmware 20457.1.29 blocks the SMC charge keys; the only remaining control is adapter cutoff, which conflicts with battery preservation |
 | Power modes | Opens macOS Battery settings |

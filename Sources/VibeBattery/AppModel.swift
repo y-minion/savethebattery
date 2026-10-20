@@ -25,7 +25,9 @@ import BatteryPlatform
     var heatStatus:String {
         let h=preferences.heat
         if !h.enabled { return "꺼짐" }
-        if chargeController.record.heatPaused { return "적용 실패로 멈춤 · 다시 켜거나 상한을 적용하면 재개" }
+        let record=chargeController.record
+        if record.heatPaused,let hold=record.heat.holdLimit { return "복원 실패로 멈춤 · 상한이 \(hold)%로 남아 있음 (원래 \(record.heat.userLimit.map { "\($0)%" } ?? "상한 없음"))" }
+        if record.heatPaused { return "멈춤 · 상한이 외부에서 바뀌었거나 적용에 실패함. 다시 켜거나 상한을 적용하면 재개" }
         if let hold=chargeController.record.heat.holdLimit { return "보류 중 · 상한을 \(hold)%로 낮춤, \(Int(h.resumeAt))°C 이하 5분 유지 시 복원" }
         switch lastHeatAction {
         case .sensorUnavailable:return "중지됨 · 배터리 온도를 읽지 못함"
@@ -36,7 +38,7 @@ import BatteryPlatform
     func refreshCharge() {
         let step=chargeController.heatStep(snapshot:battery,settings:preferences.heat)
         lastHeatAction=step.action
-        if case .failure(let e)?=step.result { message="과열 보류를 멈췄습니다. \(e.localizedDescription)" }
+        if case .failure(let e)?=step.result { message="과열 보류를 멈췄습니다. \(e.localizedDescription) 현재 상태: \(heatStatus)" }
         charge=chargeController.state();chargeConflicts=ChargeControllerScan.current()
         loginItem=SMAppService.mainApp.status == .enabled
     }
@@ -64,6 +66,10 @@ import BatteryPlatform
     init() {
         if let d=try? Data(contentsOf:preferencesURL),let p=try? JSONDecoder().decode(UserPreferences.self,from:d) { preferences=p;preferences.validate() }
         refresh()
+        // A heat hold must not outlive the app that would restore it.
+        NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
+            MainActor.assumeIsolated { _=self?.chargeController.releaseHold() }
+        }
         timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true) { [weak self] _ in Task { @MainActor in self?.tick() } }
     }
     func tick() {

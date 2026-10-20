@@ -90,4 +90,39 @@ struct ChargeControllerTests {
         #expect(blocked.heatStep(snapshot:hot(40,at:t0),settings:heatOn,now:t0).action == HeatAction.none)
         #expect(b.state.limit==95)
     }
+    func holding(_ b:FakeBackend,_ c:ChargeController,_ t0:Date) {
+        b.state.limit=90;_=c.heatStep(snapshot:hot(40,at:t0),settings:heatOn,now:t0)
+    }
+    @Test func externalChangeDuringHoldPausesHeatInsteadOfReholding() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        b.state.limit=100
+        #expect(c.heatStep(snapshot:hot(40,at:t0+30),settings:heatOn,now:t0+30).action == .yielded)
+        #expect(c.heatStep(snapshot:hot(40,at:t0+60),settings:heatOn,now:t0+60).action == HeatAction.none)
+        #expect(b.state.limit==100);#expect(c.record.heatPaused)
+    }
+    @Test func failedRestoreKeepsUserLimitAndHold() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        b.ignore=true
+        _=c.heatStep(snapshot:hot(30,at:t0+60),settings:heatOn,now:t0+60)
+        #expect(c.heatStep(snapshot:hot(30,at:t0+400),settings:heatOn,now:t0+400).result == .failure(.notApplied))
+        #expect(c.record.heat.holdLimit==85);#expect(c.record.heat.userLimit==90);#expect(c.record.heatPaused)
+    }
+    @Test func failedUserApplyKeepsHold() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        b.accept=false
+        #expect(c.apply(.setLimit(95)) == .failure(.rejected("macOS가 요청을 거부했습니다.")))
+        #expect(c.record.heat.holdLimit==85);#expect(c.record.heat.userLimit==90)
+    }
+    @Test func topUpIsRefusedDuringHold() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        #expect(c.apply(.startTopUp) == .failure(.heatHoldActive))
+        #expect(b.calls==[.setLimit(85)])
+    }
+    @Test func releaseHoldRestoresUserLimitButNotExternalChange() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        #expect(c.releaseHold() == .success(ChargeLimitState(supported:true,enabled:true,limit:90)))
+        #expect(c.record.heat==HeatState())
+        let other=make(b);holding(b,other,t0);b.state.limit=95
+        #expect(other.releaseHold()==nil);#expect(b.state.limit==95);#expect(other.record.heat==HeatState())
+    }
 }

@@ -34,6 +34,6 @@ struct ChargeControlCard:View {
             Text("과열 보류: \(model.heatStatus)").font(.callout)
             Text("헬퍼 \(model.helperInstalled ? "설치됨":"설치 안 됨") · 상한은 앱을 종료해도 macOS가 유지합니다.").font(.caption).foregroundStyle(.secondary)
             Text("항해 하한 지정·강제 방전·교정은 이 macOS 펌웨어에서 어댑터 차단 없이 불가능해 제공하지 않습니다. 재충전 시점은 macOS가 정합니다.").font(.caption).foregroundStyle(.secondary)
-        }.onAppear { target=model.charge.limit.map { min(100,max(50,$0)) } ?? 80 }
+        }.onAppear { target=model.charge.limit.map { min(100,max(50,($0+ChargeCommand.step-1)/ChargeCommand.step*ChargeCommand.step)) } ?? 80 }
     }
 }

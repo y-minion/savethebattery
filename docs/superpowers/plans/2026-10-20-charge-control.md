@@ -1343,6 +1343,10 @@ In the app: set 85 → 적용. Expected alert `적용을 확인했습니다. 현
 
 In the app: set 75 → 적용 (Stepper from 85 in steps of 5, or start at 79 and step down). Expected `현재 상한 75%`, `pmset -g battlimit` shows 75. If it reports `적용 실패`, run `sudo defaults read com.apple.smartcharging.topoffprotection` and record the keys/types; this is the planned discovery point for the `MCLFeatureState` encoding — rule on it in the ledger before changing `TopoffDomain.writes`.
 
+- [ ] **Step 5b: Sub-80 from the off state**
+
+Press "상한 끄기", confirm `pmset -g battlimit` shows no limit, then apply 70. Record whether the helper write re-enables the limit (the reviewer expects `MCLFeatureState` may stay disabled and produce `적용 실패`). Rule on the encoding in the ledger before changing `TopoffDomain.writes`.
+
 - [ ] **Step 6: One-time full charge**
 
 Press "한 번 100% 충전". Record `vbctl charge status --json` and `pmset -g battlimit` immediately and after 1 minute. Press "완충 종료". Expected: MCL re-enabled at the previous limit. Record the observed macOS behaviour verbatim.
@@ -1350,6 +1354,10 @@ Press "한 번 100% 충전". Record `vbctl charge status --json` and `pmset -g b
 - [ ] **Step 7: Persistence**
 
 Quit the app → `vbctl charge status` still shows the limit. Sleep and wake → still shown. Reboot (user's choice, may be deferred) → still shown. Record each result or "deferred".
+
+- [ ] **Step 7b: Quit during a heat hold**
+
+Only if it can be reached naturally (no artificial heating): with heat hold on and a hold active, quit the app and confirm the limit returns to the user's value. Otherwise record "deferred".
 
 - [ ] **Step 8: Restore and document**
 

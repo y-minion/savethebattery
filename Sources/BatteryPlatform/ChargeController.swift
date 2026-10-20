@@ -53,7 +53,7 @@ public final class ChargeController {
     public func state() -> ChargeLimitState {
         let s=backend.read()
         if record.topUpRequested != nil {
-            if s.enabled==false { record.topUpObservedOff=true }
+            if s.allowsFullCharge { record.topUpObservedOff=true }
             else if s.enabled==true,record.topUpObservedOff { record.topUpRequested=nil;record.topUpObservedOff=false }
             save()
         }

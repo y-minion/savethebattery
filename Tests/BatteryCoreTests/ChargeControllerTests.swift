@@ -161,6 +161,19 @@ struct ChargeControllerTests {
         b.state.enabled=true;_=c.state()
         #expect(c.record.topUpRequested==nil);#expect(!c.topUpActive)
     }
+    /// Observed on the target: during a one-time full charge PowerUI reports enabled with a 100% limit.
+    @Test func topUpIsSeenAsAFullLimitAndEndsWhenTheOldLimitReturns() {
+        let b=FakeBackend();b.state.limit=70;let c=make(b)
+        _=c.apply(.startTopUp)
+        b.state=ChargeLimitState(supported:true,enabled:true,limit:100);_=c.state()
+        #expect(c.topUpActive)
+        b.state.limit=70;_=c.state()
+        #expect(c.record.topUpRequested==nil);#expect(!c.topUpActive)
+    }
+    @Test func endTopUpIsConfirmedOnlyBelowAFullLimit() {
+        #expect(ChargeLimitState(supported:true,enabled:true,limit:100).matches(.endTopUp)==false)
+        #expect(ChargeLimitState(supported:true,enabled:true,limit:70).matches(.endTopUp)==true)
+    }
     @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
         var probes=0
         let probe={ probes+=1;return true }

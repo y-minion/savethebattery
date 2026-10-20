@@ -67,7 +67,7 @@ struct HealthView:View {
                         Text(sleepText(e)).foregroundStyle(e.isHigh ? Color.orange:Color.secondary)
                     }
                 }
-                Text("시간당 1% 넘게 줄면 강조합니다. 잠자기를 막거나 깨우는 앱이 있는지 확인해 보세요.").font(.caption).foregroundStyle(.secondary)
+                Text("잔량이 정수로 보고되므로 1%의 반올림 오차를 빼고도 시간당 1%를 넘을 때만 강조합니다. 잠자기를 막거나 깨우는 앱이 있는지 확인해 보세요.").font(.caption).foregroundStyle(.secondary)
             }
             Card {
                 Label("제안",systemImage:"lightbulb").font(.headline)

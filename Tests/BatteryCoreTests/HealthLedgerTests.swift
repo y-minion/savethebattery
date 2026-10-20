@@ -61,7 +61,7 @@ struct HealthLedgerTests {
         for i in 0..<401 { days.append(DailyUsage(day:c.date(byAdding:.day,value:-i-1,to:c.startOfDay(for:at(2026,10,20)))!)) }
         days.sort { $0.day<$1.day }
         let out=HealthLedger.record(sample(at(2026,10,20)),after:nil,into:days,calendar:c)
-        #expect(out.count==401);#expect(out.first!.day==c.date(byAdding:.day,value:-400,to:c.startOfDay(for:at(2026,10,20)))!)
+        #expect(out.count==400);#expect(out.first!.day==c.date(byAdding:.day,value:-399,to:c.startOfDay(for:at(2026,10,20)))!)
     }
     @Test func segmentStartsAtBatteryReplacement() {
         func day(_ n:Int,id:String?,design:Int?,cycles:Int?) -> DailyUsage { var d=DailyUsage(day:Date(timeIntervalSince1970:Double(n)*86400));d.batteryID=id;d.designCapacity=design;d.cycles=cycles;return d }

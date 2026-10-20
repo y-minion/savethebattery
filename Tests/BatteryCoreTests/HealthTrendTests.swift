@@ -9,10 +9,10 @@ struct HealthTrendTests {
     }
     var now:Date { c.date(byAdding:.day,value:60,to:start)! }
     @Test func collectsUntilThirtyDaysFivePointsAndOnePoint() {
-        #expect(HealthTrend.make(days([(0,95),(10,94),(20,93),(25,92.5),(29,92)]),now:now,calendar:c).status == .collecting(days:29,points:5))
-        #expect(HealthTrend.make(days([(0,95),(40,94)]),now:now,calendar:c).status == .collecting(days:40,points:2))
-        #expect(HealthTrend.make(days([(0,95),(10,94.8),(20,94.9),(30,94.5),(40,94.6)]),now:now,calendar:c).status == .collecting(days:40,points:5))
-        #expect(HealthTrend.make([],now:now,calendar:c).status == .collecting(days:0,points:0))
+        #expect(HealthTrend.make(days([(0,95),(10,94),(20,93),(25,92.5),(29,92)]),now:now,calendar:c).status == .collecting(days:29,points:5,change:3))
+        #expect(HealthTrend.make(days([(0,95),(40,94)]),now:now,calendar:c).status == .collecting(days:40,points:2,change:1))
+        #expect(HealthTrend.make(days([(0,95),(10,94.8),(20,94.9),(30,94.5),(40,94.6)]),now:now,calendar:c).status == .collecting(days:40,points:5,change:0.5))
+        #expect(HealthTrend.make([],now:now,calendar:c).status == .collecting(days:0,points:0,change:0))
     }
     @Test func linearDeclineProjectsExactDate() {
         let t=HealthTrend.make(days(stride(from:0,through:60,by:5).map { ($0,95-0.02*Double($0)) }),now:now,calendar:c)

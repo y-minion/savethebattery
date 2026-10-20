@@ -22,6 +22,7 @@ import BatteryPlatform
     private lazy var healthRecorder=HealthRecorder(store:HealthStore(url:AppPaths.health))
     private let sleepStore=SleepStore(url:AppPaths.sleep)
     private var sleepStart:BatterySnapshot?
+    private var trendCache=TrendCache()
     private let helper=XPCChargeHelper()
     private var lastHeatAction=HeatAction.none
     private lazy var chargeController=ChargeController(backend:PowerUIChargeBackend(),helper:helper,detect:ChargeControllerScan.current,url:AppPaths.directory.appendingPathComponent("charge.json"))
@@ -30,7 +31,9 @@ import BatteryPlatform
     var topUpActive:Bool { chargeController.topUpActive }
     func checkHelper() { helperStatus=helper.status() }
     func updateHealthReport() {
-        healthReport=HealthReport.make(snapshot:battery,days:healthRecorder.file.days,sleeps:sleeps,context:AdvisorContext(limit:charge.enabled==true ? charge.limit:nil,heatEnabled:preferences.heat.enabled),now:Date(),calendar:.current)
+        let days=healthRecorder.file.days,now=Date()
+        let trend=trendCache.trend(for:BatterySegment.current(days),now:now,calendar:.current)
+        healthReport=HealthReport.make(snapshot:battery,days:days,sleeps:sleeps,context:AdvisorContext(limit:charge.enabled==true ? charge.limit:nil,heatEnabled:preferences.heat.enabled),now:now,calendar:.current,trend:trend)
     }
     func clearHealth() {
         do { try healthRecorder.reset();try sleepStore.delete();sleeps=[];updateHealthReport() } catch { message=error.localizedDescription }

@@ -1,6 +1,6 @@
 import Foundation
 public enum TrendStatus: Codable, Equatable, Sendable {
-    case collecting(days: Int, points: Int)
+    case collecting(days: Int, points: Int, change: Double)
     case alreadyBelow
     case notDeclining
     case beyondHorizon
@@ -15,12 +15,12 @@ public struct HealthTrend: Codable, Equatable, Sendable {
     public static let threshold = 80.0, minDays = 30, minPoints = 5, minChange = 1.0, horizonDays = 15 * 365
     public static func make(_ days: [DailyUsage], now: Date, calendar: Calendar) -> HealthTrend {
         let points = days.compactMap { d in d.health.map { (day: d.day, health: $0) } }
-        guard let first = points.first, let last = points.last else { return HealthTrend(status: .collecting(days: 0, points: 0)) }
+        guard let first = points.first, let last = points.last else { return HealthTrend(status: .collecting(days: 0, points: 0, change: 0)) }
         if last.health <= threshold { return HealthTrend(status: .alreadyBelow) }
         let span = calendar.dateComponents([.day], from: first.day, to: last.day).day ?? 0
         let ys = points.map(\.health)
         guard span >= minDays, points.count >= minPoints, ys.max()! - ys.min()! >= minChange else {
-            return HealthTrend(status: .collecting(days: span, points: points.count))
+            return HealthTrend(status: .collecting(days: span, points: points.count, change: ys.max()! - ys.min()!))
         }
         let xy = points.map { (x: Double(calendar.dateComponents([.day], from: first.day, to: $0.day).day ?? 0), y: $0.health) }
         guard let mid = TheilSen.fit(xy, quantile: 0.5), mid.slope < 0 else { return HealthTrend(status: .notDeclining) }
@@ -59,5 +59,22 @@ enum TheilSen {
     static func percentile(_ s: [Double], _ q: Double) -> Double {
         let pos = q * Double(s.count - 1), lo = Int(pos.rounded(.down)), hi = min(lo + 1, s.count - 1)
         return s[lo] + (s[hi] - s[lo]) * (pos - Double(lo))
+    }
+}
+/// Reuses the last trend while its inputs and the local day stay the same, so the fit does not rerun every refresh.
+public struct TrendCache {
+    struct Point: Equatable { var day: Date; var health: Double?; var cycles: Int? }
+    struct Key: Equatable { var today: Date; var points: [Point] }
+    var key: Key?
+    var value: HealthTrend?
+    public private(set) var computations = 0
+    public init() {}
+    public mutating func trend(for days: [DailyUsage], now: Date, calendar: Calendar) -> HealthTrend {
+        let k = Key(today: calendar.startOfDay(for: now), points: days.map { Point(day: $0.day, health: $0.health, cycles: $0.cycles) })
+        if k == key, let value { return value }
+        computations += 1
+        let v = HealthTrend.make(days, now: now, calendar: calendar)
+        key = k; value = v
+        return v
     }
 }

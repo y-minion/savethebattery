@@ -28,7 +28,7 @@ import BatteryPlatform
             case "health":
                 let b=BatteryReader.read(),s=PowerUIChargeBackend().read()
                 let prefs=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) } ?? UserPreferences()
-                let r=HealthReport.make(snapshot:b,days:HealthStore(url:AppPaths.health).read().days,sleeps:SleepStore(url:AppPaths.sleep).read(),
+                let r=HealthReport.make(snapshot:b,days:HealthStore(url:AppPaths.health).read(repair:false).days,sleeps:SleepStore(url:AppPaths.sleep).read(repair:false),
                                         context:AdvisorContext(limit:s.enabled==true ? s.limit:nil,heatEnabled:prefs.heat.enabled),now:Date(),calendar:.current)
                 if args.contains("--json") {
                     let e=JSONEncoder();e.dateEncodingStrategy = .iso8601;e.outputFormatting=[.prettyPrinted,.sortedKeys]

@@ -9,7 +9,7 @@ struct HealthStoreTests {
         let d=dir();try FileManager.default.createDirectory(at:d,withIntermediateDirectories:true)
         let url=d.appendingPathComponent("health.json");try Data("{oops".utf8).write(to:url)
         #expect(HealthStore(url:url).read().days.isEmpty)
-        #expect(FileManager.default.fileExists(atPath:url.appendingPathExtension("corrupt").path))
+        #expect(try FileManager.default.contentsOfDirectory(atPath:d.path).contains { $0.hasPrefix("health.json.corrupt-") })
         #expect(!FileManager.default.fileExists(atPath:url.path))
     }
     @Test func savedFilesArePrivate() throws {

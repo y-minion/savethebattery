@@ -13,11 +13,15 @@ public struct SleepEvent: Codable, Equatable, Sendable {
         guard !onAC, seconds >= Self.minimumDuration, let a = startPercent, let b = endPercent, b <= a else { return nil }
         return Double(a - b) / (seconds / 3600)
     }
-    public var isHigh: Bool { (drainPerHour ?? 0) > Self.highDrain }
+    /// High only when the rate stays above the threshold after allowing one point of integer rounding.
+    public var isHigh: Bool {
+        guard let r = drainPerHour else { return false }
+        return r - 3600 / end.timeIntervalSince(start) > Self.highDrain
+    }
 }
 public struct UsageSummary: Codable, Equatable, Sendable {
     public var days = 0
-    public var observed = 0.0, onAC = 0.0, soc90 = 0.0, soc95 = 0.0, hot35 = 0.0, hot40 = 0.0
+    public var observed = 0.0, onAC = 0.0, soc90 = 0.0, soc95 = 0.0, hot35 = 0.0, hot40 = 0.0, hot35OnAC = 0.0
     public var maxTemperature: Double?, averageSoC: Double?, averageStress: Double?
     /// Fraction of stress removed if charge never exceeded 80%.
     public var reductionAt80: Double?
@@ -25,7 +29,7 @@ public struct UsageSummary: Codable, Equatable, Sendable {
         var s = UsageSummary(); s.days = days.count
         var socSeconds = 0.0, socSum = 0.0, stressSeconds = 0.0, stress = 0.0, at80 = 0.0
         for d in days {
-            s.observed += d.observed; s.onAC += d.onAC; s.soc90 += d.soc90; s.soc95 += d.soc95; s.hot35 += d.hot35; s.hot40 += d.hot40
+            s.observed += d.observed; s.onAC += d.onAC; s.soc90 += d.soc90; s.soc95 += d.soc95; s.hot35 += d.hot35; s.hot40 += d.hot40; s.hot35OnAC += d.hot35OnAC
             if let t = d.maxTemperature { s.maxTemperature = max(s.maxTemperature ?? t, t) }
             socSeconds += d.socSeconds; socSum += d.socSum; stressSeconds += d.stressSeconds; stress += d.stress; at80 += d.stressAt80
         }
@@ -50,10 +54,10 @@ public enum HealthAdvisor {
         if week.soc95 >= 6 * 3600, (context.limit ?? 100) > 80 {
             out.append(Suggestion(kind: .chargeLimit, message: "최근 7일 중 \(hours(week.soc95))시간을 잔량 95% 이상에서 보냈습니다. 충전 상한 80%를 권장합니다."))
         }
-        if week.hot35 >= 2 * 3600, !context.heatEnabled {
-            out.append(Suggestion(kind: .heatHold, message: "최근 7일 중 \(hours(week.hot35))시간 동안 배터리가 35°C 이상이었습니다. 과열 보류를 켜는 것을 권장합니다."))
+        if week.hot35OnAC >= 2 * 3600, !context.heatEnabled {
+            out.append(Suggestion(kind: .heatHold, message: "최근 7일 중 어댑터 연결 상태로 \(hours(week.hot35OnAC))시간 동안 배터리가 35°C 이상이었습니다. 과열 보류를 켜면 이때 충전을 멈춥니다."))
         }
-        if let worst = sleeps.suffix(5).compactMap(\.drainPerHour).max(), worst > SleepEvent.highDrain {
+        if let worst = sleeps.suffix(5).filter(\.isHigh).compactMap(\.drainPerHour).max() {
             out.append(Suggestion(kind: .sleepDrain, message: String(format: "최근 잠자기 중 시간당 %.1f%% 소모가 있었습니다. 잠자기를 막는 앱이 있는지 확인하세요.", worst)))
         }
         return Array(out.prefix(3))
@@ -67,7 +71,7 @@ public struct HealthReport: Codable, Sendable {
     public var week: UsageSummary, month: UsageSummary
     public var sleeps: [SleepEvent]
     public var suggestions: [Suggestion]
-    public static func make(snapshot: BatterySnapshot, days: [DailyUsage], sleeps: [SleepEvent], context: AdvisorContext, now: Date, calendar: Calendar) -> HealthReport {
+    public static func make(snapshot: BatterySnapshot, days: [DailyUsage], sleeps: [SleepEvent], context: AdvisorContext, now: Date, calendar: Calendar, trend: HealthTrend? = nil) -> HealthReport {
         func window(_ n: Int) -> [DailyUsage] {
             let from = calendar.date(byAdding: .day, value: -(n - 1), to: calendar.startOfDay(for: now))!
             return days.filter { $0.day >= from }
@@ -75,7 +79,7 @@ public struct HealthReport: Codable, Sendable {
         let health = snapshot.healthPrecise ?? snapshot.health.map(Double.init)
         let week = UsageSummary.make(window(7))
         return HealthReport(generated: now, health: health, marginTo80: health.map { $0 - 80 }, cycles: snapshot.cycles, designCycles: snapshot.designCycles,
-                            trend: HealthTrend.make(BatterySegment.current(days), now: now, calendar: calendar), week: week, month: UsageSummary.make(window(30)),
+                            trend: trend ?? HealthTrend.make(BatterySegment.current(days), now: now, calendar: calendar), week: week, month: UsageSummary.make(window(30)),
                             sleeps: Array(sleeps.reversed()), suggestions: HealthAdvisor.suggestions(week: week, sleeps: sleeps, context: context))
     }
 }
@@ -84,7 +88,10 @@ public enum HealthText {
     static func month(_ d: Date, _ calendar: Calendar) -> String { let c = calendar.dateComponents([.year, .month], from: d); return "\(c.year!)년 \(c.month!)월" }
     public static func trend(_ t: HealthTrend, calendar: Calendar) -> String {
         switch t.status {
-        case .collecting(let days, _): return "데이터 수집 중 (\(min(days, HealthTrend.minDays))/\(HealthTrend.minDays)일)"
+        case .collecting(let days, let points, let change):
+            if days < HealthTrend.minDays { return "데이터 수집 중 (\(days)/\(HealthTrend.minDays)일)" }
+            if points < HealthTrend.minPoints { return "데이터 수집 중 (측정한 날 \(points)/\(HealthTrend.minPoints)일)" }
+            return String(format: "변화가 작아 아직 추세 계산 불가 (변화 %.1f/%.1f%%p)", change, HealthTrend.minChange)
         case .alreadyBelow: return "건강도가 이미 80% 이하입니다"
         case .notDeclining: return "아직 하락 추세가 보이지 않습니다"
         case .beyondHorizon: return "80% 도달 예상: 15년 이상"

@@ -24,10 +24,10 @@ Target machine: Apple Silicon M4 Pro, macOS 27.0.1 (26A434). Other models and OS
 | Power modes | Opens macOS Battery settings |
 | MagSafe LED | Planned (`ACLC` readable, write unverified) |
 | Schedules / Shortcuts | Not implemented |
-| Health history | Daily time-weighted records (observed time, AC time, time at ≥90/95% and ≥35/40°C, average charge, maximum temperature) kept locally for up to 400 days; gaps over five minutes stay unknown; collected only while the app runs and history is enabled; deletable |
+| Health history | Daily time-weighted records (observed time, AC time, time at ≥90/95% and ≥35/40°C, average charge, maximum temperature) kept locally for the latest 400 recorded days (counted, so a wrong clock cannot prune real history); missing keys load with defaults across versions; corrupt files are kept aside with a timestamp; gaps over five minutes stay unknown; collected only while the app runs and history is enabled; deletable |
 | Lifetime trend | Theil–Sen fit of measured health over days and cycles; shown as a range for reaching 80% only after ≥30 days, ≥5 measured days and ≥1 point of change; restarts after a battery replacement (hashed serial, design capacity or cycle count drop). Needs a month of use before it can be checked on the target |
 | Stress comparison | Relative storage-aging index interpolated from Battery University BU-808 Table 3 (general Li-ion data, not validated for this cell); compares the recorded pattern with the same record capped at 80%; never converted to years |
-| Sleep drain | Charge before sleep and after wake while the app runs; per-hour drain only on battery for sleeps of at least one hour; above 1%/h is highlighted |
+| Sleep drain | Charge before sleep and after wake while the app runs; per-hour drain only on battery for sleeps of at least one hour; highlighted only when the rate minus one point of integer rounding still exceeds 1%/h |
 | Automatic AI turn hooks | Planned, not implemented |
 
 ## Firmware findings (2026-10-20)

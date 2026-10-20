@@ -13,7 +13,9 @@ public struct BatterySnapshot: Codable, Sendable {
     public var healthPrecise: Double?
     public var designCapacity: Int?
     public var designCycles: Int?
+    /// Kept out of JSON so pasted `vbctl status --json` output and history files carry no device identifier.
     public var batteryID: String?
+    enum CodingKeys: String, CodingKey { case timestamp, percent, health, cycles, temperature, watts, onAC, charging, temperatureSource, healthPrecise, designCapacity, designCycles }
     public init() {}
     public static func decode(_ values: [String: Any], now: Date = Date()) -> BatterySnapshot { 
         var result = BatterySnapshot(); result.timestamp = now

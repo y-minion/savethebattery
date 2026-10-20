@@ -8,6 +8,7 @@ public enum NotificationPolicy {
         o.memory.clamp(i.now)
         let continuous=o.memory.evaluated.map { i.now.timeIntervalSince($0)<=gap } ?? false
         charge(i,s,&o,continuous:continuous)
+        protect(i,s,&o);heat(i,s,&o)
         o.memory.evaluated=i.now
         return o
     }
@@ -57,6 +58,64 @@ public enum NotificationPolicy {
             o.memory.unavailableNotified=true
             let t=NotificationText.controlUnavailable
             o.send(s.controlUnavailable,AlertEvent(id:"charge.unavailable",title:t.0,body:t.1,section:"dashboard",thread:"charge"))
+        }
+    }
+    public static let hotCooldown:TimeInterval=1800, hotRearm=3.0, onBatteryExtra=2.0, freshTemperature:TimeInterval=120
+    public static let stuckRepeat:TimeInterval=86400, sensorDelay:TimeInterval=600
+    static func protect(_ i:NotificationInput,_ s:NotificationSettings,_ o:inout NotificationOutcome) {
+        let b=i.battery,now=i.now,age=now.timeIntervalSince(b.timestamp)
+        if b.percent != nil,let t=b.temperature,age >= -5,age<=freshTemperature {
+            let limit=b.onAC ? s.hotAt:s.hotAt+onBatteryExtra
+            if !o.memory.hotArmed,t<=limit-hotRearm { o.memory.hotArmed=true;o.remove("protect.heat") }
+            if o.memory.hotArmed,t>=limit,o.memory.hotSent.map({ now.timeIntervalSince($0)>=hotCooldown }) ?? true {
+                o.memory.hotArmed=false;o.memory.hotSent=now
+                let x=NotificationText.hot(t,onAC:b.onAC)
+                o.send(s.highTemperature,AlertEvent(id:"protect.heat",title:x.0,body:x.1,section:"settings",thread:"protect"))
+            }
+        }
+        let names=Array(Set(i.conflicts)).sorted()
+        if names.isEmpty {
+            if !o.memory.conflicts.isEmpty { o.remove("protect.conflict") }
+        } else if names.contains(where:{ !o.memory.conflicts.contains($0) }) {
+            let x=NotificationText.conflict(names)
+            o.send(s.conflict,AlertEvent(id:"protect.conflict",title:x.0,body:x.1,section:"dashboard",thread:"protect"))
+        }
+        o.memory.conflicts=names
+    }
+    static func heat(_ i:NotificationInput,_ s:NotificationSettings,_ o:inout NotificationOutcome) {
+        let now=i.now
+        if let l=i.heatStuckLimit {
+            if o.memory.stuckSent.map({ now.timeIntervalSince($0)>=stuckRepeat }) ?? true {
+                o.memory.stuckSent=now
+                let x=NotificationText.heatStuck(l)
+                o.send(s.heatProblem,AlertEvent(id:"heat.stuck",title:x.0,body:x.1,section:"settings",thread:"protect"))
+            }
+        } else if o.memory.stuckSent != nil { o.memory.stuckSent=nil;o.remove("heat.stuck") }
+        switch i.heatEvent {
+        case .yielded?:
+            let x=NotificationText.heatPaused
+            o.send(s.heatProblem,AlertEvent(id:"heat.paused",title:x.0,body:x.1,section:"settings",thread:"protect",duplicatesAppMessage:true))
+        case .holdFailed?:
+            let x=NotificationText.heatFailed
+            o.send(s.heatProblem,AlertEvent(id:"heat.failed",title:x.0,body:x.1,section:"settings",thread:"protect",duplicatesAppMessage:true))
+        case .held(let p)?:
+            let x=NotificationText.heatHeld(p)
+            o.send(s.heatActivity,AlertEvent(id:"heat.activity",title:x.0,body:x.1,section:"settings",thread:"protect"))
+        case .restored?:
+            let x=NotificationText.heatRestored
+            o.send(s.heatActivity,AlertEvent(id:"heat.activity",title:x.0,body:x.1,section:"settings",thread:"protect"))
+        case nil:break
+        }
+        if i.heatSensorMissing {
+            let since=o.memory.sensorMissingSince ?? now;o.memory.sensorMissingSince=since
+            if !o.memory.sensorNotified,now.timeIntervalSince(since)>=sensorDelay {
+                o.memory.sensorNotified=true
+                let x=NotificationText.heatSensor
+                o.send(s.heatProblem,AlertEvent(id:"heat.sensor",title:x.0,body:x.1,section:"settings",thread:"protect"))
+            }
+        } else {
+            if o.memory.sensorNotified { o.remove("heat.sensor") }
+            o.memory.sensorMissingSince=nil;o.memory.sensorNotified=false
         }
     }
 }

@@ -115,6 +115,10 @@ import BatteryPlatform
         NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
             MainActor.assumeIsolated { _=self?.chargeController.releaseHold();try? self?.healthRecorder.flush() }
         }
+        // Permission is usually granted in System Settings; re-check when the user comes back.
+        NotificationCenter.default.addObserver(forName:NSApplication.didBecomeActiveNotification,object:nil,queue:.main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.checkNotifications() }
+        }
         let ws=NSWorkspace.shared.notificationCenter
         ws.addObserver(forName:NSWorkspace.willSleepNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.willSleep() } }
         ws.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } }
@@ -122,7 +126,7 @@ import BatteryPlatform
     }
     func tick() {
         ticks+=1
-        if ticks%6==0 { refresh() }
+        if ticks%6==0 { refresh();checkNotifications() }
         let visible=NSApp.windows.contains { $0.isVisible && !$0.isMiniaturized }
         if section=="processes" && visible { processes=reader.snapshot();sampled=true }
         if section=="sessions" && visible { sessions=AppPaths.sessions.all() }

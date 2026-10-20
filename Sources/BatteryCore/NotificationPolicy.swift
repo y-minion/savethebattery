@@ -3,6 +3,8 @@ public enum NotificationPolicy {
     /// Longer than this since the last evaluation (sleep, app closed) and change-based checks restart from a baseline.
     public static let gap:TimeInterval=300
     public static let offACRearm:TimeInterval=300, onACRearm:TimeInterval=120
+    /// A top-up macOS never confirms must not mute limit alerts forever.
+    public static let topUpWindow:TimeInterval=86400
     public static func evaluate(_ i:NotificationInput,settings s:NotificationSettings,memory:NotificationMemory) -> NotificationOutcome {
         var o=NotificationOutcome(memory:memory)
         o.memory.clamp(i.now)
@@ -16,6 +18,7 @@ public enum NotificationPolicy {
     }
     static func charge(_ i:NotificationInput,_ s:NotificationSettings,_ o:inout NotificationOutcome,continuous:Bool) {
         let b=i.battery,now=i.now
+        let toppingUp=i.topUpRequested.map { now.timeIntervalSince($0)<topUpWindow } ?? false
         if let off=o.memory.offACSince,now.timeIntervalSince(off)>offACRearm { o.memory.limitNotified=nil }
         let steadyAC=b.onAC && (o.memory.onACSince.map { now.timeIntervalSince($0)>=onACRearm } ?? false)
         if b.onAC { o.memory.offACSince=nil;if o.memory.onACSince==nil { o.memory.onACSince=now } }
@@ -24,7 +27,7 @@ public enum NotificationPolicy {
         if let p=b.percent {
             // Charging just stopped at the limit; the displayed percent is rounded, so one point short counts.
             if continuous,o.memory.wasCharging==true,b.onAC,!b.charging,i.limit.enabled==true,let l=i.limit.limit,p>=l-1,
-               !i.heatHolding,i.topUpRequested==nil,o.memory.limitNotified==nil {
+               !i.heatHolding,!toppingUp,o.memory.limitNotified==nil {
                 o.memory.limitNotified=l
                 let t=NotificationText.limitReached(l)
                 o.send(s.limitReached,AlertEvent(id:"charge.limitReached",title:t.0,body:t.1,section:"dashboard",thread:"charge"))
@@ -46,12 +49,12 @@ public enum NotificationPolicy {
         if origin != .unknown {
             // Only a change VibeBattery did not write itself: its own writes move `lastWritten`, and top-up and a yielded hold explain themselves.
             if o.memory.origin == .vibeBattery,origin == .external || origin == .none,o.memory.lastWritten==i.lastWritten,
-               i.topUpRequested==nil,i.heatEvent != .yielded {
+               o.memory.chargeWrites==i.chargeWrites,!toppingUp,i.heatEvent != .yielded {
                 let t=NotificationText.limitChanged(origin == .none ? nil:i.limit.limit)
                 o.send(s.limitChanged,AlertEvent(id:"charge.limitChanged",title:t.0,body:t.1,section:"dashboard",thread:"charge"))
             }
             if origin == .vibeBattery,let before=o.memory.origin,before != .vibeBattery { o.remove("charge.limitChanged") }
-            o.memory.origin=origin;o.memory.lastWritten=i.lastWritten
+            o.memory.origin=origin;o.memory.lastWritten=i.lastWritten;o.memory.chargeWrites=i.chargeWrites
         }
         if i.limit.supported==true {
             if o.memory.unavailableNotified { o.remove("charge.unavailable") }
@@ -96,7 +99,7 @@ public enum NotificationPolicy {
         switch i.heatEvent {
         case .yielded?:
             let x=NotificationText.heatPaused
-            o.send(s.heatProblem,AlertEvent(id:"heat.paused",title:x.0,body:x.1,section:"settings",thread:"protect",duplicatesAppMessage:true))
+            o.send(s.heatProblem,AlertEvent(id:"heat.paused",title:x.0,body:x.1,section:"settings",thread:"protect"))
         case .holdFailed?:
             let x=NotificationText.heatFailed
             o.send(s.heatProblem,AlertEvent(id:"heat.failed",title:x.0,body:x.1,section:"settings",thread:"protect",duplicatesAppMessage:true))
@@ -141,7 +144,11 @@ public enum NotificationPolicy {
                     o.send(s.protectionReleased,AlertEvent(id:"session.released.\(key)",title:t.0,body:t.1,section:"sessions",thread:"session"))
                 }
             }
-            if x.ended != nil,!m.ended { m.ended=true;m.released=true;ended.append(x) }
+            if let e=x.ended,!m.ended {
+                // An ending older than the late window happened while the app was closed; a restart is not news.
+                m.ended=true;m.released=true
+                if i.now.timeIntervalSince(e)<=lateSession { ended.append(x) }
+            }
             marks[key]=m
         }
         o.memory.sessions=marks

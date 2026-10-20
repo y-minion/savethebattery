@@ -24,6 +24,8 @@ public struct ChargeRecord: Codable, Equatable {
     /// Owner of the limit a hold replaced, so restoring it keeps the original origin.
     public var lastWrittenBeforeHold:Int?
     public var topUpObservedOff=false
+    /// Count of writes VibeBattery attempted, so its own changes are never reported as someone else's.
+    public var writes=0
     public init() {}
     public init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)
@@ -33,6 +35,7 @@ public struct ChargeRecord: Codable, Equatable {
         topUpRequested=try c.decodeIfPresent(Date.self,forKey:.topUpRequested)
         lastWrittenBeforeHold=try c.decodeIfPresent(Int.self,forKey:.lastWrittenBeforeHold)
         topUpObservedOff=try c.decodeIfPresent(Bool.self,forKey:.topUpObservedOff) ?? false
+        writes=try c.decodeIfPresent(Int.self,forKey:.writes) ?? 0
     }
 }
 public final class ChargeController {
@@ -63,8 +66,12 @@ public final class ChargeController {
         defer { save() }
         if case .setLimit(let p)=c,c.requiresHelper {
             guard let helper,helper.isInstalled else { return .failure(.helperRequired) }
+            record.writes+=1
             if let m=helper.setLimit(p) { return .failure(.rejected(m)) }
-        } else if !backend.perform(c) { return .failure(.rejected("macOS가 요청을 거부했습니다.")) }
+        } else {
+            record.writes+=1
+            if !backend.perform(c) { return .failure(.rejected("macOS가 요청을 거부했습니다.")) }
+        }
         let s=backend.read()
         guard s.matches(c) != false else { return .failure(.notApplied) }
         // A user's own successful choice replaces any hold; a failed one keeps it.

@@ -54,10 +54,10 @@
 설정 키 / 처음 상태 / 알림 ID / 조건 / 재무장.
 
 ### 충전 상태 (화면: 대시보드, thread `charge`)
-- `limitReached` / 꺼짐 / `charge.limitReached`: 직전 평가에서 충전 중이었고 지금은 `onAC && !charging && limit.enabled==true`, 잔량 ≥ 상한−1. 과열 보류 중이거나 완충 요청 중이면 보내지 않는다. 재무장: 어댑터를 5분 넘게 분리했거나 상한 값이 바뀜.
+- `limitReached` / 꺼짐 / `charge.limitReached`: 직전 평가에서 충전 중이었고 지금은 `onAC && !charging && limit.enabled==true`, 잔량 ≥ 상한−1. 과열 보류 중이거나 24시간 안의 완충 요청 중이면 보내지 않는다. 재무장: 어댑터를 5분 넘게 분리했거나 상한 값이 바뀜.
 - `topUpDone` / 켜짐 / `charge.topUpDone`: `topUpRequested != nil && onAC && 잔량 ≥ 99`. 요청 하나당 한 번. 문구는 복귀 시점을 약속하지 않는다("오래 연결해 두면 배터리에 부담이 됩니다"). Task 8 실기기 검증 결과에 따라 조건을 확정한다.
 - `lowBattery` / 꺼짐 / `charge.low`: `!onAC && 잔량 ≤ 기준`(기본 20, 10~50, 5 단위). 재무장: 잔량 ≥ 기준+5, 또는 어댑터를 2분 이상 계속 연결. 재무장 시 알림 센터에서 지운다.
-- `limitChanged` / 켜짐 / `charge.limitChanged`: 직전 출처가 `vibeBattery`였는데 지금 `external` 또는 `none`이고, `lastWritten`이 그사이 바뀌지 않았고(앱이 직접 바꾼 것이 아님), 완충 요청 중이 아님. `unknown`은 판단을 미루고 이전 출처를 유지한다. 재무장: 출처가 다시 `vibeBattery`.
+- `limitChanged` / 켜짐 / `charge.limitChanged`: 직전 출처가 `vibeBattery`였는데 지금 `external` 또는 `none`이고, `lastWritten`과 앱의 충전 쓰기 횟수(`ChargeRecord.writes`, 과열 보류·복원·종료 시 복원 포함)가 그사이 바뀌지 않았고(앱이 직접 바꾼 것이 아님), 24시간 안의 완충 요청 중이 아님(확인되지 않은 완충 요청이 알림을 영원히 막지 않도록). `unknown`은 판단을 미루고 이전 출처를 유지한다. 재무장: 출처가 다시 `vibeBattery`.
 - `controlUnavailable` / 켜짐 / `charge.unavailable`: 이전에 `supported==true`를 본 적이 있는데 `false`가 됨. 재무장: 다시 `true`.
 
 ### 보호 경고 (화면: 설정, 충돌만 대시보드, thread `protect`)
@@ -68,13 +68,13 @@
   - `heat.paused`: `heatEvent == yielded` → 다른 곳에서 상한이 바뀌어 보류를 멈춤.
   - `heat.failed`: `heatEvent == holdFailed` → 보류를 걸지 못함.
   - `heat.sensor`: `heatSensorMissing`이 10분 이상 이어짐 → 한 번. 센서가 돌아오면 재무장.
-  - `heat.paused`와 `heat.failed`는 앱 안 경고창도 띄우므로 `duplicatesAppMessage = true`.
+  - `heat.failed`는 앱 안 경고창도 띄우므로 `duplicatesAppMessage = true`. `heat.paused`는 앱 경고창이 없으므로 항상 보낸다.
 - `heatActivity` / 꺼짐 / `heat.activity`: `held(N)` → 보류 시작, `restored` → 보류 해제.
 
 ### 바이브 코딩 (화면: 바이브 코딩, thread `session`)
 - `sessionEnded` / 켜짐 / `session.end.<id>`: 직전에 `ended == nil`로 본 세션이 `ended`를 갖게 됨. 결과는 종료 코드로: 0이면 "완료", 아니면 "실패 · 코드 N". outcome이 `detached`/`expired`이면 "보호 해제 후 종료". 본문은 실행 파일 이름과 걸린 시간만(인수 없음).
 - `sessionCancelled` / 꺼짐: outcome `cancelled`로 끝남(Ctrl‑C 등). 위 `session.end.<id>`를 쓴다.
-- 처음 보는 세션이 이미 끝나 있으면, 종료가 10분 이내일 때만 알린다(앱이 꺼져 있었거나 30초 사이에 시작·종료된 작업).
+- 종료는 10분 이내일 때만 알린다. 처음 보는 세션(앱이 꺼져 있었거나 30초 사이에 시작·종료)과, 앱을 다시 켰을 때 그사이 끝나 있던 세션 모두 같다.
 - 한 번의 평가에서 종료 알림이 3개를 넘으면 `session.batch` 한 건으로 묶는다("작업 N개 종료 · 완료 a · 실패 b").
 - `protectionReleased` / 켜짐 / `session.released.<id>`: 직전에 `running`으로 본 세션이 아직 끝나지 않았는데 outcome이 `expired`이거나, `detached`이면서 사용자 해제 표시(`released`)가 없음. "어댑터 분리로 잠자기 방지가 풀렸습니다. 작업은 계속되지만 맥이 잠들 수 있습니다." 처음 볼 때 이미 풀려 있던 세션은 알리지 않는다.
 - 기억의 세션 목록은 입력에 있는 ID만 남긴다(세션 기록은 30일 뒤 지워짐).

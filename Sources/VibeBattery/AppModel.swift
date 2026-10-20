@@ -139,7 +139,7 @@ import BatteryPlatform
     func notify(wake:SleepEvent?=nil) {
         var i=NotificationInput(now:Date(),battery:battery)
         let r=chargeController.record
-        i.limit=charge;i.lastWritten=r.lastWritten;i.topUpRequested=r.topUpRequested
+        i.limit=charge;i.lastWritten=r.lastWritten;i.chargeWrites=r.writes;i.topUpRequested=r.topUpRequested
         i.heatEnabled=preferences.heat.enabled;i.heatHolding=r.heat.holdLimit != nil
         i.heatStuckLimit=r.heatPaused ? r.heat.holdLimit:nil
         i.heatSensorMissing=preferences.heat.enabled && lastHeatAction == .sensorUnavailable

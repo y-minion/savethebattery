@@ -36,7 +36,7 @@ struct NotificationProtectTests {
     }
     @Test func heatEventsMapToAlerts() {
         func one(_ e:HeatEvent) -> [AlertEvent] { var i=NT.input(0);i.heatEvent=e;return NT.run([i])[0].events }
-        #expect(one(.yielded).map(\.id)==["heat.paused"]);#expect(one(.yielded)[0].duplicatesAppMessage)
+        #expect(one(.yielded).map(\.id)==["heat.paused"]);#expect(!one(.yielded)[0].duplicatesAppMessage)
         #expect(one(.holdFailed).map(\.id)==["heat.failed"]);#expect(one(.holdFailed)[0].duplicatesAppMessage)
         #expect(one(.held(70)).map(\.id)==["heat.activity"]);#expect(one(.held(70))[0].body.contains("70%"))
         #expect(one(.restored).map(\.id)==["heat.activity"])

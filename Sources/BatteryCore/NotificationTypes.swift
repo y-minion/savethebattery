@@ -55,6 +55,8 @@ public struct NotificationInput: Sendable {
     public var battery:BatterySnapshot
     public var limit=ChargeLimitState()
     public var lastWritten:Int?
+    /// Bumped on every charge write VibeBattery attempts, including its own heat-hold restores.
+    public var chargeWrites=0
     public var topUpRequested:Date?
     public var heatEnabled=false, heatHolding=false
     /// The lowered limit left behind by a failed restore.
@@ -103,6 +105,7 @@ public struct NotificationMemory: Codable, Equatable, Sendable {
     public var conflicts:[String]=[]
     public var origin:LimitOrigin?
     public var lastWritten:Int?
+    public var chargeWrites:Int?
     public var supportedSeen=false, unavailableNotified=false
     public var stuckSent:Date?
     public var sensorMissingSince:Date?
@@ -110,7 +113,7 @@ public struct NotificationMemory: Codable, Equatable, Sendable {
     public var sessions:[String:SessionMark]=[:]
     public var suggestionSent:[String:Date]=[:]
     public var weekKey:String?
-    enum CodingKeys:String,CodingKey { case limitNotified,offACSince,onACSince,topUpNotified,lowArmed,hotArmed,hotSent,conflicts,origin,lastWritten,supportedSeen,unavailableNotified,stuckSent,sensorMissingSince,sensorNotified,sessions,suggestionSent,weekKey }
+    enum CodingKeys:String,CodingKey { case limitNotified,offACSince,onACSince,topUpNotified,lowArmed,hotArmed,hotSent,conflicts,origin,lastWritten,chargeWrites,supportedSeen,unavailableNotified,stuckSent,sensorMissingSince,sensorNotified,sessions,suggestionSent,weekKey }
     public init() {}
     public init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)
@@ -122,6 +125,7 @@ public struct NotificationMemory: Codable, Equatable, Sendable {
         conflicts=try c.decodeIfPresent([String].self,forKey:.conflicts) ?? []
         origin=(try? c.decodeIfPresent(LimitOrigin.self,forKey:.origin)) ?? nil
         lastWritten=try c.decodeIfPresent(Int.self,forKey:.lastWritten)
+        chargeWrites=try c.decodeIfPresent(Int.self,forKey:.chargeWrites)
         supportedSeen=try c.decodeIfPresent(Bool.self,forKey:.supportedSeen) ?? false
         unavailableNotified=try c.decodeIfPresent(Bool.self,forKey:.unavailableNotified) ?? false
         stuckSent=try c.decodeIfPresent(Date.self,forKey:.stuckSent)

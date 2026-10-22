@@ -18,7 +18,7 @@ The independent review found PID-reuse risk in arbitrary raw signals, delayed as
 - The PowerUI bridge rejects out-of-range limits before calling macOS; tests never pass a valid limit, so automated runs do not change the real charge limit.
 - On the target Mac, `vbctl charge status` reported the same limit as `pmset -g battlimit` (79%) and detected the running AlDente; the rebuilt app launched with writes blocked and left the limit unchanged.
 - The release bundle embeds `VBChargeHelper` signed with identifier `io.github.y-minion.vibebattery.helper` and the install/uninstall scripts; both scripts refuse to run without root.
-- Pending (requires the user at the Mac after removing AlDente): helper installation, 80–100% and sub-80 writes, one-time full charge and its return, persistence across app quit, sleep and reboot.
+- Hardware validation: see "On-device validation (2026-10-21/22)" below.
 
 ## Health insights (2026-10-20)
 
@@ -31,6 +31,25 @@ The independent review found PID-reuse risk in arbitrary raw signals, delayed as
 
 - Swift Testing now runs 143 tests in 23 suites, adding notification defaults and tolerant decoding, threshold validation, click-target allow-listing, heat-step mapping, limit reached only after an observed charging step (with gaps as fresh baselines, heat hold and top-up excluded, re-arming after a five-minute unplug or a new limit), top-up done once per request, low battery re-arming after a 5-point rise or two minutes on the adapter, limit changes only when VibeBattery did not write them (its own writes, restores, top-up and a yielded hold excluded), loss of charge control, temperature thresholds with a 3 °C re-arm and 30-minute cooldown (+2 °C on battery, stale, missing and battery-less readings ignored), conflicts by name, a stuck heat hold repeated daily, paused/failed hold, a missing sensor after ten minutes, session endings by end time and exit code (including after a released protection), adapter or expiry releases but not user releases, cancelled sessions, late sessions within ten minutes, batching over three, pruning, sleep drain, weekly suggestions, the weekly summary keyed by ISO week after Monday 09:00, disabled events advancing memory, future timestamps expiring, and private change-only memory writes with corrupt-file recovery. After the final review: VibeBattery's own heat-hold restore is never reported as an outside limit change (every charge write is counted), an unconfirmed top-up stops muting limit alerts after 24 hours, endings that happened while the app was closed are not announced on relaunch, and a paused heat hold is announced even with the app in front.
 - A release build launched with a scratch data directory stayed running for 40 s without requesting notification permission and wrote `notify.json` with mode 0600; the debug binary run outside an `.app` bundle also stayed running (no UserNotifications use). The running app and its data were not touched.
-- Pending (requires the user at the Mac): the permission prompt under ad-hoc signing, test notification with the app in front and behind, click routing to the right screen, permission kept after a rebuild, and confirming the top-up done condition with a real one-time full charge.
+- On-device checks: see "On-device validation (2026-10-21/22)" below.
 
-Not claimed as validated: hardware charge-limit writes, real high-temperature heat hold, physical display behavior across external monitors, lid-close/background automation compatibility, manual termination of the user's apps, or support across other hardware/OS combinations. See [the capability report](COMPATIBILITY.md) for unimplemented features.
+## On-device validation (2026-10-21/22)
+
+With the user at the target Mac after AlDente and its helper were removed (its sub-80 limit did not persist; the limit was off afterwards).
+
+| Check | Result |
+|---|---|
+| Helper install | Pass after copying the app with `ditto --norsrc --noextattr`. The first attempt failed the strict signature check because an iCloud-synced checkout re-adds Finder metadata; the build now signs in a temporary folder |
+| 85% (PowerUI) | Pass; app, `vbctl` and `pmset` agree |
+| 75% / 70% (helper) | Fail, then pass. macOS applies helper writes a moment after the notification, so the immediate read-back saw the old value; read-back now polls up to 4 s |
+| 70% from the off state | Fail, then pass. "Off" is stored as `MCLFeatureState = 0` and "on" as `1` (integer); the helper now writes 1 when the state is 0 or missing and leaves any other value alone |
+| One-time full charge | Charging resumed within a minute. PowerUI reports the top-up as enabled at 100% (not disabled), so the app first missed it and hid "완충 종료"; fixed. Ending it re-enabled the limit at macOS's stored 80% instead of 70%; the app now re-applies its last limit, observed as `setLimit(70)` one second after the user's end request |
+| Persistence | Limit kept after app quit, sleep/wake and a reboot; the login item started the app and the helper ran at boot |
+| Notifications | Permission prompt, test alert with the app in front and behind, click opens the window, permission kept across rebuilds, full-charge alert at 99%. Permission granted in System Settings now refreshes the settings card without a relaunch |
+| Screens | Health analysis screen and notification settings card inspected by the user |
+
+- Unexplained once: during the first full charge the limit turned off and the app's record matched a successful "turn off" that the user did not press; heat hold was off and the system log had no trace. Every attempted charge write is now logged with its source; it has not recurred.
+- Not yet observed on the device: macOS ending a top-up by itself, real high-temperature heat hold, and the remaining notification events.
+- Swift Testing now runs 152 tests in 23 suites.
+
+Not claimed as validated: real high-temperature heat hold, physical display behavior across external monitors, lid-close/background automation compatibility, manual termination of the user's apps, or support across other hardware/OS combinations. See [the capability report](COMPATIBILITY.md) for unimplemented features.

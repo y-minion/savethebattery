@@ -10,7 +10,7 @@
 
 **Spec:** ../specs/2026-10-20-charge-control-design.md (parent: ../specs/2026-10-18-design.md)
 
-**Progress:** Tasks 1–7 complete; Task 8 (hardware) pending user presence.
+**Progress:** Tasks 1–8 complete; Task 8 hardware validation done on 2026-10-21/22 (see docs/VALIDATION.md).
 
 ## Global Constraints
 

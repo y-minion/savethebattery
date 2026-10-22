@@ -19,12 +19,14 @@ public struct ChargeLimitState: Codable, Equatable, Sendable {
         guard let limit else { return .unknown }
         return lastWritten==limit ? .vibeBattery:.external
     }
+    /// A one-time full charge as macOS reports it: off, or (observed on the target) on at 100%.
+    public var allowsFullCharge:Bool { enabled==false || (enabled==true && limit==100) }
     /// Whether a read-back state confirms a command. nil: macOS gives no observable confirmation.
     public func matches(_ c:ChargeCommand) -> Bool? {
         switch c {
         case .setLimit(let p):return enabled==true && limit==p
         case .clearLimit:return enabled==false
-        case .endTopUp:return enabled==true
+        case .endTopUp:return enabled==true && limit != nil && limit != 100
         case .startTopUp:return nil
         }
     }

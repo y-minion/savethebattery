@@ -22,4 +22,14 @@ struct HelperPolicyTests {
         #expect(TopoffDomain.writes(limit:49,existingFeature:nil)==nil)
         #expect(TopoffDomain.writes(limit:101,existingFeature:nil)==nil)
     }
+    /// Observed on the target: System Settings "off" stores MCLFeatureState = 0, "on" stores 1.
+    @Test func lowLimitReEnablesTheObservedOffState() {
+        let off=TopoffDomain.writes(limit:70,existingFeature:NSNumber(value:0))
+        #expect((off?[TopoffDomain.featureKey] as? NSNumber)?.intValue==1)
+        #expect((off?[TopoffDomain.limitKey] as? NSNumber)?.intValue==70)
+        let on=TopoffDomain.writes(limit:70,existingFeature:NSNumber(value:1))
+        #expect(on?.keys.sorted()==[TopoffDomain.limitKey])
+        let text=TopoffDomain.writes(limit:70,existingFeature:"0" as NSString)
+        #expect(text?.keys.sorted()==[TopoffDomain.limitKey])
+    }
 }

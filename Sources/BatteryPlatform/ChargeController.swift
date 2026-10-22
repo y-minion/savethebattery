@@ -19,6 +19,11 @@ public enum ChargeError: Error, Equatable, LocalizedError {
         }
     }
 }
+/// One attempted charge write, kept so an unexpected limit change can be traced to its source.
+public struct ChargeWrite: Codable, Equatable {
+    public enum Source: String, Codable { case user, heat, quit, topUp }
+    public var date:Date;public var command:String;public var source:Source;public var ok:Bool
+}
 public struct ChargeRecord: Codable, Equatable {
     public var lastWritten:Int?;public var heat=HeatState();public var heatPaused=false;public var topUpRequested:Date?
     /// Owner of the limit a hold replaced, so restoring it keeps the original origin.
@@ -26,6 +31,8 @@ public struct ChargeRecord: Codable, Equatable {
     public var topUpObservedOff=false
     /// Count of writes VibeBattery attempted, so its own changes are never reported as someone else's.
     public var writes=0
+    public var log:[ChargeWrite]=[]
+    public static let logLimit=20
     public init() {}
     public init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)
@@ -36,14 +43,17 @@ public struct ChargeRecord: Codable, Equatable {
         lastWrittenBeforeHold=try c.decodeIfPresent(Int.self,forKey:.lastWrittenBeforeHold)
         topUpObservedOff=try c.decodeIfPresent(Bool.self,forKey:.topUpObservedOff) ?? false
         writes=try c.decodeIfPresent(Int.self,forKey:.writes) ?? 0
+        log=(try? c.decodeIfPresent([ChargeWrite].self,forKey:.log)) ?? []
     }
 }
 public final class ChargeController {
     private let backend:ChargeLimitBackend;private let helper:ChargeHelperClient?
-    private let detect:()->[OtherChargeController];private let url:URL
+    private let detect:()->[OtherChargeController];private let url:URL;private let pause:(TimeInterval)->Void
     public private(set) var record:ChargeRecord
-    public init(backend:ChargeLimitBackend,helper:ChargeHelperClient?,detect:@escaping ()->[OtherChargeController],url:URL) {
-        self.backend=backend;self.helper=helper;self.detect=detect;self.url=url
+    /// macOS applies a helper write after its domain-change notification, so read-back polls briefly.
+    static let settleStep:TimeInterval=0.5,settleSteps=8
+    public init(backend:ChargeLimitBackend,helper:ChargeHelperClient?,detect:@escaping ()->[OtherChargeController],url:URL,pause:@escaping (TimeInterval)->Void={ Thread.sleep(forTimeInterval:$0) }) {
+        self.backend=backend;self.helper=helper;self.detect=detect;self.url=url;self.pause=pause
         record=(try? JSONDecoder().decode(ChargeRecord.self,from:Data(contentsOf:url))) ?? ChargeRecord()
     }
     public var helperInstalled:Bool { helper?.isInstalled==true }
@@ -51,14 +61,35 @@ public final class ChargeController {
     public func state() -> ChargeLimitState {
         let s=backend.read()
         if record.topUpRequested != nil {
-            if s.enabled==false { record.topUpObservedOff=true }
-            else if s.enabled==true,record.topUpObservedOff { record.topUpRequested=nil;record.topUpObservedOff=false }
+            if s.allowsFullCharge { record.topUpObservedOff=true }
+            else if s.enabled==true,record.topUpObservedOff {
+                record.topUpRequested=nil;record.topUpObservedOff=false;save()
+                if case .success(let r)?=reapplyAfterTopUp(s) { return r }
+            }
             save()
         }
         return s
     }
     public var topUpActive:Bool { record.topUpRequested != nil && record.topUpObservedOff }
-    @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true) -> Result<ChargeLimitState,ChargeError> {
+    @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true,source:ChargeWrite.Source?=nil) -> Result<ChargeLimitState,ChargeError> {
+        let r=write(c,byUser:byUser)
+        switch r { case .success,.failure(.notApplied),.failure(.rejected):logWrite(c,source ?? (byUser ? .user:.heat),r);default:break }
+        if c == .endTopUp,case .success(let s)=r,let again=reapplyAfterTopUp(s) { return again }
+        return r
+    }
+    /// macOS re-enables the limit at its own stored value, which never holds a
+    /// helper-written limit below 80%; put back the limit VibeBattery last set.
+    private func reapplyAfterTopUp(_ s:ChargeLimitState) -> Result<ChargeLimitState,ChargeError>? {
+        guard let want=record.lastWritten,s.enabled==true,s.limit != want else { return nil }
+        return apply(.setLimit(want),byUser:false,source:.topUp)
+    }
+    private func logWrite(_ c:ChargeCommand,_ source:ChargeWrite.Source,_ r:Result<ChargeLimitState,ChargeError>) {
+        var ok=false;if case .success=r { ok=true }
+        record.log.append(ChargeWrite(date:Date(),command:"\(c)",source:source,ok:ok))
+        if record.log.count>ChargeRecord.logLimit { record.log.removeFirst(record.log.count-ChargeRecord.logLimit) }
+        save()
+    }
+    private func write(_ c:ChargeCommand,byUser:Bool) -> Result<ChargeLimitState,ChargeError> {
         guard c.isValid else { return .failure(.invalid) }
         let others=detect();guard others.isEmpty else { return .failure(.conflict(others.map(\.name))) }
         guard backend.read().supported==true else { return .failure(.unavailable) }
@@ -72,7 +103,8 @@ public final class ChargeController {
             record.writes+=1
             if !backend.perform(c) { return .failure(.rejected("macOS가 요청을 거부했습니다.")) }
         }
-        let s=backend.read()
+        var s=backend.read()
+        for _ in 0..<Self.settleSteps where s.matches(c)==false { pause(Self.settleStep);s=backend.read() }
         guard s.matches(c) != false else { return .failure(.notApplied) }
         // A user's own successful choice replaces any hold; a failed one keeps it.
         if byUser { record.heat=HeatState();record.heatPaused=false }
@@ -113,7 +145,7 @@ public final class ChargeController {
         guard let hold=record.heat.holdLimit else { return nil }
         let s=backend.read()
         guard s.enabled==true,s.limit==hold else { record.heat=HeatState();save();return nil }
-        let r=apply(record.heat.userLimit.map { .setLimit($0) } ?? .clearLimit,byUser:false)
+        let r=apply(record.heat.userLimit.map { .setLimit($0) } ?? .clearLimit,byUser:false,source:.quit)
         if case .success=r { record.heat=HeatState();record.lastWritten=record.lastWrittenBeforeHold;save() }
         return r
     }

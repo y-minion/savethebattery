@@ -52,4 +52,25 @@ With the user at the target Mac after AlDente and its helper were removed (its s
 - Not yet observed on the device: macOS ending a top-up by itself, real high-temperature heat hold, and the remaining notification events.
 - Swift Testing now runs 152 tests in 23 suites.
 
+## Automation (2026-10-23)
+
+- Swift Testing runs 206 tests in 27 suites. New tests cover:
+  - schedule next/due rules: weekdays, week boundary, latest of many, same-time order, 12-hour catch-up boundary, first-check baseline, clock going backwards, disabled and newly edited rules, DST spring-forward and fall-back, time-zone change
+  - Korean schedule text and lossy preference decoding
+  - write sources and the change reason, including a limit changed elsewhere afterwards
+  - top-up ended before a chosen limit, refusing `end` with no top-up
+  - the schedule runner saving its last check before applying
+  - the control channel: request allow-list, round trip, oversize line, missing socket, response timeout, stale socket, 0600 mode, and a client that hangs up
+  - CLI parsing and exit codes, and the status report
+- On the target Mac (limit kept at 70% throughout, writing the same value):
+  - `vbctl charge set 70` → exit 0, logged as the command line
+  - with the app quit → exit 3, and the socket was removed
+  - `set 73` → exit 2
+  - `end` with no top-up → exit 1
+  - A schedule two minutes ahead ran within 30 s and was logged as a schedule write
+  - The user checked the charge page, the schedule editor, the dashboard card and the menu
+- Found on the device and fixed:
+  - the app quit silently (SIGPIPE) after `vbctl charge status` checked whether it was running
+  - successful schedules were listed as failed because of an optional fallback in the app
+
 Not claimed as validated: real high-temperature heat hold, physical display behavior across external monitors, lid-close/background automation compatibility, manual termination of the user's apps, or support across other hardware/OS combinations. See [the capability report](COMPATIBILITY.md) for unimplemented features.

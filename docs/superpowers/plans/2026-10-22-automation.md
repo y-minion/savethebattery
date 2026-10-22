@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-22-automation-design.md`
 
+**Progress:** Tasks 1–8 complete (2026-10-23).
+
 **Out of this plan:** Shortcuts App Intents (spec goal 3). They need the Xcode project from sub-project 3-1, which does not exist yet. The spec allows deferring them ("Xcode 전환이 늦어지면 이 항목만 뒤로 미루고 나머지는 먼저 낸다").
 
 ## Global Constraints

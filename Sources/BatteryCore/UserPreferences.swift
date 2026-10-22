@@ -3,6 +3,7 @@ public struct UserPreferences: Codable {
     public var hours=4.0;public var screenOff=true;public var cleanup=false;public var backgroundHistory=true
     public var heat=HeatSettings()
     public var notifications=NotificationSettings()
+    public var schedules:[ChargeScheduleRule]=[]
     public init() {}
     // Files written before a field existed must keep the user's other choices.
     public init(from decoder:Decoder) throws {
@@ -13,8 +14,11 @@ public struct UserPreferences: Codable {
         backgroundHistory=try c.decodeIfPresent(Bool.self,forKey:.backgroundHistory) ?? true
         heat=try c.decodeIfPresent(HeatSettings.self,forKey:.heat) ?? HeatSettings()
         notifications=try c.decodeIfPresent(NotificationSettings.self,forKey:.notifications) ?? NotificationSettings()
+        schedules=(try? c.decodeIfPresent([LossyElement<ChargeScheduleRule>].self,forKey:.schedules))?.compactMap(\.value) ?? []
     }
-    public mutating func validate() { if !hours.isFinite || hours<=0 || hours>168 { hours=4 };heat.validate();notifications.validate() }
+    public mutating func validate() { if !hours.isFinite || hours<=0 || hours>168 { hours=4 };heat.validate();notifications.validate()
+        schedules=Array(schedules.filter(\.isValid).prefix(SchedulePolicy.maxRules))
+    }
 }
 public enum ShellQuote {
     public static func quote(_ s:String) -> String { "'"+s.replacingOccurrences(of:"'",with:"'\"'\"'")+"'" }

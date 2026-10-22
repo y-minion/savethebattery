@@ -205,6 +205,50 @@ struct ChargeControllerTests {
         b.state.limit=80
         #expect(c.state().limit==70);#expect(c.record.topUpRequested==nil);#expect(h.calls==[70,70])
     }
+    @Test func scheduleWriteIsLoggedWithNameAndCountsAsWrite() {
+        let b=FakeBackend();let c=make(b);let before=c.record.writes
+        _=c.apply(.setLimit(85),source:.schedule,detail:"밤에는 85%")
+        #expect(c.record.log.last?.source == .schedule);#expect(c.record.log.last?.detail=="밤에는 85%")
+        #expect(c.record.writes==before+1);#expect(c.record.lastWritten==85)
+    }
+    @Test func limitDuringTopUpEndsTopUpFirst() {
+        let b=FakeBackend();b.enableTo=80;let h=FakeHelper(b);let c=make(b,helper:h)
+        _=c.apply(.setLimit(70));_=c.apply(.startTopUp)
+        b.state.limit=100;_=c.state();#expect(c.topUpActive)
+        #expect(c.apply(.setLimit(75),source:.schedule) == .success(ChargeLimitState(supported:true,enabled:true,limit:75)))
+        #expect(c.record.log.suffix(2).map(\.command)==["endTopUp","setLimit(75)"])
+        #expect(c.record.log.suffix(2).allSatisfy { $0.source == .schedule })
+        #expect(c.record.topUpRequested==nil);#expect(c.record.lastWritten==75)
+    }
+    @Test func scheduleDuringHeatHoldReplacesHold() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        _=c.apply(.setLimit(85),source:.schedule)
+        #expect(c.record.heat==HeatState());#expect(!c.record.heatPaused)
+    }
+    @Test func oldLogWithoutDetailLoads() throws {
+        let r=try JSONDecoder().decode(ChargeRecord.self,from:Data(#"{"log":[{"date":0,"command":"clearLimit","source":"user","ok":true}]}"#.utf8))
+        #expect(r.log.count==1);#expect(r.log.first?.detail==nil)
+    }
+    @Test func lastChangeIsLatestSuccess() {
+        let b=FakeBackend();let c=make(b)
+        _=c.apply(.setLimit(85));b.ignore=true;_=c.apply(.setLimit(90))
+        #expect(c.record.lastChange?.command=="setLimit(85)")
+    }
+    @Test func reasonTextBySource() {
+        var cal=Calendar(identifier:.gregorian);cal.timeZone=TimeZone(identifier:"Asia/Seoul")!
+        let now=cal.date(from:DateComponents(year:2026,month:10,day:22,hour:23,minute:0))!
+        let at=cal.date(from:DateComponents(year:2026,month:10,day:22,hour:22,minute:0))!
+        func w(_ s:ChargeWrite.Source,_ d:String?=nil,_ date:Date=at) -> String { ChargeText.reason(ChargeWrite(date:date,command:"setLimit(70)",source:s,ok:true,detail:d),now:now,calendar:cal) }
+        #expect(w(.user)=="22:00 직접 바꿈")
+        #expect(w(.schedule,"밤에는 70%")=="22:00 일정 '밤에는 70%'로 바뀜")
+        #expect(w(.cli)=="22:00 명령줄로 바뀜")
+        #expect(w(.shortcut)=="22:00 단축어로 바뀜")
+        #expect(w(.heat)=="22:00 과열 보류로 바뀜")
+        #expect(w(.topUp)=="22:00 완충 후 원래 상한으로 복원")
+        #expect(w(.quit)=="22:00 앱 종료 시 복원")
+        #expect(w(.user,nil,at-86_400)=="어제 22:00 직접 바꿈")
+        #expect(w(.user,nil,at-3*86_400)=="10월 19일 22:00 직접 바꿈")
+    }
     @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
         var probes=0
         let probe={ probes+=1;return true }

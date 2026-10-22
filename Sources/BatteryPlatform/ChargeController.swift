@@ -21,8 +21,11 @@ public enum ChargeError: Error, Equatable, LocalizedError {
 }
 /// One attempted charge write, kept so an unexpected limit change can be traced to its source.
 public struct ChargeWrite: Codable, Equatable {
-    public enum Source: String, Codable { case user, heat, quit, topUp }
+    public enum Source: String, Codable { case user, heat, quit, topUp, schedule, cli, shortcut }
     public var date:Date;public var command:String;public var source:Source;public var ok:Bool
+    /// The schedule's name for schedule writes.
+    public var detail:String?
+    public init(date:Date,command:String,source:Source,ok:Bool,detail:String?=nil) { self.date=date;self.command=command;self.source=source;self.ok=ok;self.detail=detail }
 }
 public struct ChargeRecord: Codable, Equatable {
     public var lastWritten:Int?;public var heat=HeatState();public var heatPaused=false;public var topUpRequested:Date?
@@ -33,6 +36,8 @@ public struct ChargeRecord: Codable, Equatable {
     public var writes=0
     public var log:[ChargeWrite]=[]
     public static let logLimit=20
+    /// The latest write that took effect, used to explain the current limit.
+    public var lastChange:ChargeWrite? { log.last(where:\.ok) }
     public init() {}
     public init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)
@@ -71,9 +76,15 @@ public final class ChargeController {
         return s
     }
     public var topUpActive:Bool { record.topUpRequested != nil && record.topUpObservedOff }
-    @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true,source:ChargeWrite.Source?=nil) -> Result<ChargeLimitState,ChargeError> {
+    @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true,source:ChargeWrite.Source?=nil,detail:String?=nil) -> Result<ChargeLimitState,ChargeError> {
+        let from=source ?? (byUser ? .user:.heat)
+        // A chosen limit ends a running one-time full charge first, so the new value is not overridden when it ends.
+        if byUser,record.topUpRequested != nil,c.endsTopUp {
+            let e=write(.endTopUp,byUser:true);log(.endTopUp,from,detail,e)
+            if case .failure=e { return e }
+        }
         let r=write(c,byUser:byUser)
-        switch r { case .success,.failure(.notApplied),.failure(.rejected):logWrite(c,source ?? (byUser ? .user:.heat),r);default:break }
+        log(c,from,detail,r)
         if c == .endTopUp,case .success(let s)=r,let again=reapplyAfterTopUp(s) { return again }
         return r
     }
@@ -83,9 +94,11 @@ public final class ChargeController {
         guard let want=record.lastWritten,s.enabled==true,s.limit != want else { return nil }
         return apply(.setLimit(want),byUser:false,source:.topUp)
     }
-    private func logWrite(_ c:ChargeCommand,_ source:ChargeWrite.Source,_ r:Result<ChargeLimitState,ChargeError>) {
+    /// Only attempts that reached macOS or the helper are logged; refusals before writing are not.
+    private func log(_ c:ChargeCommand,_ source:ChargeWrite.Source,_ detail:String?,_ r:Result<ChargeLimitState,ChargeError>) {
+        switch r { case .success,.failure(.notApplied),.failure(.rejected):break;default:return }
         var ok=false;if case .success=r { ok=true }
-        record.log.append(ChargeWrite(date:Date(),command:"\(c)",source:source,ok:ok))
+        record.log.append(ChargeWrite(date:Date(),command:"\(c)",source:source,ok:ok,detail:detail))
         if record.log.count>ChargeRecord.logLimit { record.log.removeFirst(record.log.count-ChargeRecord.logLimit) }
         save()
     }

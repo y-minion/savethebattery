@@ -7,6 +7,7 @@ public enum ChargeCommand: Equatable, Sendable {
     /// macOS offers 5% steps; other values are unverified for the private setter.
     public static let step=5
     public var isValid:Bool { if case .setLimit(let p)=self { return Self.range.contains(p) && p%Self.step==0 };return true }
+    public var endsTopUp:Bool { switch self { case .setLimit,.clearLimit:return true;default:return false } }
     public var requiresHelper:Bool { if case .setLimit(let p)=self { return p<Self.userFloor };return false }
 }
 public enum LimitOrigin: String, Codable, Sendable { case vibeBattery, external, none, unknown }

@@ -205,6 +205,86 @@ struct ChargeControllerTests {
         b.state.limit=80
         #expect(c.state().limit==70);#expect(c.record.topUpRequested==nil);#expect(h.calls==[70,70])
     }
+    @Test func scheduleWriteIsLoggedWithNameAndCountsAsWrite() {
+        let b=FakeBackend();let c=make(b);let before=c.record.writes
+        _=c.apply(.setLimit(85),source:.schedule,detail:"밤에는 85%")
+        #expect(c.record.log.last?.source == .schedule);#expect(c.record.log.last?.detail=="밤에는 85%")
+        #expect(c.record.writes==before+1);#expect(c.record.lastWritten==85)
+    }
+    @Test func limitDuringTopUpEndsTopUpFirst() {
+        let b=FakeBackend();b.enableTo=80;let h=FakeHelper(b);let c=make(b,helper:h)
+        _=c.apply(.setLimit(70));_=c.apply(.startTopUp)
+        b.state.limit=100;_=c.state();#expect(c.topUpActive)
+        #expect(c.apply(.setLimit(75),source:.schedule) == .success(ChargeLimitState(supported:true,enabled:true,limit:75)))
+        #expect(c.record.log.suffix(2).map(\.command)==["endTopUp","setLimit(75)"])
+        #expect(c.record.log.suffix(2).allSatisfy { $0.source == .schedule })
+        #expect(c.record.topUpRequested==nil);#expect(c.record.lastWritten==75)
+    }
+    @Test func scheduleDuringHeatHoldReplacesHold() {
+        let b=FakeBackend();let c=make(b);let t0=Date();holding(b,c,t0)
+        _=c.apply(.setLimit(85),source:.schedule)
+        #expect(c.record.heat==HeatState());#expect(!c.record.heatPaused)
+    }
+    @Test func oldLogWithoutDetailLoads() throws {
+        let r=try JSONDecoder().decode(ChargeRecord.self,from:Data(#"{"log":[{"date":0,"command":"clearLimit","source":"user","ok":true}]}"#.utf8))
+        #expect(r.log.count==1);#expect(r.log.first?.detail==nil)
+    }
+    @Test func lastChangeIsLatestSuccess() {
+        let b=FakeBackend();let c=make(b)
+        _=c.apply(.setLimit(85));b.ignore=true;_=c.apply(.setLimit(90))
+        #expect(c.record.lastChange?.command=="setLimit(85)")
+    }
+    @Test func reasonTextBySource() {
+        var cal=Calendar(identifier:.gregorian);cal.timeZone=TimeZone(identifier:"Asia/Seoul")!
+        let now=cal.date(from:DateComponents(year:2026,month:10,day:22,hour:23,minute:0))!
+        let at=cal.date(from:DateComponents(year:2026,month:10,day:22,hour:22,minute:0))!
+        func w(_ s:ChargeWrite.Source,_ d:String?=nil,_ date:Date=at) -> String { ChargeText.reason(ChargeWrite(date:date,command:"setLimit(70)",source:s,ok:true,detail:d),now:now,calendar:cal) }
+        #expect(w(.user)=="22:00 직접 바꿈")
+        #expect(w(.schedule,"평일 아침 완충")=="22:00 일정 '평일 아침 완충'에 따라 바뀜")
+        #expect(w(.cli)=="22:00 명령줄로 바뀜")
+        #expect(w(.shortcut)=="22:00 단축어로 바뀜")
+        #expect(w(.heat)=="22:00 과열 보류로 바뀜")
+        #expect(w(.topUp)=="22:00 완충 후 원래 상한으로 복원")
+        #expect(w(.quit)=="22:00 앱 종료 시 복원")
+        #expect(w(.user,nil,at-86_400)=="어제 22:00 직접 바꿈")
+        #expect(w(.user,nil,at-3*86_400)=="10월 19일 22:00 직접 바꿈")
+    }
+    @Test func endTopUpWithoutTopUpIsRefused() {
+        let b=FakeBackend();b.state.enabled=false;let c=make(b)
+        #expect(c.apply(.endTopUp,source:.cli) == .failure(.noTopUp))
+        #expect(b.calls.isEmpty);#expect(b.state.enabled==false)
+        #expect(ChargeError.noTopUp.localizedDescription=="진행 중인 한 번 완충이 없습니다.")
+    }
+    static var seoul:Calendar { var c=Calendar(identifier:.gregorian);c.timeZone=TimeZone(identifier:"Asia/Seoul")!;return c }
+    static func seoulAt(_ h:Int,_ m:Int) -> Date { seoul.date(from:DateComponents(year:2026,month:10,day:22,hour:h,minute:m))! }
+    @Test func currentReasonFollowsWhoSetTheLimit() {
+        let now=Self.seoulAt(23,0),cal=Self.seoul
+        var r=ChargeRecord();r.lastWritten=70
+        r.log=[ChargeWrite(date:Self.seoulAt(22,0),command:"setLimit(70)",source:.schedule,ok:true,detail:"밤에는 70%")]
+        func reason(_ s:ChargeLimitState,_ rec:ChargeRecord) -> String? { ChargeText.currentReason(record:rec,state:s,now:now,calendar:cal) }
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:70),r)=="22:00 일정 '밤에는 70%'에 따라 바뀜")
+        // Changed in System Settings afterwards: the old reason must not stay under the new value.
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:80),r)=="다른 앱 또는 시스템 설정에서 바뀜")
+        #expect(reason(ChargeLimitState(supported:true,enabled:false,limit:100),r)=="다른 앱 또는 시스템 설정에서 꺼짐")
+        var off=r;off.lastWritten=nil;off.log.append(ChargeWrite(date:Self.seoulAt(22,30),command:"clearLimit",source:.cli,ok:true))
+        #expect(reason(ChargeLimitState(supported:true,enabled:false,limit:100),off)=="22:30 명령줄로 바뀜")
+        var top=r;top.topUpRequested=Self.seoulAt(22,40);top.log.append(ChargeWrite(date:Self.seoulAt(22,40),command:"startTopUp",source:.user,ok:true))
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:100),top)=="22:40 직접 바꿈")
+        // Never written by VibeBattery: the value came from somewhere else.
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:70),ChargeRecord())=="다른 앱 또는 시스템 설정에서 바뀜")
+        #expect(reason(ChargeLimitState(supported:true,enabled:nil,limit:nil),r)==nil)
+    }
+    @Test func logLineIsPlainKorean() {
+        let now=Self.seoulAt(23,0),cal=Self.seoul
+        func line(_ c:String,_ s:ChargeWrite.Source,_ ok:Bool=true,_ d:String?=nil) -> String { ChargeText.logLine(ChargeWrite(date:Self.seoulAt(22,0),command:c,source:s,ok:ok,detail:d),now:now,calendar:cal) }
+        #expect(line("setLimit(70)",.schedule,true,"밤에는 70%")=="22:00 · 일정 '밤에는 70%' · 상한 70%")
+        #expect(line("clearLimit",.user)=="22:00 · 직접 · 상한 끄기")
+        #expect(line("startTopUp",.cli)=="22:00 · 명령줄 · 한 번 완충 시작")
+        #expect(line("endTopUp",.shortcut)=="22:00 · 단축어 · 완충 종료")
+        #expect(line("setLimit(75)",.heat,false)=="22:00 · 과열 보류 · 상한 75% · 실패")
+        #expect(line("setLimit(70)",.topUp)=="22:00 · 완충 후 복원 · 상한 70%")
+        #expect(line("clearLimit",.quit)=="22:00 · 앱 종료 시 복원 · 상한 끄기")
+    }
     @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
         var probes=0
         let probe={ probes+=1;return true }

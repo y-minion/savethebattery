@@ -1,5 +1,6 @@
 import SwiftUI
 import BatteryCore
+import BatteryPlatform
 struct DashboardView:View {
     @EnvironmentObject var model:AppModel
     var body:some View {
@@ -27,6 +28,15 @@ struct DashboardView:View {
         }
         Card {
             HStack {
+                Label("충전",systemImage:"bolt.batteryblock").font(.headline);Spacer()
+                Button("충전 관리 열기") { model.section="charge" }.buttonStyle(.bordered)
+            }
+            Text(ChargeText.limit(model.charge)).font(.title2.weight(.semibold))
+            if let why=model.lastChangeText { Text(why).foregroundStyle(.secondary) }
+            Text(model.nextSchedule.map { "다음 일정: \(ScheduleText.when($0.at,now:Date(),calendar:.current)) · \($0.rule.name)" } ?? "예약된 일정 없음").font(.callout).foregroundStyle(.secondary)
+        }
+        Card {
+            HStack {
                 Label("건강 분석",systemImage:"heart.text.square").font(.headline)
                 Text(model.healthReport.map { HealthText.trend($0.trend,calendar:.current) } ?? "측정 중").foregroundStyle(.secondary)
                 Spacer()
@@ -42,7 +52,6 @@ struct DashboardView:View {
             if model.history.count<2 { Text("측정값이 쌓이면 잔량 변화를 표시합니다.").foregroundStyle(.secondary).frame(height:85) }
             else { BatteryGraph(values:model.history.suffix(120).compactMap { $0.percent.map(Double.init) }).frame(height:90) }
         }
-        ChargeControlCard()
     }
     func metric(_ title:String,value:String,footnote:String,symbol:String)->some View {
         Card { Label(title,systemImage:symbol).font(.caption).foregroundStyle(.secondary);Text(value).font(.system(size:27,weight:.semibold,design:.rounded));Text(footnote).font(.caption2).foregroundStyle(.tertiary) }

@@ -16,14 +16,7 @@ struct SettingsView:View {
         }
     }
     var body:some View {
-        PageTitle(title:"내 방식대로",subtitle:"보호 방식과 기록을 직접 선택하세요.")
-        Card {
-            Text("과열 시 충전 보류").font(.headline)
-            Toggle("배터리 온도가 높으면 충전 보류",isOn:Binding(get:{ model.preferences.heat.enabled },set:{ model.setHeatEnabled($0) }))
-            Stepper("보류 온도 \(Int(model.preferences.heat.holdAt))°C",value:$model.preferences.heat.holdAt,in:30...45,step:1).onChange(of:model.preferences.heat.holdAt) { _,_ in model.savePreferences() }
-            Stepper("재개 온도 \(Int(model.preferences.heat.resumeAt))°C",value:$model.preferences.heat.resumeAt,in:25...44,step:1).onChange(of:model.preferences.heat.resumeAt) { _,_ in model.savePreferences() }
-            Text("기본값 35°C/32°C는 Apple 공식 기준이 아닌 보수적 설계값입니다. 잔량 50% 이상에서 충전 중일 때만 상한을 현재 잔량으로 낮추며, 앱이 실행 중일 때만 동작합니다. Apple의 하드웨어 보호를 대체하지 않습니다.").font(.caption).foregroundStyle(.secondary)
-        }
+        PageTitle(title:"설정",subtitle:"앱 전체 설정과 알림, 기록을 정합니다. 충전 관련 설정은 충전 페이지에 있습니다.")
         Card {
             Text("알림").font(.headline)
             HStack {
@@ -35,6 +28,8 @@ struct SettingsView:View {
             Text("충전 상태").font(.subheadline.weight(.semibold))
             flag("충전 상한 도달","충전 중 상한에 닿아 충전이 멈추면",\.limitReached)
             flag("완충 끝남","한 번 완충이 99% 이상이 되면",\.topUpDone)
+            flag("일정 실행 실패","일정이 상한을 바꾸지 못했을 때",\.scheduleFailed)
+            flag("일정 실행됨","일정이 실행될 때마다",\.scheduleRan)
             flag("배터리 부족","배터리 사용 중 아래 기준 이하로 내려가면",\.lowBattery)
             Stepper("배터리 부족 기준 \(model.preferences.notifications.lowAt)%",value:$model.preferences.notifications.lowAt,in:NotificationSettings.lowRange,step:5).onChange(of:model.preferences.notifications.lowAt) { _,_ in model.savePreferences() }
             flag("충전 상한이 꺼지거나 바뀜","VibeBattery가 설정한 상한을 다른 곳에서 바꾸면",\.limitChanged)
@@ -56,6 +51,15 @@ struct SettingsView:View {
             Text("앱이 실행 중일 때만 알리며 최대 2분 늦을 수 있습니다. 집중 모드에서는 가려질 수 있고, 잠금 화면 미리보기는 macOS 알림 설정을 따릅니다.").font(.caption).foregroundStyle(.secondary)
         }.onAppear { model.checkNotifications() }
         Card {
+            Text("명령줄과 단축어").font(.headline)
+            Text("앱이 실행 중이면 터미널이나 단축어에서 충전 상한을 바꿀 수 있습니다.").foregroundStyle(.secondary)
+            VStack(alignment:.leading,spacing:4) {
+                ForEach(["vbctl charge set 70","vbctl charge topup","vbctl charge status --json"],id:\.self) { Text($0).font(.system(.callout,design:.monospaced)).textSelection(.enabled) }
+            }
+            Button("vbctl 경로 복사") { model.copyText(Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/vbctl").path) }
+            Text("단축어 앱의 '셸 스크립트 실행'에 위 명령을 넣어 쓸 수 있습니다.").font(.caption).foregroundStyle(.secondary)
+        }
+        Card {
             Text("시작과 에너지 모드").font(.headline)
             Toggle("로그인 시 VibeBattery 실행",isOn:Binding(get:{ model.loginItem },set:{ model.setLoginItem($0) }))
             Text("저전력·자동·고전력 모드는 macOS 배터리 설정에서 선택합니다.").foregroundStyle(.secondary)
@@ -71,8 +75,8 @@ struct SettingsView:View {
         }
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)
-            Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리.").foregroundStyle(.secondary)
-            Text("구현됨(이 Mac에서 실제 쓰기 검증 대기): 충전 상한 50~100%, 한 번 완충, 과열 시 충전 보류. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 건강 분석: 하루 기록과 잠자기 소모를 이 맥에 최대 1년 보관하며 수명 추세는 30일 이상 기록 후 표시. 알림: 충전·보호·바이브 코딩·건강 이벤트를 이벤트별로 켜고 끔. 개발 예정: 일정·단축어, MagSafe LED.").foregroundStyle(.secondary)
+            Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리, 충전 상한 50~100%, 한 번 완충, 충전 일정, 명령줄 충전 제어, 건강 분석, 알림.").foregroundStyle(.secondary)
+            Text("이 Mac에서 실기기 확인: 충전 상한, 한 번 완충, 알림. 실제 고온 상황의 과열 보류는 아직 확인 전입니다. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 개발 예정: 단축어 전용 동작, 전력 흐름, MagSafe LED.").foregroundStyle(.secondary)
             Link("GitHub에서 소스와 진행 상황 보기",destination:URL(string:"https://github.com/y-minion/vibebattery")!)
         }
     }

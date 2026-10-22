@@ -13,6 +13,8 @@ public final class ControlServer {
     public convenience init(path:URL,handler:@escaping (ChargeCommand)->ControlResponse) { self.init(path:path,handler:handler,queue:.main) }
     init(path:URL,handler:@escaping (ChargeCommand)->ControlResponse,queue:DispatchQueue) { self.path=path;self.handler=handler;self.queue=queue }
     public func start() throws {
+        // A client that hangs up before the reply would otherwise end the whole app with SIGPIPE.
+        signal(SIGPIPE,SIG_IGN)
         // A socket left by a crashed app would make bind fail.
         unlink(path.path)
         let s=socket(AF_UNIX,SOCK_STREAM,0)
@@ -40,6 +42,8 @@ public final class ControlServer {
     private func serve(_ c:Int32) {
         var uid=uid_t(0),gid=gid_t(0)
         guard getpeereid(c,&uid,&gid)==0,uid==getuid() else { return }
+        // A client that hangs up early (a liveness check) must not kill the app with SIGPIPE.
+        var nosig:Int32=1;setsockopt(c,SOL_SOCKET,SO_NOSIGPIPE,&nosig,socklen_t(MemoryLayout<Int32>.size))
         ControlSocket.setTimeout(c,SO_RCVTIMEO,Self.readTimeout);ControlSocket.setTimeout(c,SO_SNDTIMEO,Self.readTimeout)
         let response:ControlResponse
         if let line=ControlSocket.readLine(c,limit:Self.maxLine),let request=try? JSONDecoder().decode(ControlRequest.self,from:line),let command=request.chargeCommand() {

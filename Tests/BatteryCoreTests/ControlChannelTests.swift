@@ -59,6 +59,15 @@ struct ControlChannelTests {
         let mode=try FileManager.default.attributesOfItem(atPath:p.path)[.posixPermissions] as? Int
         #expect(mode==0o600)
     }
+    /// `vbctl charge status` only checks that the app listens and hangs up; answering it must not kill the app with SIGPIPE.
+    @Test func hangUpWithoutRequestKeepsServing() throws {
+        let p=path()
+        let s=try server(p) { _ in ControlResponse(ok:true,message:"ok",state:nil) };defer { s.stop() }
+        #expect(ControlClient.isListening(path:p))
+        Thread.sleep(forTimeInterval:0.3)
+        #expect(ControlClient.isListening(path:p))
+        #expect(try ControlClient.send(ControlRequest(.endTopUp),path:p).ok)
+    }
     @Test func stopRemovesSocket() throws {
         let p=path();let s=try server(p) { _ in ControlResponse(ok:true,message:"",state:nil) }
         s.stop()

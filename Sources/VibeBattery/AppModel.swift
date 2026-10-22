@@ -35,6 +35,70 @@ import BatteryPlatform
     var chargeOrigin:LimitOrigin { charge.origin(lastWritten:chargeController.record.lastWritten) }
     var topUpRequested:Date? { chargeController.record.topUpRequested }
     var topUpActive:Bool { chargeController.topUpActive }
+    @Published var scheduleRuns:[ScheduleRun]=[]
+    @Published var nextSchedule:ScheduleOccurrence?
+    /// "22:00 일정 '밤에는 70%'로 바뀜": why the limit is what it is.
+    var lastChangeText:String? { chargeController.record.lastChange.map { ChargeText.reason($0,now:Date(),calendar:.current) } }
+    var chargeLog:[ChargeWrite] { chargeController.record.log }
+    private lazy var scheduleRunner=ScheduleRunner(file:JSONFile(url:AppPaths.schedule)) { [weak self] command,rule in
+        MainActor.assumeIsolated { self?.runSchedule(command,rule) ?? "앱을 사용할 수 없습니다." }
+    }
+    private var controlServer:ControlServer?
+    private func runSchedule(_ command:ChargeCommand,_ rule:ChargeScheduleRule) -> String? {
+        switch chargeController.apply(command,source:.schedule,detail:rule.name) {
+        case .success(let s):charge=s;return nil
+        case .failure(let e):return e.localizedDescription
+        }
+    }
+    func checkSchedules() {
+        let run=scheduleRunner.check(preferences.schedules,now:Date(),calendar:.current)
+        scheduleRuns=scheduleRunner.state.recent
+        nextSchedule=SchedulePolicy.nextAny(preferences.schedules,after:Date(),calendar:.current)
+        guard let run else { return }
+        switch run.result {
+        case .failed(let reason) where preferences.notifications.scheduleFailed:
+            notifier.deliver(AlertEvent(id:"schedule.failed",title:"일정 '\(run.ruleName)' 실행 실패",body:reason,section:"charge",thread:"charge"))
+        case .ran where preferences.notifications.scheduleRan:
+            notifier.deliver(AlertEvent(id:"schedule.ran",title:"일정 '\(run.ruleName)' 실행됨",body:run.action,section:"charge",thread:"charge"))
+        default:break
+        }
+    }
+    func addSchedule(_ rule:ChargeScheduleRule) {
+        guard preferences.schedules.count<SchedulePolicy.maxRules else { return }
+        var r=rule;r.edited(now:Date());preferences.schedules.append(r);schedulesChanged()
+    }
+    /// Changing when or what a rule does, or turning it back on, starts it fresh so a time already past today does not fire.
+    func updateSchedule(_ rule:ChargeScheduleRule) {
+        guard let i=preferences.schedules.firstIndex(where:{ $0.id==rule.id }) else { return }
+        let old=preferences.schedules[i];var r=rule
+        if old.hour != r.hour || old.minute != r.minute || old.weekdays != r.weekdays || old.action != r.action || (!old.enabled && r.enabled) { r.edited(now:Date()) }
+        preferences.schedules[i]=r;schedulesChanged()
+    }
+    func removeSchedule(id:UUID) { preferences.schedules.removeAll { $0.id==id };schedulesChanged() }
+    private func schedulesChanged() {
+        savePreferences()
+        nextSchedule=SchedulePolicy.nextAny(preferences.schedules,after:Date(),calendar:.current)
+    }
+    static func chargeMessage(_ c:ChargeCommand,_ s:ChargeLimitState) -> String {
+        c == .startTopUp ? "한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다.":"적용을 확인했습니다. \(ChargeText.limit(s))"
+    }
+    /// A `vbctl charge` request; the app applies it like a user change and logs it as the command line's.
+    private func handleControl(_ c:ChargeCommand) -> ControlResponse {
+        switch chargeController.apply(c,source:.cli) {
+        case .success(let s):charge=s;return ControlResponse(ok:true,message:Self.chargeMessage(c,s),state:s)
+        case .failure(let e):
+            if c.requiresHelper { checkHelper() }
+            return ControlResponse(ok:false,message:e.localizedDescription,state:charge)
+        }
+    }
+    private func startControlServer() {
+        try? FileManager.default.createDirectory(at:AppPaths.directory,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
+        let server=ControlServer(path:AppPaths.controlSocket) { [weak self] c in
+            MainActor.assumeIsolated { self?.handleControl(c) ?? ControlResponse(ok:false,message:"앱을 사용할 수 없습니다.",state:nil) }
+        }
+        // Without the channel only vbctl writes are unavailable; the app itself keeps working.
+        do { try server.start();controlServer=server } catch { controlServer=nil }
+    }
     func checkHelper() { helperStatus=helper.status() }
     func updateHealthReport() {
         let days=healthRecorder.file.days,now=Date()
@@ -85,7 +149,7 @@ import BatteryPlatform
         switch chargeController.apply(c) {
         case .success(let s):
             charge=s
-            message = c == .startTopUp ? "한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다.":"적용을 확인했습니다. \(ChargeText.limit(s))"
+            message=Self.chargeMessage(c,s)
         case .failure(let e):
             message=e.localizedDescription
             if c.requiresHelper { checkHelper() }
@@ -110,10 +174,11 @@ import BatteryPlatform
         refresh()
         checkHelper()
         checkNotifications()
+        startControlServer()
         NotificationRouter.shared.open={ [weak self] in self?.show($0) }
         // A heat hold must not outlive the app that would restore it.
         NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
-            MainActor.assumeIsolated { _=self?.chargeController.releaseHold();try? self?.healthRecorder.flush() }
+            MainActor.assumeIsolated { self?.controlServer?.stop();_=self?.chargeController.releaseHold();try? self?.healthRecorder.flush() }
         }
         // Permission is usually granted in System Settings; re-check when the user comes back.
         NotificationCenter.default.addObserver(forName:NSApplication.didBecomeActiveNotification,object:nil,queue:.main) { [weak self] _ in
@@ -137,6 +202,7 @@ import BatteryPlatform
         if preferences.backgroundHistory { do { try historyStore.append(battery);try healthRecorder.record(battery) } catch { message=error.localizedDescription } }
         history=historyStore.read();sessions=AppPaths.sessions.all()
         refreshCharge()
+        checkSchedules()
         updateHealthReport()
         notify(wake:wake)
     }

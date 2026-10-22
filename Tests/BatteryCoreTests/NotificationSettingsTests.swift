@@ -2,6 +2,13 @@ import Testing
 import Foundation
 @testable import BatteryCore
 struct NotificationSettingsTests {
+    @Test func scheduleNotificationDefaults() throws {
+        let s=NotificationSettings()
+        #expect(s.scheduleFailed);#expect(!s.scheduleRan)
+        let old=try JSONDecoder().decode(NotificationSettings.self,from:Data(#"{"topUpDone":false}"#.utf8))
+        #expect(old.scheduleFailed);#expect(!old.scheduleRan);#expect(!old.topUpDone)
+    }
+    @Test func chargeSectionRoutes() { #expect(AlertEvent.route("charge")=="charge") }
     @Test func defaultsTurnOnOnlyCostlyMisses() {
         let s=NotificationSettings()
         #expect(s.topUpDone && s.limitChanged && s.controlUnavailable && s.highTemperature && s.conflict && s.heatProblem && s.sessionEnded && s.protectionReleased && s.sleepDrain)

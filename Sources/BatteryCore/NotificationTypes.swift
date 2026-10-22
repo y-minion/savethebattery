@@ -5,6 +5,7 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
     public var highTemperature=true, conflict=true, heatProblem=true, heatActivity=false
     public var sessionEnded=true, sessionCancelled=false, protectionReleased=true
     public var sleepDrain=true, suggestions=false, weeklySummary=false
+    public var scheduleFailed=true, scheduleRan=false
     public var lowAt=20
     public var hotAt=40.0
     public static let lowRange=10...50, hotRange=36.0...45.0
@@ -19,6 +20,7 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
         sessionEnded=try flag(.sessionEnded,d.sessionEnded);sessionCancelled=try flag(.sessionCancelled,d.sessionCancelled)
         protectionReleased=try flag(.protectionReleased,d.protectionReleased);sleepDrain=try flag(.sleepDrain,d.sleepDrain)
         suggestions=try flag(.suggestions,d.suggestions);weeklySummary=try flag(.weeklySummary,d.weeklySummary)
+        scheduleFailed=try flag(.scheduleFailed,d.scheduleFailed);scheduleRan=try flag(.scheduleRan,d.scheduleRan)
         lowAt=try c.decodeIfPresent(Int.self,forKey:.lowAt) ?? d.lowAt
         hotAt=try c.decodeIfPresent(Double.self,forKey:.hotAt) ?? d.hotAt
     }
@@ -72,7 +74,7 @@ public struct NotificationInput: Sendable {
     public init(now:Date,battery:BatterySnapshot) { self.now=now;self.battery=battery }
 }
 public struct AlertEvent: Equatable, Sendable {
-    public static let sections:Set<String>=["dashboard","settings","sessions","health"]
+    public static let sections:Set<String>=["dashboard","charge","settings","sessions","health"]
     /// The screen a clicked notification may open; anything unexpected opens the dashboard.
     public static func route(_ value:Any?) -> String { (value as? String).flatMap { sections.contains($0) ? $0:nil } ?? "dashboard" }
     /// Same id replaces the earlier notification of that kind.

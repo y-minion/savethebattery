@@ -17,14 +17,7 @@ import BatteryPlatform
             case "release":
                 guard args.count==2,let id=UUID(uuidString:args[1]) else { throw OptionError.invalid("release 뒤에 세션 UUID가 필요합니다.") }
                 try AppPaths.sessions.release(id);print("보호 해제를 요청했습니다. 작업은 종료하지 않습니다.")
-            case "charge":
-                guard args.count>=2,args[1]=="status" else { throw OptionError.invalid("사용법: vbctl charge status [--json]") }
-                let s=PowerUIChargeBackend().read()
-                if args.contains("--json") { print(String(data:try JSONEncoder().encode(s),encoding:.utf8)!) }
-                else {
-                    print("충전: \(ChargeText.limit(s))")
-                    for o in ChargeControllerScan.current() { print("다른 충전 관리: \(o.name) (\(o.evidence))") }
-                }
+            case "charge":exit(charge(Array(args.dropFirst())))
             case "health":
                 let b=BatteryReader.read(),s=PowerUIChargeBackend().read()
                 let prefs=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) } ?? UserPreferences()
@@ -37,6 +30,7 @@ import BatteryPlatform
             VibeBattery — 배터리와 터미널 작업 관리
               vbctl status [--json]
               vbctl charge status [--json]
+              vbctl charge set <50-100> | off | topup | end   (앱 실행 중)
               vbctl health [--json]
               vbctl run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
               vbctl resource [--keep] -- command args   (관리 세션 내부)
@@ -47,5 +41,29 @@ import BatteryPlatform
             """)
             }
         } catch { note(error.localizedDescription);exit(1) }
+    }
+    /// Writes go through the running app, which owns the helper and the write log.
+    static func charge(_ args:[String]) -> Int32 {
+        switch ChargeCLI.parse(args) {
+        case .failure(let e):note(e.text);return 2
+        case .success(.request(let r)):
+            let result=Result { try ControlClient.send(r,path:AppPaths.controlSocket) }.mapError { $0 as? ControlClient.Failure ?? .notRunning }
+            let code=ChargeCLI.exitCode(result),text=ChargeCLI.message(result)
+            if code==0 { print(text) } else { note(text) }
+            return code
+        case .success(.status(let json)):
+            let s=PowerUIChargeBackend().read()
+            if json {
+                let record=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("charge.json"))).flatMap { try? JSONDecoder().decode(ChargeRecord.self,from:$0) }
+                let rules=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) }?.schedules ?? []
+                let report=ChargeStatusReport.make(state:s,record:record,rules:rules,appRunning:ControlClient.isListening(path:AppPaths.controlSocket),now:Date(),calendar:.current)
+                let e=JSONEncoder();e.dateEncodingStrategy = .iso8601;e.outputFormatting=[.sortedKeys]
+                print(String(data:(try? e.encode(report)) ?? Data(),encoding:.utf8)!)
+            } else {
+                print("충전: \(ChargeText.limit(s))")
+                for o in ChargeControllerScan.current() { print("다른 충전 관리: \(o.name) (\(o.evidence))") }
+            }
+            return 0
+        }
     }
 }

@@ -41,13 +41,13 @@ import BatteryPlatform
     var lastChangeText:String? { ChargeText.currentReason(record:chargeController.record,state:charge,now:Date(),calendar:.current) }
     var chargeLog:[ChargeWrite] { chargeController.record.log }
     private lazy var scheduleRunner=ScheduleRunner(file:JSONFile(url:AppPaths.schedule)) { [weak self] command,rule in
-        MainActor.assumeIsolated { self?.runSchedule(command,rule) ?? "앱을 사용할 수 없습니다." }
+        MainActor.assumeIsolated { self?.runSchedule(command,rule) ?? .failed("앱을 사용할 수 없습니다.") }
     }
     private var controlServer:ControlServer?
-    private func runSchedule(_ command:ChargeCommand,_ rule:ChargeScheduleRule) -> String? {
+    private func runSchedule(_ command:ChargeCommand,_ rule:ChargeScheduleRule) -> ScheduleApplyResult {
         switch chargeController.apply(command,source:.schedule,detail:rule.name) {
-        case .success(let s):charge=s;return nil
-        case .failure(let e):return e.localizedDescription
+        case .success(let s):charge=s;return .applied
+        case .failure(let e):return .failed(e.localizedDescription)
         }
     }
     func checkSchedules() {

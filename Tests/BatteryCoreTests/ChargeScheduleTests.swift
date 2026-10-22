@@ -98,6 +98,23 @@ struct ChargeScheduleTests {
         #expect(ScheduleText.when(Self.at(10,23,7,5),now:now,calendar:cal)=="내일 07:05")
         #expect(ScheduleText.when(Self.at(10,26,0,0),now:now,calendar:cal)=="10월 26일 00:00")
     }
+    @Test func dstFallBackRunsOnce() {
+        // 01:30 happens twice in New York on 2026-11-01; checks every 30 s must run it once.
+        let ny=Self.calendar("America/New_York"),r=Self.rule(1,30)
+        var t=ny.date(from:DateComponents(year:2026,month:11,day:1,hour:0))!,last=t,runs=0
+        let end=t+4*3600
+        while t<end { t+=30;if case .run=SchedulePolicy.due([r],lastCheck:last,now:t,calendar:ny) { runs+=1 };last=t }
+        #expect(runs==1)
+    }
+    @Test func templateNamesCountAsAutomatic() {
+        var r=ChargeScheduleRule.templates(now:Self.at(10,22,12,0))[0]
+        #expect(ScheduleText.isAutoName(r.name,for:r))
+        r.action = .setLimit(80)
+        #expect(ScheduleText.isAutoName(r.name,for:r))
+        #expect(ScheduleText.isAutoName(ScheduleText.sentence(r),for:r))
+        #expect(ScheduleText.isAutoName("",for:r))
+        #expect(!ScheduleText.isAutoName("출장 전날",for:r))
+    }
     @Test func templatesAreValid() {
         let t=ChargeScheduleRule.templates(now:Self.at(10,22,12,0))
         #expect(t.map(\.name)==["밤에는 70%","평일 아침 완충","주말엔 80%"])

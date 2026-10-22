@@ -141,7 +141,7 @@ struct ScheduleEditor:View {
             guard let r=rule else { return }
             days=r.weekdays;time=Calendar.current.date(from:DateComponents(hour:r.hour,minute:r.minute)) ?? time
             switch r.action { case .setLimit(let p):kind = .limit;limit=p;case .topUp:kind = .topUp;case .clearLimit:kind = .off }
-            if r.name != ScheduleText.sentence(r) { name=r.name;nameEdited=true }
+            if !ScheduleText.isAutoName(r.name,for:r) { name=r.name;nameEdited=true }
         }
     }
 }
@@ -168,7 +168,7 @@ struct HelperLogCard:View {
                     Text("최근 충전 변경").font(.subheadline.weight(.semibold))
                     if model.chargeLog.isEmpty { Text("아직 기록이 없습니다.").font(.caption).foregroundStyle(.secondary) }
                     ForEach(Array(model.chargeLog.reversed().enumerated()),id:\.offset) { _,w in
-                        Text("\(ChargeText.reason(w,now:Date(),calendar:.current)) · \(w.command)\(w.ok ? "":" · 실패")").font(.caption.monospacedDigit()).foregroundStyle(w.ok ? Color.secondary:Color.orange)
+                        Text(ChargeText.logLine(w,now:Date(),calendar:.current)).font(.caption.monospacedDigit()).foregroundStyle(w.ok ? Color.secondary:Color.orange)
                     }
                 }.padding(.top,6)
             }

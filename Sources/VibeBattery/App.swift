@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import BatteryCore
 import BatteryPlatform
 @main struct VibeBatteryApp: App {
     @StateObject private var model=AppModel()
@@ -27,7 +28,7 @@ struct MenuContent:View {
     var body:some View {
         Text("VibeBattery · \(model.battery.percent.map(String.init) ?? "—")%")
         Text(model.battery.temperature.map { String(format:"배터리 %.1f°C",$0) } ?? "온도 조회 불가")
-        Text(ChargeText.limit(model.charge)+(model.nextSchedule.map { " · 다음 일정 "+String(format:"%02d:%02d",$0.rule.hour,$0.rule.minute) } ?? ""))
+        Text(ChargeText.limit(model.charge)+(model.nextSchedule.map { " · 다음 일정 "+ScheduleText.when($0.at,now:Date(),calendar:.current) } ?? ""))
         let canWrite=model.charge.supported==true && model.chargeConflicts.isEmpty
         if model.topUpActive { Button("완충 종료") { model.applyCharge(.endTopUp) }.disabled(!canWrite) }
         else { Button("한 번 100% 충전") { model.applyCharge(.startTopUp) }.disabled(!canWrite) }

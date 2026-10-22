@@ -240,7 +240,7 @@ struct ChargeControllerTests {
         let at=cal.date(from:DateComponents(year:2026,month:10,day:22,hour:22,minute:0))!
         func w(_ s:ChargeWrite.Source,_ d:String?=nil,_ date:Date=at) -> String { ChargeText.reason(ChargeWrite(date:date,command:"setLimit(70)",source:s,ok:true,detail:d),now:now,calendar:cal) }
         #expect(w(.user)=="22:00 직접 바꿈")
-        #expect(w(.schedule,"밤에는 70%")=="22:00 일정 '밤에는 70%'로 바뀜")
+        #expect(w(.schedule,"평일 아침 완충")=="22:00 일정 '평일 아침 완충'에 따라 바뀜")
         #expect(w(.cli)=="22:00 명령줄로 바뀜")
         #expect(w(.shortcut)=="22:00 단축어로 바뀜")
         #expect(w(.heat)=="22:00 과열 보류로 바뀜")
@@ -248,6 +248,42 @@ struct ChargeControllerTests {
         #expect(w(.quit)=="22:00 앱 종료 시 복원")
         #expect(w(.user,nil,at-86_400)=="어제 22:00 직접 바꿈")
         #expect(w(.user,nil,at-3*86_400)=="10월 19일 22:00 직접 바꿈")
+    }
+    @Test func endTopUpWithoutTopUpIsRefused() {
+        let b=FakeBackend();b.state.enabled=false;let c=make(b)
+        #expect(c.apply(.endTopUp,source:.cli) == .failure(.noTopUp))
+        #expect(b.calls.isEmpty);#expect(b.state.enabled==false)
+        #expect(ChargeError.noTopUp.localizedDescription=="진행 중인 한 번 완충이 없습니다.")
+    }
+    static var seoul:Calendar { var c=Calendar(identifier:.gregorian);c.timeZone=TimeZone(identifier:"Asia/Seoul")!;return c }
+    static func seoulAt(_ h:Int,_ m:Int) -> Date { seoul.date(from:DateComponents(year:2026,month:10,day:22,hour:h,minute:m))! }
+    @Test func currentReasonFollowsWhoSetTheLimit() {
+        let now=Self.seoulAt(23,0),cal=Self.seoul
+        var r=ChargeRecord();r.lastWritten=70
+        r.log=[ChargeWrite(date:Self.seoulAt(22,0),command:"setLimit(70)",source:.schedule,ok:true,detail:"밤에는 70%")]
+        func reason(_ s:ChargeLimitState,_ rec:ChargeRecord) -> String? { ChargeText.currentReason(record:rec,state:s,now:now,calendar:cal) }
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:70),r)=="22:00 일정 '밤에는 70%'에 따라 바뀜")
+        // Changed in System Settings afterwards: the old reason must not stay under the new value.
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:80),r)=="다른 앱 또는 시스템 설정에서 바뀜")
+        #expect(reason(ChargeLimitState(supported:true,enabled:false,limit:100),r)=="다른 앱 또는 시스템 설정에서 꺼짐")
+        var off=r;off.lastWritten=nil;off.log.append(ChargeWrite(date:Self.seoulAt(22,30),command:"clearLimit",source:.cli,ok:true))
+        #expect(reason(ChargeLimitState(supported:true,enabled:false,limit:100),off)=="22:30 명령줄로 바뀜")
+        var top=r;top.topUpRequested=Self.seoulAt(22,40);top.log.append(ChargeWrite(date:Self.seoulAt(22,40),command:"startTopUp",source:.user,ok:true))
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:100),top)=="22:40 직접 바꿈")
+        // Never written by VibeBattery: the value came from somewhere else.
+        #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:70),ChargeRecord())=="다른 앱 또는 시스템 설정에서 바뀜")
+        #expect(reason(ChargeLimitState(supported:true,enabled:nil,limit:nil),r)==nil)
+    }
+    @Test func logLineIsPlainKorean() {
+        let now=Self.seoulAt(23,0),cal=Self.seoul
+        func line(_ c:String,_ s:ChargeWrite.Source,_ ok:Bool=true,_ d:String?=nil) -> String { ChargeText.logLine(ChargeWrite(date:Self.seoulAt(22,0),command:c,source:s,ok:ok,detail:d),now:now,calendar:cal) }
+        #expect(line("setLimit(70)",.schedule,true,"밤에는 70%")=="22:00 · 일정 '밤에는 70%' · 상한 70%")
+        #expect(line("clearLimit",.user)=="22:00 · 직접 · 상한 끄기")
+        #expect(line("startTopUp",.cli)=="22:00 · 명령줄 · 한 번 완충 시작")
+        #expect(line("endTopUp",.shortcut)=="22:00 · 단축어 · 완충 종료")
+        #expect(line("setLimit(75)",.heat,false)=="22:00 · 과열 보류 · 상한 75% · 실패")
+        #expect(line("setLimit(70)",.topUp)=="22:00 · 완충 후 복원 · 상한 70%")
+        #expect(line("clearLimit",.quit)=="22:00 · 앱 종료 시 복원 · 상한 끄기")
     }
     @Test func helperStatusExplainsWhySubEightyIsUnavailable() {
         var probes=0

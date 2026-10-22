@@ -6,7 +6,7 @@ public protocol ChargeHelperClient {
     func setLimit(_ percent:Int) -> String?
 }
 public enum ChargeError: Error, Equatable, LocalizedError {
-    case invalid, conflict([String]), helperRequired, unavailable, rejected(String), notApplied, heatHoldActive
+    case invalid, conflict([String]), helperRequired, unavailable, rejected(String), notApplied, heatHoldActive, noTopUp
     public var errorDescription:String? {
         switch self {
         case .invalid:return "충전 상한은 50~100% 사이에서 5% 단위로 고를 수 있습니다."
@@ -15,6 +15,7 @@ public enum ChargeError: Error, Equatable, LocalizedError {
         case .unavailable:return "이 macOS에서 충전 상한 제어를 확인하지 못했습니다."
         case .rejected(let m):return m
         case .notApplied:return "적용 실패: 다시 읽은 값이 요청과 다릅니다. 자동으로 재시도하지 않습니다."
+        case .noTopUp:return "진행 중인 한 번 완충이 없습니다."
         case .heatHoldActive:return "과열 보류 중에는 한 번 완충을 시작할 수 없습니다. 배터리가 식은 뒤 다시 시도하세요."
         }
     }
@@ -78,6 +79,8 @@ public final class ChargeController {
     public var topUpActive:Bool { record.topUpRequested != nil && record.topUpObservedOff }
     @discardableResult public func apply(_ c:ChargeCommand,byUser:Bool=true,source:ChargeWrite.Source?=nil,detail:String?=nil) -> Result<ChargeLimitState,ChargeError> {
         let from=source ?? (byUser ? .user:.heat)
+        // Ending a top-up that is not running would turn a limit the user switched off back on.
+        if c == .endTopUp,byUser,record.topUpRequested==nil { return .failure(.noTopUp) }
         // A chosen limit ends a running one-time full charge first, so the new value is not overridden when it ends.
         if byUser,record.topUpRequested != nil,c.endsTopUp {
             let e=write(.endTopUp,byUser:true);log(.endTopUp,from,detail,e)

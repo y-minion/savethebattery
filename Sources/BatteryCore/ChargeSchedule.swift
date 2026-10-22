@@ -42,7 +42,19 @@ public enum SchedulePolicy {
     public static let catchUpWindow:TimeInterval=43_200
     public static let maxRules=10
     public static func next(_ r:ChargeScheduleRule,after:Date,calendar:Calendar) -> Date? {
-        r.weekdays.compactMap { calendar.nextDate(after:after,matching:DateComponents(hour:r.hour,minute:r.minute,weekday:$0),matchingPolicy:.nextTime) }.min()
+        r.weekdays.compactMap { day -> Date? in
+            let match=DateComponents(hour:r.hour,minute:r.minute,weekday:day)
+            guard let d=calendar.nextDate(after:after,matching:match,matchingPolicy:.nextTime) else { return nil }
+            // When clocks fall back the same local time comes twice; only the first one counts.
+            return isRepeat(d,r,calendar) ? calendar.nextDate(after:d,matching:match,matchingPolicy:.nextTime):d
+        }.min()
+    }
+    private static func isRepeat(_ d:Date,_ r:ChargeScheduleRule,_ calendar:Calendar) -> Bool {
+        let tz=calendar.timeZone
+        let shift=tz.daylightSavingTimeOffset(for:d.addingTimeInterval(-7200))-tz.daylightSavingTimeOffset(for:d)
+        guard shift>0 else { return false }
+        let earlier=d.addingTimeInterval(-shift),c=calendar.dateComponents([.hour,.minute],from:earlier)
+        return c.hour==r.hour && c.minute==r.minute && calendar.isDate(earlier,inSameDayAs:d)
     }
     public static func nextAny(_ rules:[ChargeScheduleRule],after:Date,calendar:Calendar) -> ScheduleOccurrence? {
         var best:ScheduleOccurrence?
@@ -90,6 +102,9 @@ public enum ScheduleText {
         if let t=calendar.date(byAdding:.day,value:1,to:now),calendar.isDate(d,inSameDayAs:t) { return "내일 \(time)" }
         return "\(c.month ?? 0)월 \(c.day ?? 0)일 \(time)"
     }
+    static let templateNames:Set<String>=["밤에는 70%","평일 아침 완충","주말엔 80%"]
+    /// A name the user never typed: empty, the generated sentence, or a template's; it follows the rule when edited.
+    public static func isAutoName(_ name:String,for r:ChargeScheduleRule) -> Bool { name.isEmpty || name==sentence(r) || templateNames.contains(name) }
     public static func sentence(_ r:ChargeScheduleRule) -> String { "\(days(r.weekdays)) \(String(format:"%02d:%02d",r.hour,r.minute)) · \(action(r.action))" }
 }
 /// Decodes each element on its own so one damaged schedule does not lose the others.

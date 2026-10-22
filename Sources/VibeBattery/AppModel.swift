@@ -38,7 +38,7 @@ import BatteryPlatform
     @Published var scheduleRuns:[ScheduleRun]=[]
     @Published var nextSchedule:ScheduleOccurrence?
     /// "22:00 일정 '밤에는 70%'로 바뀜": why the limit is what it is.
-    var lastChangeText:String? { chargeController.record.lastChange.map { ChargeText.reason($0,now:Date(),calendar:.current) } }
+    var lastChangeText:String? { ChargeText.currentReason(record:chargeController.record,state:charge,now:Date(),calendar:.current) }
     var chargeLog:[ChargeWrite] { chargeController.record.log }
     private lazy var scheduleRunner=ScheduleRunner(file:JSONFile(url:AppPaths.schedule)) { [weak self] command,rule in
         MainActor.assumeIsolated { self?.runSchedule(command,rule) ?? "앱을 사용할 수 없습니다." }

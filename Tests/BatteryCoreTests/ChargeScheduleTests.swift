@@ -92,6 +92,12 @@ struct ChargeScheduleTests {
         #expect(many.schedules.count==SchedulePolicy.maxRules)
         let empty=try JSONDecoder().decode(UserPreferences.self,from:Data("{}".utf8));#expect(empty.schedules.isEmpty)
     }
+    @Test func whenReadsRelativeDay() {
+        let now=Self.at(10,22,21,0)
+        #expect(ScheduleText.when(Self.at(10,22,22,0),now:now,calendar:cal)=="오늘 22:00")
+        #expect(ScheduleText.when(Self.at(10,23,7,5),now:now,calendar:cal)=="내일 07:05")
+        #expect(ScheduleText.when(Self.at(10,26,0,0),now:now,calendar:cal)=="10월 26일 00:00")
+    }
     @Test func templatesAreValid() {
         let t=ChargeScheduleRule.templates(now:Self.at(10,22,12,0))
         #expect(t.map(\.name)==["밤에는 70%","평일 아침 완충","주말엔 80%"])

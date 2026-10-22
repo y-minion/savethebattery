@@ -82,6 +82,14 @@ public enum ScheduleText {
         case .clearLimit:return "상한 끄기"
         }
     }
+    /// "오늘 22:00", "내일 07:00" or "10월 26일 00:00".
+    public static func when(_ d:Date,now:Date,calendar:Calendar) -> String {
+        let c=calendar.dateComponents([.month,.day,.hour,.minute],from:d)
+        let time=String(format:"%02d:%02d",c.hour ?? 0,c.minute ?? 0)
+        if calendar.isDate(d,inSameDayAs:now) { return "오늘 \(time)" }
+        if let t=calendar.date(byAdding:.day,value:1,to:now),calendar.isDate(d,inSameDayAs:t) { return "내일 \(time)" }
+        return "\(c.month ?? 0)월 \(c.day ?? 0)일 \(time)"
+    }
     public static func sentence(_ r:ChargeScheduleRule) -> String { "\(days(r.weekdays)) \(String(format:"%02d:%02d",r.hour,r.minute)) · \(action(r.action))" }
 }
 /// Decodes each element on its own so one damaged schedule does not lose the others.

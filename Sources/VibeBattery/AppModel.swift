@@ -274,6 +274,10 @@ import BatteryPlatform
         NSPasteboard.general.clearContents();NSPasteboard.general.setString(command(for:executable),forType:.string)
         message="명령을 복사했습니다. iTerm2 또는 Ghostty에 붙여 넣어 시작하세요."
     }
+    func copyText(_ text:String) {
+        NSPasteboard.general.clearContents();NSPasteboard.general.setString(text,forType:.string)
+        message="경로를 복사했습니다: \(text)"
+    }
     func ownerAlive(_ r:SessionRecord) -> Bool { guard let o=r.owner else { return false };return ProcessReader.one(o.pid)?.identity==o }
     func status(_ r:SessionRecord) -> String {
         if r.ended==nil && !ownerAlive(r) { return "관리 연결 끊김" }

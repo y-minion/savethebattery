@@ -16,6 +16,7 @@ public enum AppPaths {
     public static var health:URL { directory.appendingPathComponent("health.json") }
     public static var sleep:URL { directory.appendingPathComponent("sleep.json") }
     public static var notify:URL { directory.appendingPathComponent("notify.json") }
+    public static var schedule:URL { directory.appendingPathComponent("schedule.json") }
 }
 public struct SessionStore {
     public let directory: URL

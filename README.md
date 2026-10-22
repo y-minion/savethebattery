@@ -25,7 +25,7 @@ macOS 27 펌웨어(20457.1.29)는 SMC 충전 중지 키를 막고 있어, 충전
 
 ## 빌드
 
-Swift 6 도구 및 호환되는 macOS SDK가 필요합니다. 일반적인 최신 Xcode 환경:
+Xcode가 필요합니다. 앱은 저장소의 `VibeBattery.xcodeproj`로 빌드합니다. 이 프로젝트는 `project.yml`에서 [XcodeGen](https://github.com/yonaskolb/XcodeGen)으로 만들었으므로, `project.yml`을 고친 뒤에는 `xcodegen generate`를 실행하세요. 테스트는 Swift 패키지로 돌립니다.
 
 ```sh
 swift test --disable-xctest
@@ -34,7 +34,7 @@ scripts/build-app.sh
 open dist/VibeBattery.app
 ```
 
-빌드 결과는 `dist/VibeBattery.app`과 `dist/VibeBattery.zip`입니다. 앱은 로컬 실행용 임시 서명을 사용합니다. 일반 배포용 Developer ID 서명·공증은 아직 포함하지 않습니다. 현재 저장소에는 원본 코드만 있고 외부 패키지 의존성은 없습니다.
+빌드 결과는 `dist/VibeBattery.app`과 `dist/VibeBattery.zip`입니다. 단축어 전용 동작은 Xcode 빌드에만 포함됩니다. 앱은 로컬 실행용 임시 서명을 사용합니다. 일반 배포용 Developer ID 서명·공증은 아직 포함하지 않습니다. 현재 저장소에는 원본 코드만 있고 외부 패키지 의존성은 없습니다.
 
 ## 명령줄과 단축어
 

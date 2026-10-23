@@ -4,7 +4,8 @@ set -eu
 cd "$(dirname "$0")/.."
 VB_OUTPUT_DIR=${VB_OUTPUT_DIR:-"$PWD/dist"}
 VB_DERIVED="$PWD/.build/xcode"
-xcodebuild -project VibeBattery.xcodeproj -scheme VibeBatteryApp -configuration Release -derivedDataPath "$VB_DERIVED" build >"$VB_DERIVED.log" 2>&1 || { tail -40 "$VB_DERIVED.log";exit 1; }
+mkdir -p "$VB_DERIVED"
+xcodebuild -project VibeBattery.xcodeproj -scheme VibeBatteryApp -configuration Release -derivedDataPath "$VB_DERIVED" build >"$VB_DERIVED/build.log" 2>&1 || { tail -40 "$VB_DERIVED/build.log";exit 1; }
 # Sign outside the output folder: a synced folder (iCloud Documents) can re-add
 # Finder metadata mid-build, which strict signature checks reject.
 VB_STAGE=$(mktemp -d "${TMPDIR:-/tmp}/vibebattery-build.XXXXXX")

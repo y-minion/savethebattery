@@ -45,7 +45,7 @@ struct BatteryStatusEntity: TransientAppEntity {
     @Property(title:"충전 중") var charging:Bool?
     @Property(title:"어댑터 연결") var onAC:Bool?
     @Property(title:"상한") var limit:Int?
-    @Property(title:"건강도") var health:Int?
+    @Property(title:"건강도(추정)") var health:Int?
     @Property(title:"온도") var temperature:Double?
     var summary=""
     var displayRepresentation:DisplayRepresentation { DisplayRepresentation(title:"\(summary)") }

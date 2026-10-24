@@ -13,6 +13,7 @@
 
 - Swift 패키지의 실행 대상은 `xcodebuild`로 빌드해도 `Metadata.appintents`가 만들어지지 않는다. 그래서 단축어 동작이 나타나지 않는다.
 - XcodeGen으로 만든 앱 대상(`type: application`)은 Release 빌드에서 `Contents/Resources/Metadata.appintents`를 만든다. 로컬 Swift 패키지의 라이브러리도 연결된다.
+- (설치 후 확인, 2026-10-24) 단축어 앱은 팀 서명이 있는 앱의 동작만 보여 준다. 임시 서명 앱은 `Metadata.appintents`가 있어도 동작이 보이지 않는다. 그래서 `build-app.sh`는 키체인의 "Apple Development" 인증서(또는 `VB_SIGN_IDENTITY`)로 서명하고, 인증서가 없을 때(CI 등)만 임시 서명으로 빌드한다. 헬퍼는 식별자만 확인하므로 두 서명 모두에서 동작한다.
 
 ## 목표
 

@@ -46,7 +46,7 @@ final class Service:NSObject,ChargeHelperProtocol {
     }
 }
 /// Root-only test command, used when the binary is started by hand (launchd passes no arguments).
-/// `--led read|system|off|green|orange`: prints the previous value and, for writes, the value read back.
+/// `--led read|system|off|green|orange`: prints the previous value and, for writes, the value written (no read-back: the key shows the displayed color).
 /// Exit codes: 0 ok, 1 failure, 2 usage.
 func ledCommand(_ args:[String]) -> Int32 {
     func fail(_ text:String,_ code:Int32) -> Int32 { FileHandle.standardError.write((text+"\n").data(using:.utf8)!);return code }
@@ -61,12 +61,9 @@ func ledCommand(_ args:[String]) -> Int32 {
     guard let led=names[args[1]] else { print("\(ledKey) 이전 값 \(old)");return 0 }
     let w=vb_smc_write_u8(ledKey,UInt8(led.rawValue))
     guard w==0 else { return fail("\(ledKey) 이전 값 \(old) · 쓰지 못했습니다. (\(w))",1) }
-    var now:UInt8=0
-    let back=vb_smc_read_u8(ledKey,&now)
-    guard back==0 else { return fail("\(ledKey) 이전 값 \(old) · 쓴 뒤 다시 읽지 못했습니다. (\(back))",1) }
-    print("\(ledKey) 이전 값 \(old) → \(now)")
-    // Under system control the key may report the LED's current color, so a different read-back is only noted.
-    return Int(now)==led.rawValue ? 0:fail("참고: 다시 읽은 값이 쓴 값(\(led.rawValue))과 다릅니다.",0)
+    // The key reads the LED's displayed color, not the control mode, so a read-back proves nothing.
+    print("\(ledKey) 이전 값 \(old) → \(led.rawValue) 썼습니다")
+    return 0
 }
 let cliArguments=Array(CommandLine.arguments.dropFirst())
 if !cliArguments.isEmpty { exit(ledCommand(cliArguments)) }

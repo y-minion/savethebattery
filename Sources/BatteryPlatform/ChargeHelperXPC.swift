@@ -25,13 +25,13 @@ public final class XPCChargeHelper: ChargeHelperClient {
         c.resume();return c
     }
     // Bounded wait: a stalled helper must not freeze the app's main thread.
-    private func call<T>(_ fallback:T,_ body:(ChargeHelperProtocol,@escaping (T)->Void)->Void) -> T {
+    private func call<T>(_ fallback:T,timeout:TimeInterval=3,_ body:(ChargeHelperProtocol,@escaping (T)->Void)->Void) -> T {
         let c=connect();defer { c.invalidate() }
         let done=DispatchSemaphore(value:0);let lock=NSLock();var result=fallback
         let finish:(T)->Void={ v in lock.lock();result=v;lock.unlock();done.signal() }
         guard let proxy=c.remoteObjectProxyWithErrorHandler({ _ in finish(fallback) }) as? ChargeHelperProtocol else { return fallback }
         body(proxy,finish)
-        guard done.wait(timeout:.now()+3) == .success else { return fallback }
+        guard done.wait(timeout:.now()+timeout) == .success else { return fallback }
         lock.lock();defer { lock.unlock() };return result
     }
     private static let noReply="헬퍼에 연결하지 못했거나 3초 안에 응답이 없습니다."
@@ -45,8 +45,9 @@ public final class XPCChargeHelper: ChargeHelperClient {
     public func setLowPowerMode(_ on:Bool) -> String? {
         call(Self.noReply as String?) { proxy,finish in proxy.setLowPowerMode(on) { finish($0) } }
     }
-    public func setMagSafeLED(_ v:MagSafeLED) -> String? {
-        call(Self.noReply as String?) { proxy,finish in proxy.setMagSafeLED(v.rawValue) { finish($0) } }
+    /// `timeout` bounds the wait; the quit path uses a short one so the app still exits promptly.
+    public func setMagSafeLED(_ v:MagSafeLED,timeout:TimeInterval=3) -> String? {
+        call(Self.noReply as String?,timeout:timeout) { proxy,finish in proxy.setMagSafeLED(v.rawValue) { finish($0) } }
     }
     public func readState() -> [String:String]? {
         call(nil as [String:String]?) { proxy,finish in proxy.readState { finish($0) } }

@@ -12,7 +12,9 @@
 		0A27D4A05133537F9957C8D6 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D643A01B5C56616360E82B /* DashboardView.swift */; };
 		1A53EE2D512E53484C77EFBA /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3315A191359FEBF720F72706 /* AppModel.swift */; };
 		1B989C71F81739E96BAF9E1D /* SessionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CEF701FD15671F19F52B58 /* SessionsView.swift */; };
+		1E6200888958CB8E2433C175 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4B44FF10AA126183D9863A /* MenuBarIcon.swift */; };
 		270EE45B4BA311DDA7D897FD /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9A9BD4128EBDCC34F4EDC5 /* App.swift */; };
+		3986C9DC658E6548E5151E30 /* MenuWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25A19D326CC4E80033229CD4 /* MenuWindow.swift */; };
 		46FE2D87BBA577B293C47118 /* SessionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B88B180D71C8B5B11E84C3 /* SessionRunner.swift */; };
 		4BF83CC5E31D6E323CE4AA67 /* VBChargeHelper in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 582B35FC88C983331FA3E54B /* VBChargeHelper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5597993BA10B64959DE1CD47 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45B1ACBB0CFFCD6463701837 /* Main.swift */; };
@@ -74,6 +76,7 @@
 		04CC1DBF4662D8142BEE1442 /* ResourceRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceRunner.swift; sourceTree = "<group>"; };
 		0A020FDCB309E18A24DC8273 /* ChargeIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeIntents.swift; sourceTree = "<group>"; };
 		1B86C12E613BAA11B444A475 /* VibeBatteryApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeBatteryApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		25A19D326CC4E80033229CD4 /* MenuWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuWindow.swift; sourceTree = "<group>"; };
 		289196878332C8951082FB3F /* vbctl */ = {isa = PBXFileReference; includeInIndex = 0; path = vbctl; sourceTree = BUILT_PRODUCTS_DIR; };
 		3315A191359FEBF720F72706 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		38B88B180D71C8B5B11E84C3 /* SessionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRunner.swift; sourceTree = "<group>"; };
@@ -89,6 +92,7 @@
 		BD9A9BD4128EBDCC34F4EDC5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		C44FE5D78379B6CB8BAF4402 /* install-helper.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "install-helper.sh"; sourceTree = "<group>"; };
 		C620400A3E7FF15B0A4926D7 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		CA4B44FF10AA126183D9863A /* MenuBarIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIcon.swift; sourceTree = "<group>"; };
 		D28234EBE31B5A4B8CCE662B /* ChargeControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeControlView.swift; sourceTree = "<group>"; };
 		DD95128FE5024E3262D7B55B /* ProcessesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessesView.swift; sourceTree = "<group>"; };
 		E1F675D2F345E31B5B9B9C56 /* uninstall-helper.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "uninstall-helper.sh"; sourceTree = "<group>"; };
@@ -140,6 +144,8 @@
 				69238EE300AEAC6E22ED6727 /* ChargeView.swift */,
 				49D643A01B5C56616360E82B /* DashboardView.swift */,
 				7FEC7CC828570B37A896E19C /* HealthView.swift */,
+				CA4B44FF10AA126183D9863A /* MenuBarIcon.swift */,
+				25A19D326CC4E80033229CD4 /* MenuWindow.swift */,
 				FDD850D5EAC9A9681D4F3103 /* Notifier.swift */,
 				DD95128FE5024E3262D7B55B /* ProcessesView.swift */,
 				B2CEF701FD15671F19F52B58 /* SessionsView.swift */,
@@ -374,6 +380,8 @@
 				9331556D82D858C5CACDB836 /* ChargeView.swift in Sources */,
 				0A27D4A05133537F9957C8D6 /* DashboardView.swift in Sources */,
 				DE11E10BDB1CC4A3BB873CD6 /* HealthView.swift in Sources */,
+				1E6200888958CB8E2433C175 /* MenuBarIcon.swift in Sources */,
+				3986C9DC658E6548E5151E30 /* MenuWindow.swift in Sources */,
 				C7C02E43FDFCEDD560F4F50A /* Notifier.swift in Sources */,
 				614932E0AE1873D851DF2807 /* ProcessesView.swift in Sources */,
 				1B989C71F81739E96BAF9E1D /* SessionsView.swift in Sources */,

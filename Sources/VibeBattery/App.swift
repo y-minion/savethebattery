@@ -9,8 +9,8 @@ import BatteryPlatform
         WindowGroup("VibeBattery",id:"main") { RootView().environmentObject(model).frame(minWidth:900,minHeight:650).tint(.mint) }
             .defaultSize(width:1050,height:740)
         MenuBarExtra {
-            MenuContent().environmentObject(model)
-        } label: { MenuLabel().environmentObject(model) }
+            MenuWindow().environmentObject(model)
+        } label: { MenuLabel().environmentObject(model) }.menuBarExtraStyle(.window)
     }
 }
 /// Always rendered, so it is where the app keeps a way to reopen the window for notification clicks.
@@ -18,27 +18,13 @@ struct MenuLabel:View {
     @EnvironmentObject var model:AppModel
     @Environment(\.openWindow) var openWindow
     var body:some View {
-        Label("\(model.battery.percent.map(String.init) ?? "—")%",systemImage:model.battery.onAC ? "bolt.batteryblock":"battery.75percent")
+        let style=model.preferences.menuBar.icon,text="\(model.battery.percent.map(String.init) ?? "—")%"
+        HStack(spacing:4) {
+            if style != .percentOnly { Image(nsImage:MenuBarIcon.image(percent:model.battery.percent,status:model.menuStatus)) }
+            if style == .percentOnly { Text(MenuBarIcon.glyphText(model.menuStatus)+text) }
+            else if style == .iconAndPercent { Text(text) }
+        }
             .onAppear { model.openMain={ openWindow(id:"main") } }
-    }
-}
-struct MenuContent:View {
-    @EnvironmentObject var model:AppModel
-    @Environment(\.openWindow) var openWindow
-    var body:some View {
-        Text("VibeBattery · \(model.battery.percent.map(String.init) ?? "—")%")
-        Text(model.battery.temperature.map { String(format:"배터리 %.1f°C",$0) } ?? "온도 조회 불가")
-        Text(ChargeText.limit(model.charge)+(model.nextSchedule.map { " · 다음 일정 "+ScheduleText.when($0.at,now:Date(),calendar:.current) } ?? ""))
-        let canWrite=model.charge.supported==true && model.chargeConflicts.isEmpty
-        if model.topUpActive { Button("완충 종료") { model.applyCharge(.endTopUp) }.disabled(!canWrite) }
-        else { Button("한 번 100% 충전") { model.applyCharge(.startTopUp) }.disabled(!canWrite) }
-        Divider()
-        Button("대시보드 열기") { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
-        Button("Claude 실행 명령 복사") { model.copyCommand("claude") }
-        Button("Codex 실행 명령 복사") { model.copyCommand("codex") }
-        Button("배터리 설정 열기") { model.openBatterySettings() }
-        Divider()
-        Button("앱 종료") { NSApp.terminate(nil) }
     }
 }
 struct RootView:View {

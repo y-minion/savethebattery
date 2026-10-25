@@ -27,6 +27,18 @@ import BatteryPlatform
     @Published var sleeps:[SleepEvent]=[]
     @Published var notificationAccess=NotificationAccess.unavailable
     var openMain:(()->Void)?
+    var menuStatus:MenuBarStatus { .make(onAC:battery.onAC,charging:battery.charging,heatHolding:chargeController.record.heat.holdLimit != nil) }
+    var activeSessions:[SessionRecord] { sessions.filter { $0.ended==nil && ownerAlive($0) } }
+    private var menuTimer:Timer?
+    /// While the menu window is open the battery is read every 2 s; the 5 s tick is unchanged.
+    var menuWindowOpen=false {
+        didSet {
+            menuTimer?.invalidate();menuTimer=nil
+            guard menuWindowOpen else { return }
+            battery=BatteryReader.read()
+            menuTimer=Timer.scheduledTimer(withTimeInterval:2,repeats:true) { [weak self] _ in Task { @MainActor in self?.battery=BatteryReader.read() } }
+        }
+    }
     private let notifier=NotificationRuntime.makeSink()
     private let notificationStore=NotificationStore(url:AppPaths.notify)
     private lazy var notificationMemory=notificationStore.read()

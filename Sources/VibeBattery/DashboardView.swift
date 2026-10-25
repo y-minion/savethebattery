@@ -15,10 +15,17 @@ struct DashboardView:View {
                 VStack(alignment:.leading,spacing:12) {
                     Label(model.battery.onAC ? "어댑터 연결됨":"배터리 사용 중",systemImage:model.battery.onAC ? "powerplug.fill":"battery.75percent").font(.title3.bold())
                     Text(model.battery.charging ? "충전 중":"현재 충전하지 않음").foregroundStyle(.secondary)
+                    if let hw=model.battery.hardwarePercent {
+                        Text("하드웨어 잔량 \(hw)%").font(.callout).foregroundStyle(.secondary)
+                            .help("macOS는 배터리 보호를 위해 표시 값을 조정합니다. 이 값은 배터리가 직접 보고한 남은 용량입니다.")
+                    }
                     Text("측정 \(model.battery.timestamp.formatted(date:.omitted,time:.standard))").font(.caption).foregroundStyle(.tertiary)
                 }
                 Spacer()
-                Button("새로고침") { model.refresh() }.buttonStyle(.bordered)
+                VStack(spacing:8) {
+                    Button("새로고침") { model.refresh() }.buttonStyle(.bordered)
+                    Button("배터리 설정 열기") { model.openBatterySettings() }.buttonStyle(.bordered)
+                }
             }
         }
         HStack(alignment:.top,spacing:16) {
@@ -44,8 +51,10 @@ struct DashboardView:View {
             }
         }
         Card {
-            HStack { Label("배터리 전력 흐름",systemImage:"bolt.horizontal").font(.headline);Spacer();Text(model.battery.watts.map { String(format:"%+.2f W",$0) } ?? "조회 불가").font(.title2.monospacedDigit()) }
-            Text("+ 충전 · − 방전 · 0은 측정 시점의 값입니다. 어댑터 전체 소비 전력은 포함하지 않습니다.").font(.caption).foregroundStyle(.secondary)
+            Label("전력 흐름",systemImage:"bolt.horizontal").font(.headline)
+            // PowerBar carries the headline, adapter text and legend.
+            if let p=PowerSummary.make(model.battery) { PowerBar(summary:p) }
+            else { Text("이 맥에서는 전력 흐름을 읽을 수 없습니다").foregroundStyle(.secondary) }
         }
         Card {
             HStack { Text("최근 잔량 이력").font(.headline);Spacer();Text("기기에만 저장").font(.caption).foregroundStyle(.secondary) }

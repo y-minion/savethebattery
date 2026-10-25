@@ -51,6 +51,25 @@ struct SettingsView:View {
             Text("앱이 실행 중일 때만 알리며 최대 2분 늦을 수 있습니다. 집중 모드에서는 가려질 수 있고, 잠금 화면 미리보기는 macOS 알림 설정을 따릅니다.").font(.caption).foregroundStyle(.secondary)
         }.onAppear { model.checkNotifications() }
         Card {
+            Text("메뉴 막대").font(.headline)
+            Picker("표시 방식",selection:Binding(get:{ model.preferences.menuBar.icon },set:{ model.preferences.menuBar.icon=$0;model.savePreferences() })) {
+                ForEach(MenuIconStyle.allCases,id:\.self) { Text($0.title).tag($0) }
+            }
+            Text("메뉴 창 구성").font(.subheadline.weight(.semibold))
+            let sections=model.preferences.menuBar.sections
+            ForEach(Array(sections.enumerated()),id:\.element.section) { i,s in
+                HStack {
+                    Toggle(s.section.title,isOn:Binding(get:{ s.visible },set:{ v in
+                        if let k=model.preferences.menuBar.sections.firstIndex(where:{ $0.section==s.section }) { model.preferences.menuBar.sections[k].visible=v;model.savePreferences() }
+                    }))
+                    Spacer()
+                    Button { model.preferences.menuBar.move(s.section,by:-1);model.savePreferences() } label: { Image(systemName:"chevron.up") }.disabled(i==0)
+                    Button { model.preferences.menuBar.move(s.section,by:1);model.savePreferences() } label: { Image(systemName:"chevron.down") }.disabled(i==sections.count-1)
+                }
+            }
+            Button("기본값으로 되돌리기") { model.preferences.menuBar = .default;model.savePreferences() }
+        }
+        Card {
             Text("명령줄과 단축어").font(.headline)
             Text("앱이 실행 중이면 터미널이나 단축어에서 충전 상한을 바꿀 수 있습니다.").foregroundStyle(.secondary)
             VStack(alignment:.leading,spacing:4) {

@@ -4,6 +4,7 @@ public struct UserPreferences: Codable {
     public var heat=HeatSettings()
     public var notifications=NotificationSettings()
     public var schedules:[ChargeScheduleRule]=[]
+    public var menuBar=MenuBarSettings()
     public init() {}
     // Files written before a field existed must keep the user's other choices.
     public init(from decoder:Decoder) throws {
@@ -15,6 +16,7 @@ public struct UserPreferences: Codable {
         heat=try c.decodeIfPresent(HeatSettings.self,forKey:.heat) ?? HeatSettings()
         notifications=try c.decodeIfPresent(NotificationSettings.self,forKey:.notifications) ?? NotificationSettings()
         schedules=(try? c.decodeIfPresent([LossyElement<ChargeScheduleRule>].self,forKey:.schedules))?.compactMap(\.value) ?? []
+        menuBar=(try? c.decodeIfPresent(MenuBarSettings.self,forKey:.menuBar)) ?? MenuBarSettings()
     }
     public mutating func validate() { if !hours.isFinite || hours<=0 || hours>168 { hours=4 };heat.validate();notifications.validate()
         schedules=Array(schedules.filter(\.isValid).prefix(SchedulePolicy.maxRules))

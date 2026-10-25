@@ -15,7 +15,11 @@ public struct BatterySnapshot: Codable, Sendable {
     public var designCycles: Int?
     /// Kept out of JSON so pasted `vbctl status --json` output and history files carry no device identifier.
     public var batteryID: String?
-    enum CodingKeys: String, CodingKey { case timestamp, percent, health, cycles, temperature, watts, onAC, charging, temperatureSource, healthPrecise, designCapacity, designCycles }
+    /// Raw RemainingCapacity / FullChargeCapacity, the percentage the battery hardware itself reports (macOS's `percent` is smoothed).
+    public var hardwarePercent: Int?
+    /// Live adapter and system power from the IORegistry; kept out of JSON like `batteryID`.
+    public var power: PowerReading?
+    enum CodingKeys: String, CodingKey { case timestamp, percent, health, cycles, temperature, watts, onAC, charging, temperatureSource, healthPrecise, designCapacity, designCycles, hardwarePercent }
     public init() {}
     public static func decode(_ values: [String: Any], now: Date = Date()) -> BatterySnapshot { 
         var result = BatterySnapshot(); result.timestamp = now
@@ -38,6 +42,10 @@ public struct BatterySnapshot: Codable, Sendable {
             let signed = Int64(bitPattern: current.uint64Value)
             if abs(Double(signed)) < 100000, voltage > 0, voltage < 100000 { result.watts = voltage * Double(signed) / 1_000_000 }
         }
+        if let remaining = (data["RemainingCapacity"] as? NSNumber)?.doubleValue, let fullCharge = (data["FullChargeCapacity"] as? NSNumber)?.doubleValue, fullCharge > 0 {
+            let hardware = Int((remaining / fullCharge * 100).rounded()); if (0...100).contains(hardware) { result.hardwarePercent = hardware }
+        }
+        result.power = PowerReading.decode(values)
         result.onAC = values["ExternalConnected"] as? Bool ?? false
         result.charging = values["IsCharging"] as? Bool ?? false
         return result

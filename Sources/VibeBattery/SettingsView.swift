@@ -82,10 +82,11 @@ struct SettingsView:View {
                     }
                 }
             }
-            if let caption=LowPowerText.caption(model.helperStatus) { Text(caption).font(.caption).foregroundStyle(.secondary) }
+            if model.ledUnsupported { Text(MagSafeLEDText.unsupported).font(.caption).foregroundStyle(.secondary) }
+            else if let caption=LowPowerText.caption(model.helperStatus) { Text(caption).font(.caption).foregroundStyle(.secondary) }
             else if !model.chargeConflicts.isEmpty { Text("다른 충전 관리 앱이 있어 LED를 바꾸지 않습니다.").font(.caption).foregroundStyle(.secondary) }
             Text("MagSafe 케이블로 연결했을 때만 켜집니다. USB-C 단자로 충전하면 효과가 없습니다.").font(.caption).foregroundStyle(.secondary)
-        }.disabled(model.helperStatus != .ready)
+        }.disabled(model.helperStatus != .ready || model.ledUnsupported)
         Card {
             Text("명령줄과 단축어").font(.headline)
             Text("앱이 실행 중이면 터미널이나 단축어에서 충전 상한을 바꿀 수 있습니다.").foregroundStyle(.secondary)
@@ -111,7 +112,7 @@ struct SettingsView:View {
         }
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)
-            Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리, 충전 상한 50~100%, 한 번 완충, 충전 일정, 명령줄 충전 제어, 건강 분석, 알림.").foregroundStyle(.secondary)
+            Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리, 충전 상한 50~100%, 한 번 완충, 충전 일정, 명령줄 충전 제어, 건강 분석, 알림, 실시간 메뉴 막대 아이콘과 메뉴 창, 전력 흐름, 하드웨어 잔량, 저전력 모드 스위치, MagSafe LED.").foregroundStyle(.secondary)
             Text("이 Mac에서 실기기 확인: 충전 상한, 한 번 완충, 알림. 실제 고온 상황의 과열 보류는 아직 확인 전입니다. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약).").foregroundStyle(.secondary)
             Link("GitHub에서 소스와 진행 상황 보기",destination:URL(string:"https://github.com/y-minion/vibebattery")!)
         }

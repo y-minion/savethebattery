@@ -105,7 +105,7 @@ struct MenuWindow:View {
     var batterySection:some View {
         let b=model.battery
         return VStack(alignment:.leading,spacing:4) {
-            row("하드웨어 잔량",b.hardwarePercent.map { "\($0)%" })
+            row("하드웨어 잔량",b.hardwarePercent.map { "\($0)%" }).help("macOS는 배터리 보호를 위해 표시 값을 조정합니다. 이 값은 배터리가 직접 보고한 남은 용량입니다.")
             row("건강도(추정)",b.health.map { "\($0)%" })
             row("사이클",b.cycles.map(String.init))
         }

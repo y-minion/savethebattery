@@ -24,7 +24,9 @@ import BatteryPlatform
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled
     @Published var lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
-    @Published var lowPowerConditional=false
+    @Published var lowPowerNotes:[String]=[]
+    /// This Mac has no usable LED key (per launch); nothing is written again.
+    @Published var ledUnsupported=false
     @Published var lowPowerBusy=false
     @Published var healthReport:HealthReport?
     @Published var sleeps:[SleepEvent]=[]
@@ -36,6 +38,7 @@ import BatteryPlatform
     /// While the menu window is open the battery is read every 2 s; the 5 s tick is unchanged.
     var menuWindowOpen=false {
         didSet {
+            guard menuWindowOpen != oldValue else { return }
             menuTimer?.invalidate();menuTimer=nil
             guard menuWindowOpen else { return }
             battery=BatteryReader.read();refreshLowPowerSettings()
@@ -125,7 +128,7 @@ import BatteryPlatform
     func refreshLowPowerSettings() {
         Task { [weak self] in
             let out=await Task.detached { Self.pmsetCustom() }.value
-            self?.lowPowerConditional=LowPowerSettings.parse(out).isConditional
+            self?.lowPowerNotes=LowPowerText.notes(LowPowerSettings.parse(out))
         }
     }
     nonisolated private static func pmsetCustom() -> String {
@@ -140,7 +143,7 @@ import BatteryPlatform
         guard !lowPowerBusy else { return "저전력 모드를 바꾸는 중입니다. 잠시 뒤 다시 시도해 주세요." }
         lowPowerBusy=true;defer { lowPowerBusy=false }
         if helperStatus != .ready { await refreshHelperStatus() }
-        guard helperStatus == .ready else { return LowPowerText.needsUpdate }
+        guard helperStatus == .ready else { return LowPowerText.unavailable(helperStatus) }
         let error:String?=await Task.detached {
             if let e=XPCChargeHelper().setLowPowerMode(on) { return e }
             for _ in 0..<20 {
@@ -168,9 +171,9 @@ import BatteryPlatform
     }
     /// Writes only when the target changed; the helper call stays off the main actor.
     func applyLED() {
-        guard !ledBusy,helperStatus == .ready,chargeConflicts.isEmpty else { return }
+        guard !ledBusy,!ledUnsupported,helperStatus == .ready,chargeConflicts.isEmpty else { return }
         let target=MagSafeLEDPolicy.target(preferences.led,status:menuStatus)
-        guard let value=MagSafeLEDPolicy.write(target:target,last:lastLED,dirty:ledDirty) else { return }
+        guard let value=MagSafeLEDPolicy.write(target:target,last:lastLED,dirty:ledDirty,unsupported:ledUnsupported) else { return }
         ledBusy=true;let generation=ledGeneration
         // A write that times out may still land, so the flag is set before any non-system write.
         if value != .system { ledDirty=true }
@@ -178,6 +181,9 @@ import BatteryPlatform
             let error=await Task.detached { XPCChargeHelper().setMagSafeLED(value) }.value
             ledBusy=false
             if let error {
+                let outcome=MagSafeLEDPolicy.outcome(reply:error)
+                if outcome.clearDirty { ledDirty=false } // nothing landed, so there is nothing to release
+                if outcome.unsupported { ledUnsupported=true;return } // the card says so; no alert, no retry
                 if error != ledError { ledError=error;message=error }
                 return
             }
@@ -196,9 +202,9 @@ import BatteryPlatform
     }
     /// Synchronous, bounded to 1 s: the process exits right after this handler returns.
     private func releaseLED() {
-        guard ledDirty,helperStatus == .ready,chargeConflicts.isEmpty else { return }
+        guard ledDirty,!ledUnsupported,helperStatus == .ready,chargeConflicts.isEmpty else { return }
         ledGeneration+=1 // an in-flight write must not mark state after this
-        if helper.setMagSafeLED(.system,timeout:1) == nil { ledDirty=false;lastLED = .system }
+        if helper.setMagSafeLED(.system,timeout:1) == nil { if !ledBusy { ledDirty=false };lastLED = .system } // a write still in flight may land later
     }
     private var helperGeneration=0
     private var helperProbe:Task<Void,Never>?

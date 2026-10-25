@@ -34,8 +34,21 @@ public enum MagSafeLEDPolicy {
         }
     }
     /// The value to write now, or nil when nothing changed. `dirty` means an earlier run may have left a non-system value behind.
-    public static func write(target: MagSafeLED?, last: MagSafeLED?, dirty: Bool) -> MagSafeLED? {
+    public static func write(target: MagSafeLED?, last: MagSafeLED?, dirty: Bool, unsupported: Bool = false) -> MagSafeLED? {
+        if unsupported { return nil }
         if let target { return target == last ? nil : target }
         return dirty && last != .system ? .system : nil
+    }
+}
+/// Fixed screen text for the LED; the raw error code never reaches the screen.
+public enum MagSafeLEDText {
+    public static let unsupported="이 맥에서는 MagSafe LED를 바꿀 수 없습니다."
+    public static let failed="MagSafe LED를 바꾸지 못했습니다."
+}
+extension MagSafeLEDPolicy {
+    /// What a helper reply means for the app. Only the unsupported reply proves nothing was written, so only it clears the dirty flag and stops retries.
+    public static func outcome(reply: String?) -> (clearDirty: Bool, unsupported: Bool) {
+        let unsupported = reply == MagSafeLEDText.unsupported
+        return (unsupported, unsupported)
     }
 }

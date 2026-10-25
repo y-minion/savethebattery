@@ -41,7 +41,7 @@ struct ClearChargeLimitIntent: AppIntent {
 }
 struct SetLowPowerModeIntent: AppIntent {
     static let title:LocalizedStringResource="저전력 모드 설정"
-    static let description=IntentDescription("저전력 모드를 켜거나 끕니다. 충전 헬퍼가 필요합니다.")
+    static let description=IntentDescription("저전력 모드를 켜거나 끕니다. 전원 종류별로 따로 정한 설정이 있어도 이 동작이 덮어씁니다. 충전 헬퍼가 필요합니다.")
     static let openAppWhenRun=false
     @Parameter(title:"켜기",default:true) var on:Bool
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {

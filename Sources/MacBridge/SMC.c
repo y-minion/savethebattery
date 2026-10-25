@@ -37,9 +37,14 @@ int vb_smc_read_u8(const char *key,uint8_t *out) {
     e=smc_call(c,&in,&o);if (e==0) *out=o.bytes[0];
     IOServiceClose(c);return e;
 }
-int vb_smc_write_u8(const char *key,uint8_t value) {
-    io_connect_t c;int e=smc_open_u8(key,&c);if (e) return e;
-    VBSMCData in={0},o;in.key=fourcc(key);in.info.size=1;in.command=kVBSMCWrite;in.bytes[0]=value;
+// The only key this file writes. The key is fixed here and the value must be one of 0 system, 1 off, 3 green, 4 orange.
+// -4 means the key info call failed or the key is not a 1-byte "ui8 " (nothing was written, e.g. a Mac without this LED key), -5 value not allowed.
+int vb_smc_write_aclc(uint8_t value) {
+    if (value!=0 && value!=1 && value!=3 && value!=4) return -5;
+    io_connect_t c;int e=smc_open_u8("ACLC",&c);
+    if (e==-2 || e==-3) return -4;
+    if (e) return e;
+    VBSMCData in={0},o;in.key=fourcc("ACLC");in.info.size=1;in.command=kVBSMCWrite;in.bytes[0]=value;
     e=smc_call(c,&in,&o);
     IOServiceClose(c);return e;
 }

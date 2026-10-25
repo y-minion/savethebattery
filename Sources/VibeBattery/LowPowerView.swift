@@ -16,7 +16,7 @@ struct LowPowerView:View {
             } else {
                 // The switch shows the real state; it moves only once macOS reports the change.
                 Toggle("저전력 모드",isOn:Binding(get:{ model.lowPower },set:{ on in Task { error=await model.setLowPower(on) } })).disabled(model.lowPowerBusy)
-                if model.lowPowerConditional { Text(LowPowerText.conditional).font(.caption).foregroundStyle(.secondary) }
+                ForEach(model.lowPowerNotes,id:\.self) { Text($0).font(.caption).foregroundStyle(.secondary) }
             }
             if let error { Text(error).font(.caption).foregroundStyle(.orange) }
         }.onChange(of:model.lowPower) { error=nil }

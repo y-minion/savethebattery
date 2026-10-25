@@ -31,7 +31,8 @@ public struct PowerSummary: Equatable, Sendable {
         func w(_ v: Double) -> String { String(format: "%.0f", v) }
         if b.onAC {
             guard let input = b.power?.inputW, input > 0 else { return nil }
-            let battery = b.watts ?? 0, enter = "충전기에서 \(w(input)) W 들어옴"
+            guard let battery = b.watts else { return nil }
+            let enter = "충전기에서 \(w(input)) W 들어옴"
             if battery >= 0.5 { return PowerSummary(headline: enter, adapter: adapterText(b.power), segments: [.adapterToMac(max(0, input - battery)), .adapterToBattery(battery)]) }
             if battery > -0.5 { return PowerSummary(headline: enter, adapter: adapterText(b.power), segments: [.adapterToMac(input)]) }
             return PowerSummary(headline: "충전기 \(w(input)) W + 배터리 \(w(-battery)) W 사용", adapter: adapterText(b.power), segments: [.adapterToMac(input), .batteryToMac(-battery)])

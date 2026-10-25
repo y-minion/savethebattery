@@ -2,6 +2,7 @@ import SwiftUI
 import BatteryCore
 import BatteryPlatform
 struct DashboardView:View {
+    static let hardwareCaption="macOS는 배터리 보호를 위해 표시 값을 조정합니다. 이 값은 배터리가 직접 보고한 남은 용량입니다."
     @EnvironmentObject var model:AppModel
     var body:some View {
         PageTitle(title:"배터리의 오늘",subtitle:"실제 측정값으로 상태를 확인하고, 필요한 만큼만 충전하세요.")
@@ -17,7 +18,8 @@ struct DashboardView:View {
                     Text(model.battery.charging ? "충전 중":"현재 충전하지 않음").foregroundStyle(.secondary)
                     if let hw=model.battery.hardwarePercent {
                         Text("하드웨어 잔량 \(hw)%").font(.callout).foregroundStyle(.secondary)
-                            .help("macOS는 배터리 보호를 위해 표시 값을 조정합니다. 이 값은 배터리가 직접 보고한 남은 용량입니다.")
+                            .help(Self.hardwareCaption)
+                        Text(Self.hardwareCaption).font(.caption).foregroundStyle(.tertiary).fixedSize(horizontal:false,vertical:true)
                     }
                     Text("측정 \(model.battery.timestamp.formatted(date:.omitted,time:.standard))").font(.caption).foregroundStyle(.tertiary)
                 }

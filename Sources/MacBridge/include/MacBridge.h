@@ -20,4 +20,7 @@ int vb_notify(const char *name);
 // 1-byte SMC keys only. The type and size are checked before every read or write.
 // 0 ok, -1 AppleSMC open failed, -2 key is not a 1-byte "ui8 ", -3 SMC call failed.
 int vb_smc_read_u8(const char *key, uint8_t *out);
-int vb_smc_write_u8(const char *key, uint8_t value);
+// The only SMC write: the MagSafe LED key, fixed in C. Allowed values 0, 1, 3, 4.
+// 0 ok, -1 open failed, -3 write failed, -4 key missing or not a 1-byte "ui8 " (nothing written), -5 value not allowed.
+#define VB_SMC_UNSUPPORTED (-4)
+int vb_smc_write_aclc(uint8_t value);

@@ -6,7 +6,7 @@ import MacBridge
 // Root daemon. Accepts only fixed requests (a bounded limit write, a state read, the
 // protocol version, Low Power Mode on/off and an allow-listed MagSafe LED value) from the
 // console user's /Applications/VibeBattery.app; no generic defaults, keys or commands.
-/// The only SMC key the helper writes. Never taken from a request or an argument.
+/// The only SMC key the CLI reads; the write path has the key fixed inside MacBridge.
 let ledKey="ACLC"
 let pmset="/usr/bin/pmset"
 /// Runs a fixed program with argv (no shell). Returns the exit code and standard output.
@@ -41,8 +41,8 @@ final class Service:NSObject,ChargeHelperProtocol {
     }
     func setMagSafeLED(_ raw:Int,reply:@escaping (String?)->Void) {
         guard let led=MagSafeLED(rawValue:raw) else { return reply("허용되지 않은 LED 값입니다.") }
-        let r=vb_smc_write_u8(ledKey,UInt8(led.rawValue))
-        reply(r==0 ? nil:"MagSafe LED를 바꾸지 못했습니다. (\(r))")
+        let r=vb_smc_write_aclc(UInt8(led.rawValue))
+        reply(r==0 ? nil:r==VB_SMC_UNSUPPORTED ? MagSafeLEDText.unsupported:MagSafeLEDText.failed)
     }
 }
 /// Root-only test command, used when the binary is started by hand (launchd passes no arguments).
@@ -59,7 +59,7 @@ func ledCommand(_ args:[String]) -> Int32 {
     let r=vb_smc_read_u8(ledKey,&old)
     guard r==0 else { return fail("\(ledKey) 값을 읽지 못했습니다. (\(r))",1) }
     guard let led=names[args[1]] else { print("\(ledKey) 이전 값 \(old)");return 0 }
-    let w=vb_smc_write_u8(ledKey,UInt8(led.rawValue))
+    let w=vb_smc_write_aclc(UInt8(led.rawValue))
     guard w==0 else { return fail("\(ledKey) 이전 값 \(old) · 쓰지 못했습니다. (\(w))",1) }
     // The key reads the LED's displayed color, not the control mode, so a read-back proves nothing.
     print("\(ledKey) 이전 값 \(old) → \(led.rawValue) 썼습니다")

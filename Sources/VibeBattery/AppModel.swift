@@ -137,7 +137,7 @@ import BatteryPlatform
     }
     /// nil on success. The helper call and the wait for macOS to report the change stay off the main actor.
     func setLowPower(_ on:Bool) async -> String? {
-        guard !lowPowerBusy else { return nil }
+        guard !lowPowerBusy else { return "저전력 모드를 바꾸는 중입니다. 잠시 뒤 다시 시도해 주세요." }
         lowPowerBusy=true;defer { lowPowerBusy=false }
         if helperStatus != .ready { await refreshHelperStatus() }
         guard helperStatus == .ready else { return LowPowerText.needsUpdate }
@@ -153,12 +153,21 @@ import BatteryPlatform
         refreshLowPowerSettings()
         return error
     }
-    /// The probe can wait about 3 s on an old helper, so it runs off the main actor.
+    private var helperGeneration=0
+    private var helperProbe:Task<Void,Never>?
+    /// The probe can wait about 3 s on an old helper, so it runs off the main actor. A call during a probe
+    /// joins it, and a result is dropped when `checkHelper()` ran in the meantime.
     func refreshHelperStatus() async {
-        let s=await Task.detached { XPCChargeHelper().status() }.value
-        helperStatus=s
+        if let t=helperProbe { await t.value;return }
+        helperGeneration+=1;let g=helperGeneration
+        let t=Task { @MainActor in
+            let s=await Task.detached { XPCChargeHelper().status() }.value
+            if g==helperGeneration && helperStatus != s { helperStatus=s }
+            helperProbe=nil
+        }
+        helperProbe=t;await t.value
     }
-    func checkHelper() { helperStatus=helper.status() }
+    func checkHelper() { helperGeneration+=1;helperStatus=helper.status() }
     func updateHealthReport() {
         let days=healthRecorder.file.days,now=Date()
         let trend=trendCache.trend(for:BatterySegment.current(days),now:now,calendar:.current)

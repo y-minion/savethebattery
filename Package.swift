@@ -9,7 +9,7 @@ let package = Package(name: "VibeBattery", platforms: [.macOS("15.0")], products
     .library(name: "MacBridge", targets: ["MacBridge"])
 ], targets: [
     .target(name: "BatteryCore"),
-    .target(name: "MacBridge", linkerSettings: [.linkedLibrary("proc"), .linkedFramework("Foundation")]),
+    .target(name: "MacBridge", linkerSettings: [.linkedLibrary("proc"), .linkedFramework("Foundation"), .linkedFramework("IOKit")]),
     .target(name: "BatteryPlatform", dependencies: ["BatteryCore", "MacBridge"], linkerSettings: [.linkedFramework("IOKit")]),
     .executableTarget(name: "VibeBattery", dependencies: ["BatteryCore", "BatteryPlatform"]),
     .executableTarget(name: "VibeCLI", dependencies: ["BatteryCore", "BatteryPlatform", "MacBridge"]),

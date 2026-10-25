@@ -7,6 +7,7 @@ enum ChargeHelperText {
         case .notInstalled:return "헬퍼 설치 안 됨 · 80% 미만 상한에만 필요합니다. 터미널에서 실행: \(model.helperInstallCommand)"
         case .wrongLocation:return "헬퍼 설치됨 · 앱을 /Applications/VibeBattery.app에서 실행해야 헬퍼가 요청을 받습니다."
         case .unreachable:return "헬퍼가 응답하지 않습니다. 설치 스크립트를 다시 실행하세요: \(model.helperInstallCommand)"
+        case .outdated:return "헬퍼 업데이트 필요 · 저전력 모드와 MagSafe LED를 쓰려면 다시 설치하세요: \(model.helperInstallCommand)"
         case .ready:return "헬퍼 사용 가능"
         }
     }
@@ -15,7 +16,7 @@ struct ChargeControlCard:View {
     @EnvironmentObject var model:AppModel
     @State private var target=80
     var canWrite:Bool { model.charge.supported==true && model.chargeConflicts.isEmpty }
-    var needsHelper:Bool { target<ChargeCommand.userFloor && model.helperStatus != .ready }
+    var needsHelper:Bool { target<ChargeCommand.userFloor && !model.helperStatus.canSetLimit }
     var helperText:String { ChargeHelperText.status(model) }
     var originText:String {
         switch model.chargeOrigin {

@@ -17,3 +17,7 @@ int vb_mcl_enable(void);
 int vb_mcl_disable(void);
 int vb_pid_path(int32_t pid, char *buffer, int size);
 int vb_notify(const char *name);
+// 1-byte SMC keys only. The type and size are checked before every read or write.
+// 0 ok, -1 AppleSMC open failed, -2 key is not a 1-byte "ui8 ", -3 SMC call failed.
+int vb_smc_read_u8(const char *key, uint8_t *out);
+int vb_smc_write_u8(const char *key, uint8_t value);

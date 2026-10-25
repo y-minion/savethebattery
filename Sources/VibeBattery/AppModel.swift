@@ -156,6 +156,8 @@ import BatteryPlatform
     // MagSafe LED. The key reads the displayed color, so success is the helper's reply, never a read-back.
     private var lastLED:MagSafeLED?
     private var ledBusy=false
+    /// Bumped whenever the cache is reset, so a write that was already in flight cannot restore it.
+    private var ledGeneration=0
     private var ledError:String?
     private var ledCancellable:AnyCancellable?
     private static let ledDirtyKey="vb.led.dirty"
@@ -169,7 +171,9 @@ import BatteryPlatform
         guard !ledBusy,helperStatus == .ready,chargeConflicts.isEmpty else { return }
         let target=MagSafeLEDPolicy.target(preferences.led,status:menuStatus)
         guard let value=MagSafeLEDPolicy.write(target:target,last:lastLED,dirty:ledDirty) else { return }
-        ledBusy=true
+        ledBusy=true;let generation=ledGeneration
+        // A write that times out may still land, so the flag is set before any non-system write.
+        if value != .system { ledDirty=true }
         Task { @MainActor in
             let error=await Task.detached { XPCChargeHelper().setMagSafeLED(value) }.value
             ledBusy=false
@@ -177,20 +181,23 @@ import BatteryPlatform
                 if error != ledError { ledError=error;message=error }
                 return
             }
-            ledError=nil;lastLED=value;ledDirty=value != .system
+            ledError=nil;if value == .system { ledDirty=false }
+            if generation == ledGeneration { lastLED=value }
             applyLED()
         }
     }
+    private func resetLEDCache() { ledGeneration+=1;lastLED=nil }
     func ledChanged() { savePreferences();applyLED() }
     /// The cable can reset the key, and the state may have changed since the last tick.
     private func watchPower() {
         ledCancellable=$battery.map(\.onAC).removeDuplicates().dropFirst().sink { [weak self] _ in
-            Task { @MainActor in self?.lastLED=nil;self?.applyLED() }
+            Task { @MainActor in self?.resetLEDCache();self?.applyLED() }
         }
     }
     /// Synchronous, bounded to 1 s: the process exits right after this handler returns.
     private func releaseLED() {
         guard ledDirty,helperStatus == .ready,chargeConflicts.isEmpty else { return }
+        ledGeneration+=1 // an in-flight write must not mark state after this
         if helper.setMagSafeLED(.system,timeout:1) == nil { ledDirty=false;lastLED = .system }
     }
     private var helperGeneration=0
@@ -226,7 +233,7 @@ import BatteryPlatform
             let e=SleepEvent(before:s,after:BatteryReader.read());wake=e
             do { try sleepStore.append(e);sleeps=sleepStore.read() } catch { message=error.localizedDescription }
         }
-        sleepStart=nil;lastLED=nil;refresh(wake:wake)
+        sleepStart=nil;resetLEDCache();refresh(wake:wake)
     }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     var heatStatus:String {

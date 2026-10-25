@@ -123,9 +123,9 @@ import BatteryPlatform
     }
     /// `pmset` runs off the main actor, and only on start, a power-state change, a menu window opening or a switch, not on the 5 s tick.
     func refreshLowPowerSettings() {
-        Task.detached { [weak self] in
-            let out=Self.pmsetCustom()
-            await MainActor.run { self?.lowPowerConditional=LowPowerSettings.parse(out).isConditional }
+        Task { [weak self] in
+            let out=await Task.detached { Self.pmsetCustom() }.value
+            self?.lowPowerConditional=LowPowerSettings.parse(out).isConditional
         }
     }
     nonisolated private static func pmsetCustom() -> String {

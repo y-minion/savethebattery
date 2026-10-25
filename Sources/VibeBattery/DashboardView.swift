@@ -43,6 +43,10 @@ struct DashboardView:View {
             Text(model.nextSchedule.map { "다음 일정: \(ScheduleText.when($0.at,now:Date(),calendar:.current)) · \($0.rule.name)" } ?? "예약된 일정 없음").font(.callout).foregroundStyle(.secondary)
         }
         Card {
+            Label("배터리",systemImage:"battery.75percent").font(.headline)
+            LowPowerView()
+        }
+        Card {
             HStack {
                 Label("건강 분석",systemImage:"heart.text.square").font(.headline)
                 Text(model.healthReport.map { HealthText.trend($0.trend,calendar:.current) } ?? "측정 중").foregroundStyle(.secondary)

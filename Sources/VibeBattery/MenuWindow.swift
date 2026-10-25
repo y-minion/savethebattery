@@ -58,7 +58,7 @@ struct MenuWindow:View {
             if let p=PowerSummary.make(model.battery) { PowerBar(summary:p,compact:true) }
         case .limit:limitSection
         case .topUp:topUpSection
-        case .lowPower:EmptyView() // Task 6 adds its view here.
+        case .lowPower:LowPowerView()
         case .battery:batterySection
         case .sessions:sessionsSection
         }

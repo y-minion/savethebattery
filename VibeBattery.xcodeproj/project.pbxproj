@@ -21,6 +21,7 @@
 		614932E0AE1873D851DF2807 /* ProcessesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD95128FE5024E3262D7B55B /* ProcessesView.swift */; };
 		6B0CBDB6427FDC01CA52E0F7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE431B8D94C975301BF43C /* main.swift */; };
 		7D50C5F89ADBB93CD17D1C4A /* ChargeControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28234EBE31B5A4B8CCE662B /* ChargeControlView.swift */; };
+		7FF86A066E987BF2F6A0A695 /* LowPowerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0073EB690EEB08C68AFE4B9D /* LowPowerView.swift */; };
 		8C4B0290C57DB307EB2C1971 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB430FC51271837AC63BECF4 /* SettingsView.swift */; };
 		9331556D82D858C5CACDB836 /* ChargeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69238EE300AEAC6E22ED6727 /* ChargeView.swift */; };
 		A002AB0CD85465A4916413FD /* ChargeIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A020FDCB309E18A24DC8273 /* ChargeIntents.swift */; };
@@ -73,6 +74,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0073EB690EEB08C68AFE4B9D /* LowPowerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowPowerView.swift; sourceTree = "<group>"; };
 		04CC1DBF4662D8142BEE1442 /* ResourceRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceRunner.swift; sourceTree = "<group>"; };
 		0A020FDCB309E18A24DC8273 /* ChargeIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeIntents.swift; sourceTree = "<group>"; };
 		1B86C12E613BAA11B444A475 /* VibeBatteryApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeBatteryApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -144,6 +146,7 @@
 				69238EE300AEAC6E22ED6727 /* ChargeView.swift */,
 				49D643A01B5C56616360E82B /* DashboardView.swift */,
 				7FEC7CC828570B37A896E19C /* HealthView.swift */,
+				0073EB690EEB08C68AFE4B9D /* LowPowerView.swift */,
 				CA4B44FF10AA126183D9863A /* MenuBarIcon.swift */,
 				25A19D326CC4E80033229CD4 /* MenuWindow.swift */,
 				FDD850D5EAC9A9681D4F3103 /* Notifier.swift */,
@@ -380,6 +383,7 @@
 				9331556D82D858C5CACDB836 /* ChargeView.swift in Sources */,
 				0A27D4A05133537F9957C8D6 /* DashboardView.swift in Sources */,
 				DE11E10BDB1CC4A3BB873CD6 /* HealthView.swift in Sources */,
+				7FF86A066E987BF2F6A0A695 /* LowPowerView.swift in Sources */,
 				1E6200888958CB8E2433C175 /* MenuBarIcon.swift in Sources */,
 				3986C9DC658E6548E5151E30 /* MenuWindow.swift in Sources */,
 				C7C02E43FDFCEDD560F4F50A /* Notifier.swift in Sources */,

@@ -34,3 +34,14 @@ struct HelperV2Tests {
         #expect(HelperStatus.ready.canSetLimit)
     }
 }
+
+struct LowPowerTextTests {
+    @Test func captionFollowsHelperStatus() {
+        #expect(LowPowerText.caption(.ready)==nil)
+        #expect(LowPowerText.caption(.outdated)=="헬퍼 업데이트가 필요합니다")
+        for s in [HelperStatus.notInstalled,.wrongLocation,.unreachable] { #expect(LowPowerText.caption(s)=="헬퍼를 설치하면 여기서 바로 바꿀 수 있습니다") }
+    }
+    @Test func doneText() {
+        #expect(LowPowerText.done(true)=="저전력 모드를 켰습니다.");#expect(LowPowerText.done(false)=="저전력 모드를 껐습니다.")
+    }
+}

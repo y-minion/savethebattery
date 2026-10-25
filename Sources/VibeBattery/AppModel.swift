@@ -23,6 +23,8 @@ import BatteryPlatform
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled
+    @Published var lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
+    @Published var lowPowerConditional=false
     @Published var healthReport:HealthReport?
     @Published var sleeps:[SleepEvent]=[]
     @Published var notificationAccess=NotificationAccess.unavailable
@@ -35,7 +37,7 @@ import BatteryPlatform
         didSet {
             menuTimer?.invalidate();menuTimer=nil
             guard menuWindowOpen else { return }
-            battery=BatteryReader.read()
+            battery=BatteryReader.read();refreshLowPowerSettings()
             let t=Timer(timeInterval:2,repeats:true) { [weak self] _ in Task { @MainActor in self?.battery=BatteryReader.read() } }
             RunLoop.main.add(t,forMode:.common);menuTimer=t
         }
@@ -117,6 +119,35 @@ import BatteryPlatform
         }
         // Without the channel only vbctl writes are unavailable; the app itself keeps working.
         do { try server.start();controlServer=server } catch { controlServer=nil }
+    }
+    /// `pmset` runs off the main actor, and only on start, a power-state change, a menu window opening or a switch, not on the 5 s tick.
+    func refreshLowPowerSettings() {
+        Task.detached {
+            let out=Self.pmsetCustom()
+            await MainActor.run { AppModel.shared.lowPowerConditional=LowPowerSettings.parse(out).isConditional }
+        }
+    }
+    nonisolated private static func pmsetCustom() -> String {
+        let p=Process();p.executableURL=URL(fileURLWithPath:"/usr/bin/pmset");p.arguments=["-g","custom"]
+        let pipe=Pipe();p.standardOutput=pipe;p.standardError=FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return "" }
+        let d=pipe.fileHandleForReading.readDataToEndOfFile();p.waitUntilExit()
+        return String(decoding:d,as:UTF8.self)
+    }
+    /// nil on success. The helper call and the wait for macOS to report the change stay off the main actor.
+    func setLowPower(_ on:Bool) async -> String? {
+        guard helperStatus == .ready else { return LowPowerText.needsUpdate }
+        let error:String?=await Task.detached {
+            if let e=XPCChargeHelper().setLowPowerMode(on) { return e }
+            for _ in 0..<20 {
+                if ProcessInfo.processInfo.isLowPowerModeEnabled==on { return nil }
+                try? await Task.sleep(for:.milliseconds(100))
+            }
+            return ProcessInfo.processInfo.isLowPowerModeEnabled==on ? nil:LowPowerText.failed
+        }.value
+        lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
+        refreshLowPowerSettings()
+        return error
     }
     func checkHelper() { helperStatus=helper.status() }
     func updateHealthReport() {
@@ -203,6 +234,10 @@ import BatteryPlatform
         NotificationCenter.default.addObserver(forName:NSApplication.didBecomeActiveNotification,object:nil,queue:.main) { [weak self] _ in
             MainActor.assumeIsolated { self?.checkNotifications() }
         }
+        NotificationCenter.default.addObserver(forName:.NSProcessInfoPowerStateDidChange,object:nil,queue:.main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled;self?.refreshLowPowerSettings() }
+        }
+        refreshLowPowerSettings()
         let ws=NSWorkspace.shared.notificationCenter
         ws.addObserver(forName:NSWorkspace.willSleepNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.willSleep() } }
         ws.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } }

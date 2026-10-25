@@ -23,3 +23,14 @@ public struct LowPowerSettings: Equatable, Sendable {
     /// `pmset` argv (without the program) that turns Low Power Mode on or off for every power source.
     public func arguments(on:Bool) -> [String]? { key.map { ["-a",$0,on ? "1":"0"] } }
 }
+/// Screen text for the Low Power Mode switch.
+public enum LowPowerText {
+    public static let needsUpdate="헬퍼를 업데이트하면 여기서 바로 바꿀 수 있습니다."
+    public static let failed="저전력 모드를 바꾸지 못했습니다."
+    public static let conditional="지금은 배터리/전원 어댑터에 따라 다르게 설정되어 있습니다. 여기서 바꾸면 항상 켜짐 또는 항상 꺼짐이 됩니다."
+    /// Why the switch is unavailable; nil when the helper is ready.
+    public static func caption(_ s:HelperStatus) -> String? {
+        switch s { case .ready:nil; case .outdated:"헬퍼 업데이트가 필요합니다"; default:"헬퍼를 설치하면 여기서 바로 바꿀 수 있습니다" }
+    }
+    public static func done(_ on:Bool) -> String { on ? "저전력 모드를 켰습니다.":"저전력 모드를 껐습니다." }
+}

@@ -39,6 +39,16 @@ struct ClearChargeLimitIntent: AppIntent {
     static let openAppWhenRun=false
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog { try run(.clearLimit) }
 }
+struct SetLowPowerModeIntent: AppIntent {
+    static let title:LocalizedStringResource="저전력 모드 설정"
+    static let description=IntentDescription("저전력 모드를 켜거나 끕니다. 충전 헬퍼가 필요합니다.")
+    static let openAppWhenRun=false
+    @Parameter(title:"켜기",default:true) var on:Bool
+    @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
+        if let e=await AppModel.shared.setLowPower(on) { throw ShortcutFailure(message:e) }
+        return .result(dialog:"\(LowPowerText.done(on))")
+    }
+}
 struct BatteryStatusEntity: TransientAppEntity {
     static let typeDisplayRepresentation:TypeDisplayRepresentation="배터리 상태"
     @Property(title:"잔량") var percent:Int?

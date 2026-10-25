@@ -49,6 +49,7 @@ struct MenuWindow:View {
                 Button("앱 종료") { NSApp.terminate(nil) }
             }.buttonStyle(.plain)
         }.padding(16).frame(width:300).onAppear { model.menuWindowOpen=true }.onDisappear { model.menuWindowOpen=false }
+            .background(KeyWindowObserver { model.menuWindowOpen=$0 })
     }
     @ViewBuilder func section(_ s:MenuSection) -> some View {
         switch s {
@@ -69,9 +70,13 @@ struct MenuWindow:View {
             Text(parts.joined(separator:" · ")).font(.callout).foregroundStyle(.secondary)
         }
     }
+    /// Why charge writes are unavailable, shared by the limit and topUp sections.
+    var writeBlock:String? {
+        if !model.chargeConflicts.isEmpty { return "\(model.chargeConflicts.map(\.name).joined(separator:", "))이(가) 충전을 관리하고 있어 바꿀 수 없습니다." }
+        return model.charge.supported==true ? nil:"이 맥에서는 충전 상한을 바꿀 수 없습니다"
+    }
     var limitSection:some View {
-        let conflict = !model.chargeConflicts.isEmpty
-        let canWrite=model.charge.supported==true && !conflict
+        let canWrite=writeBlock==nil
         let current=model.charge.enabled==true ? model.charge.limit:nil
         return VStack(alignment:.leading,spacing:6) {
             Text(MenuSection.limit.title).font(.caption).foregroundStyle(.secondary)
@@ -84,16 +89,16 @@ struct MenuWindow:View {
                 }
                 Button("끄기") { model.applyCharge(.clearLimit) }.buttonStyle(.bordered).disabled(!canWrite)
             }.controlSize(.small)
-            if conflict { Text("\(model.chargeConflicts.map(\.name).joined(separator:", "))이(가) 충전을 관리하고 있어 바꿀 수 없습니다.").font(.caption).foregroundStyle(.orange) }
-            else if model.charge.supported != true { Text("이 맥에서는 충전 상한을 바꿀 수 없습니다").font(.caption).foregroundStyle(.secondary) }
+            if let b=writeBlock { Text(b).font(.caption).foregroundStyle(model.chargeConflicts.isEmpty ? Color.secondary:Color.orange) }
             else if !model.helperStatus.canSetLimit { Text("80% 미만은 헬퍼가 필요합니다").font(.caption).foregroundStyle(.secondary) }
         }
     }
     var topUpSection:some View {
-        let canWrite=model.charge.supported==true && model.chargeConflicts.isEmpty
+        let canWrite=writeBlock==nil
         return VStack(alignment:.leading,spacing:6) {
             if model.topUpActive { Button("완충 종료") { model.applyCharge(.endTopUp) }.disabled(!canWrite) }
             else { Button("한 번 100% 충전") { model.applyCharge(.startTopUp) }.disabled(!canWrite) }
+            if let b=writeBlock { Text(b).font(.caption).foregroundStyle(model.chargeConflicts.isEmpty ? Color.secondary:Color.orange) }
             if let n=model.nextSchedule { Text("다음 일정 "+ScheduleText.when(n.at,now:Date(),calendar:.current)).font(.caption).foregroundStyle(.secondary) }
         }.controlSize(.small)
     }
@@ -118,4 +123,25 @@ struct MenuWindow:View {
             }
         }
     }
+}
+/// Follows the hosting window's key state so the refresh timer stops when the popover closes even if the content view stays alive.
+struct KeyWindowObserver:NSViewRepresentable {
+    var onChange:(Bool)->Void
+    final class Probe:NSView {
+        var onChange:(Bool)->Void={ _ in }
+        private var tokens:[NSObjectProtocol]=[]
+        override func viewDidMoveToWindow() {
+            stop()
+            guard let w=window else { return }
+            let c=NotificationCenter.default
+            tokens=[(NSWindow.didBecomeKeyNotification,true),(NSWindow.didResignKeyNotification,false)].map { name,on in
+                c.addObserver(forName:name,object:w,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.onChange(on) } }
+            }
+            if w.isKeyWindow { onChange(true) }
+        }
+        func stop() { tokens.forEach(NotificationCenter.default.removeObserver);tokens=[] }
+    }
+    func makeNSView(context:Context) -> Probe { let p=Probe();p.onChange=onChange;return p }
+    func updateNSView(_ v:Probe,context:Context) { v.onChange=onChange }
+    static func dismantleNSView(_ v:Probe,coordinator:()) { v.stop();v.onChange={ _ in } }
 }

@@ -36,7 +36,8 @@ import BatteryPlatform
             menuTimer?.invalidate();menuTimer=nil
             guard menuWindowOpen else { return }
             battery=BatteryReader.read()
-            menuTimer=Timer.scheduledTimer(withTimeInterval:2,repeats:true) { [weak self] _ in Task { @MainActor in self?.battery=BatteryReader.read() } }
+            let t=Timer(timeInterval:2,repeats:true) { [weak self] _ in Task { @MainActor in self?.battery=BatteryReader.read() } }
+            RunLoop.main.add(t,forMode:.common);menuTimer=t
         }
     }
     private let notifier=NotificationRuntime.makeSink()

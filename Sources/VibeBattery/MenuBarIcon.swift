@@ -13,7 +13,7 @@ enum MenuBarIcon {
     static func image(percent:Int?,status:MenuBarStatus) -> NSImage {
         let size=NSSize(width:26,height:14)
         let fraction=CGFloat(min(100,max(0,percent ?? 0)))/100
-        let glyph=glyphSymbol(status).flatMap { NSImage(systemSymbolName:$0,accessibilityDescription:nil)?.withSymbolConfiguration(.init(pointSize:9,weight:.bold)) }
+        let glyph=glyphSymbol(status).flatMap { NSImage(systemSymbolName:$0,accessibilityDescription:nil)?.withSymbolConfiguration(.init(pointSize:9,weight:.bold).applying(status == .heatHold ? .init(paletteColors:[.systemOrange]):.init())) }
         let image=NSImage(size:size,flipped:false) { _ in
             let color:NSColor = status == .heatHold ? .systemOrange : .black
             color.setStroke();color.setFill()

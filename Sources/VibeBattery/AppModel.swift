@@ -23,10 +23,29 @@ import BatteryPlatform
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled
+    @Published var lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
+    @Published var lowPowerNotes:[String]=[]
+    /// This Mac has no usable LED key (per launch); nothing is written again.
+    @Published var ledUnsupported=false
+    @Published var lowPowerBusy=false
     @Published var healthReport:HealthReport?
     @Published var sleeps:[SleepEvent]=[]
     @Published var notificationAccess=NotificationAccess.unavailable
     var openMain:(()->Void)?
+    var menuStatus:MenuBarStatus { .make(onAC:battery.onAC,charging:battery.charging,heatHolding:chargeController.record.heat.holdLimit != nil) }
+    var activeSessions:[SessionRecord] { sessions.filter { $0.ended==nil && ownerAlive($0) } }
+    private var menuTimer:Timer?
+    /// While the menu window is open the battery is read every 2 s; the 5 s tick is unchanged.
+    var menuWindowOpen=false {
+        didSet {
+            guard menuWindowOpen != oldValue else { return }
+            menuTimer?.invalidate();menuTimer=nil
+            guard menuWindowOpen else { return }
+            battery=BatteryReader.read();refreshLowPowerSettings()
+            let t=Timer(timeInterval:2,repeats:true) { [weak self] _ in Task { @MainActor in self?.battery=BatteryReader.read() } }
+            RunLoop.main.add(t,forMode:.common);menuTimer=t
+        }
+    }
     private let notifier=NotificationRuntime.makeSink()
     private let notificationStore=NotificationStore(url:AppPaths.notify)
     private lazy var notificationMemory=notificationStore.read()
@@ -105,7 +124,103 @@ import BatteryPlatform
         // Without the channel only vbctl writes are unavailable; the app itself keeps working.
         do { try server.start();controlServer=server } catch { controlServer=nil }
     }
-    func checkHelper() { helperStatus=helper.status() }
+    /// `pmset` runs off the main actor, and only on start, a power-state change, a menu window opening or a switch, not on the 5 s tick.
+    func refreshLowPowerSettings() {
+        Task { [weak self] in
+            let out=await Task.detached { Self.pmsetCustom() }.value
+            self?.lowPowerNotes=LowPowerText.notes(LowPowerSettings.parse(out))
+        }
+    }
+    nonisolated private static func pmsetCustom() -> String {
+        let p=Process();p.executableURL=URL(fileURLWithPath:"/usr/bin/pmset");p.arguments=["-g","custom"]
+        let pipe=Pipe();p.standardOutput=pipe;p.standardError=FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return "" }
+        let d=pipe.fileHandleForReading.readDataToEndOfFile();p.waitUntilExit()
+        return String(decoding:d,as:UTF8.self)
+    }
+    /// nil on success. The helper call and the wait for macOS to report the change stay off the main actor.
+    func setLowPower(_ on:Bool) async -> String? {
+        guard !lowPowerBusy else { return "저전력 모드를 바꾸는 중입니다. 잠시 뒤 다시 시도해 주세요." }
+        lowPowerBusy=true;defer { lowPowerBusy=false }
+        if helperStatus != .ready { await refreshHelperStatus() }
+        guard helperStatus == .ready else { return LowPowerText.unavailable(helperStatus) }
+        let error:String?=await Task.detached {
+            if let e=XPCChargeHelper().setLowPowerMode(on) { return e }
+            for _ in 0..<20 {
+                if ProcessInfo.processInfo.isLowPowerModeEnabled==on { return nil }
+                try? await Task.sleep(for:.milliseconds(100))
+            }
+            return ProcessInfo.processInfo.isLowPowerModeEnabled==on ? nil:LowPowerText.failed
+        }.value
+        lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
+        refreshLowPowerSettings()
+        return error
+    }
+    // MagSafe LED. The key reads the displayed color, so success is the helper's reply, never a read-back.
+    private var lastLED:MagSafeLED?
+    private var ledBusy=false
+    /// Bumped whenever the cache is reset, so a write that was already in flight cannot restore it.
+    private var ledGeneration=0
+    private var ledError:String?
+    private var ledCancellable:AnyCancellable?
+    private static let ledDirtyKey="vb.led.dirty"
+    /// True after any non-system write, so a crash or a changed mode still returns the LED to macOS.
+    private var ledDirty:Bool {
+        get { UserDefaults.standard.bool(forKey:Self.ledDirtyKey) }
+        set { UserDefaults.standard.set(newValue,forKey:Self.ledDirtyKey) }
+    }
+    /// Writes only when the target changed; the helper call stays off the main actor.
+    func applyLED() {
+        guard !ledBusy,!ledUnsupported,helperStatus == .ready,chargeConflicts.isEmpty else { return }
+        let target=MagSafeLEDPolicy.target(preferences.led,status:menuStatus)
+        guard let value=MagSafeLEDPolicy.write(target:target,last:lastLED,dirty:ledDirty,unsupported:ledUnsupported) else { return }
+        ledBusy=true;let generation=ledGeneration
+        // A write that times out may still land, so the flag is set before any non-system write.
+        if value != .system { ledDirty=true }
+        Task { @MainActor in
+            let error=await Task.detached { XPCChargeHelper().setMagSafeLED(value) }.value
+            ledBusy=false
+            if let error {
+                let outcome=MagSafeLEDPolicy.outcome(reply:error)
+                if outcome.clearDirty { ledDirty=false } // nothing landed, so there is nothing to release
+                if outcome.unsupported { ledUnsupported=true;return } // the card says so; no alert, no retry
+                if error != ledError { ledError=error;message=error }
+                return
+            }
+            ledError=nil;if value == .system { ledDirty=false }
+            if generation == ledGeneration { lastLED=value }
+            applyLED()
+        }
+    }
+    private func resetLEDCache() { ledGeneration+=1;lastLED=nil }
+    func ledChanged() { savePreferences();applyLED() }
+    /// The cable can reset the key, and the state may have changed since the last tick.
+    private func watchPower() {
+        ledCancellable=$battery.map(\.onAC).removeDuplicates().dropFirst().sink { [weak self] _ in
+            Task { @MainActor in self?.resetLEDCache();self?.applyLED() }
+        }
+    }
+    /// Synchronous, bounded to 1 s: the process exits right after this handler returns.
+    private func releaseLED() {
+        guard ledDirty,!ledUnsupported,helperStatus == .ready,chargeConflicts.isEmpty else { return }
+        ledGeneration+=1 // an in-flight write must not mark state after this
+        if helper.setMagSafeLED(.system,timeout:1) == nil { if !ledBusy { ledDirty=false };lastLED = .system } // a write still in flight may land later
+    }
+    private var helperGeneration=0
+    private var helperProbe:Task<Void,Never>?
+    /// The probe can wait about 3 s on an old helper, so it runs off the main actor. A call during a probe
+    /// joins it, and a result is dropped when `checkHelper()` ran in the meantime.
+    func refreshHelperStatus() async {
+        if let t=helperProbe { await t.value;return }
+        helperGeneration+=1;let g=helperGeneration
+        let t=Task { @MainActor in
+            let s=await Task.detached { XPCChargeHelper().status() }.value
+            if g==helperGeneration && helperStatus != s { helperStatus=s;applyLED() }
+            helperProbe=nil
+        }
+        helperProbe=t;await t.value
+    }
+    func checkHelper() { helperGeneration+=1;helperStatus=helper.status();applyLED() }
     func updateHealthReport() {
         let days=healthRecorder.file.days,now=Date()
         let trend=trendCache.trend(for:BatterySegment.current(days),now:now,calendar:.current)
@@ -124,7 +239,7 @@ import BatteryPlatform
             let e=SleepEvent(before:s,after:BatteryReader.read());wake=e
             do { try sleepStore.append(e);sleeps=sleepStore.read() } catch { message=error.localizedDescription }
         }
-        sleepStart=nil;refresh(wake:wake)
+        sleepStart=nil;resetLEDCache();refresh(wake:wake)
     }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     var heatStatus:String {
@@ -150,6 +265,7 @@ import BatteryPlatform
         if case .failure(let e)?=step.result { message="과열 보류를 멈췄습니다. \(e.localizedDescription) 현재 상태: \(heatStatus)" }
         charge=chargeController.state();chargeConflicts=ChargeControllerScan.current()
         loginItem=SMAppService.mainApp.status == .enabled
+        applyLED()
     }
     func applyCharge(_ c:ChargeCommand) {
         switch chargeController.apply(c) {
@@ -179,17 +295,22 @@ import BatteryPlatform
         sleeps=sleepStore.read()
         refresh()
         checkHelper()
+        watchPower()
         checkNotifications()
         startControlServer()
         NotificationRouter.shared.open={ [weak self] in self?.show($0) }
         // A heat hold must not outlive the app that would restore it.
         NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.controlServer?.stop();_=self?.chargeController.releaseHold();try? self?.healthRecorder.flush() }
+            MainActor.assumeIsolated { self?.controlServer?.stop();_=self?.chargeController.releaseHold();self?.releaseLED();try? self?.healthRecorder.flush() }
         }
         // Permission is usually granted in System Settings; re-check when the user comes back.
         NotificationCenter.default.addObserver(forName:NSApplication.didBecomeActiveNotification,object:nil,queue:.main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.checkNotifications() }
+            MainActor.assumeIsolated { self?.checkNotifications();Task { await self?.refreshHelperStatus() } }
         }
+        NotificationCenter.default.addObserver(forName:.NSProcessInfoPowerStateDidChange,object:nil,queue:.main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled;self?.refreshLowPowerSettings() }
+        }
+        refreshLowPowerSettings()
         let ws=NSWorkspace.shared.notificationCenter
         ws.addObserver(forName:NSWorkspace.willSleepNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.willSleep() } }
         ws.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } }

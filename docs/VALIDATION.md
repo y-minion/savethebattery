@@ -81,3 +81,15 @@ Not claimed as validated: real high-temperature heat hold, physical display beha
 - The release bundle contains `Metadata.appintents`, `vbctl`, `VBChargeHelper` (identifier `io.github.y-minion.vibebattery.helper`) and both helper scripts, passes `codesign --verify --strict`, and the embedded `vbctl` passes the session smoke test. CI (macos-15 runner, ad-hoc signing) builds the same script.
 - Shortcuts showed no actions for the ad-hoc build. Signed with an Apple Development identity, the installed app listed all five actions.
 - On the target Mac: "배터리 상태 가져오기" returned the summary; "충전 상한 설정" 80 then 70, "한 번 완충 시작" and "완충 종료" all succeeded and were logged with the Shortcuts source; the user saw them in the dashboard history. The helper kept answering the team-signed app (70% is below the PowerUI range).
+
+## Pro features (2026-10-25)
+
+- Swift Testing runs 238 tests in 33 suites (`swift test --disable-xctest`), including the new status icon, menu, power flow, Low Power Mode and MagSafe LED logic.
+- MagSafe LED hardware gate on the target (MagSafe 3, checked by eye): initial read 3; `off` turned the LED off; `system` brought it back (green); `orange` orange; `green` green; `system` restored. Reading `ACLC` returns the displayed colour with about one read of lag and never the control mode, so the app confirms writes by the helper's reply.
+- On-device checks, all passed (user):
+  - menu window sections and order; quick limit 70; hiding and moving settings cards persists across relaunch
+  - dashboard power flow and hardware percentage
+  - Low Power Mode switch on/off matches System Settings; System Settings changes are followed; Shortcut on/off works
+  - LED: "끄기" turns it off, "상태별로 정하기" shows green while paused at the limit, "macOS 기본" restores, quitting the app restores macOS control
+- Not checked: LED value after a reboot. The LED works only with the MagSafe cable, not USB-C.
+- Not included: stop charging while sleeping (by decision); sailing lower bound, forced discharge and calibration (firmware-blocked).

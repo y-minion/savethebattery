@@ -51,6 +51,43 @@ struct SettingsView:View {
             Text("앱이 실행 중일 때만 알리며 최대 2분 늦을 수 있습니다. 집중 모드에서는 가려질 수 있고, 잠금 화면 미리보기는 macOS 알림 설정을 따릅니다.").font(.caption).foregroundStyle(.secondary)
         }.onAppear { model.checkNotifications() }
         Card {
+            Text("메뉴 막대").font(.headline)
+            Picker("표시 방식",selection:Binding(get:{ model.preferences.menuBar.icon },set:{ model.preferences.menuBar.icon=$0;model.savePreferences() })) {
+                ForEach(MenuIconStyle.allCases,id:\.self) { Text($0.title).tag($0) }
+            }
+            Text("메뉴 창 구성").font(.subheadline.weight(.semibold))
+            let sections=model.preferences.menuBar.sections
+            ForEach(Array(sections.enumerated()),id:\.element.section) { i,s in
+                HStack {
+                    Toggle(s.section.title,isOn:Binding(get:{ s.visible },set:{ v in
+                        if let k=model.preferences.menuBar.sections.firstIndex(where:{ $0.section==s.section }) { model.preferences.menuBar.sections[k].visible=v;model.savePreferences() }
+                    }))
+                    Spacer()
+                    Button { model.preferences.menuBar.move(s.section,by:-1);model.savePreferences() } label: { Image(systemName:"chevron.up") }.disabled(i==0)
+                    Button { model.preferences.menuBar.move(s.section,by:1);model.savePreferences() } label: { Image(systemName:"chevron.down") }.disabled(i==sections.count-1)
+                }
+            }
+            Button("기본값으로 되돌리기") { model.preferences.menuBar = .default;model.savePreferences() }
+        }
+        Card {
+            Text("MagSafe LED").font(.headline)
+            let colors:[(String,WritableKeyPath<LEDSettings,LEDColor>)]=[("충전 중",\.charging),("상한에서 멈춤 또는 완충",\.paused),("과열로 충전 보류",\.heat)]
+            Picker("표시 방식",selection:Binding(get:{ model.preferences.led.mode },set:{ model.preferences.led.mode=$0;model.ledChanged() })) {
+                ForEach(LEDMode.allCases,id:\.self) { Text($0.title).tag($0) }
+            }
+            if model.preferences.led.mode == .perState {
+                ForEach(colors,id:\.0) { title,key in
+                    Picker(title,selection:Binding(get:{ model.preferences.led[keyPath:key] },set:{ model.preferences.led[keyPath:key]=$0;model.ledChanged() })) {
+                        ForEach(LEDColor.allCases,id:\.self) { Text($0.title).tag($0) }
+                    }
+                }
+            }
+            if model.ledUnsupported { Text(MagSafeLEDText.unsupported).font(.caption).foregroundStyle(.secondary) }
+            else if let caption=LowPowerText.caption(model.helperStatus) { Text(caption).font(.caption).foregroundStyle(.secondary) }
+            else if !model.chargeConflicts.isEmpty { Text("다른 충전 관리 앱이 있어 LED를 바꾸지 않습니다.").font(.caption).foregroundStyle(.secondary) }
+            Text("MagSafe 케이블로 연결했을 때만 켜집니다. USB-C 단자로 충전하면 효과가 없습니다.").font(.caption).foregroundStyle(.secondary)
+        }.disabled(model.helperStatus != .ready || model.ledUnsupported)
+        Card {
             Text("명령줄과 단축어").font(.headline)
             Text("앱이 실행 중이면 터미널이나 단축어에서 충전 상한을 바꿀 수 있습니다.").foregroundStyle(.secondary)
             VStack(alignment:.leading,spacing:4) {
@@ -75,8 +112,8 @@ struct SettingsView:View {
         }
         Card {
             Text("검증된 기능과 개발 중인 기능").font(.headline)
-            Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리, 충전 상한 50~100%, 한 번 완충, 충전 일정, 명령줄 충전 제어, 건강 분석, 알림.").foregroundStyle(.secondary)
-            Text("이 Mac에서 실기기 확인: 충전 상한, 한 번 완충, 알림. 실제 고온 상황의 과열 보류는 아직 확인 전입니다. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약). 개발 예정: 단축어 전용 동작, 전력 흐름, MagSafe LED.").foregroundStyle(.secondary)
+            Text("현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리, 충전 상한 50~100%, 한 번 완충, 충전 일정, 명령줄 충전 제어, 건강 분석, 알림, 실시간 메뉴 막대 아이콘과 메뉴 창, 전력 흐름, 하드웨어 잔량, 저전력 모드 스위치, MagSafe LED.").foregroundStyle(.secondary)
+            Text("이 Mac에서 실기기 확인: 충전 상한, 한 번 완충, 알림. 실제 고온 상황의 과열 보류는 아직 확인 전입니다. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약).").foregroundStyle(.secondary)
             Link("GitHub에서 소스와 진행 상황 보기",destination:URL(string:"https://github.com/y-minion/vibebattery")!)
         }
     }

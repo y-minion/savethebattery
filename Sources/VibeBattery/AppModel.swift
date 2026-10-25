@@ -25,6 +25,7 @@ import BatteryPlatform
     @Published var helperStatus=HelperStatus.notInstalled
     @Published var lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
     @Published var lowPowerConditional=false
+    @Published var lowPowerBusy=false
     @Published var healthReport:HealthReport?
     @Published var sleeps:[SleepEvent]=[]
     @Published var notificationAccess=NotificationAccess.unavailable
@@ -122,9 +123,9 @@ import BatteryPlatform
     }
     /// `pmset` runs off the main actor, and only on start, a power-state change, a menu window opening or a switch, not on the 5 s tick.
     func refreshLowPowerSettings() {
-        Task.detached {
+        Task.detached { [weak self] in
             let out=Self.pmsetCustom()
-            await MainActor.run { AppModel.shared.lowPowerConditional=LowPowerSettings.parse(out).isConditional }
+            await MainActor.run { self?.lowPowerConditional=LowPowerSettings.parse(out).isConditional }
         }
     }
     nonisolated private static func pmsetCustom() -> String {
@@ -136,6 +137,9 @@ import BatteryPlatform
     }
     /// nil on success. The helper call and the wait for macOS to report the change stay off the main actor.
     func setLowPower(_ on:Bool) async -> String? {
+        guard !lowPowerBusy else { return nil }
+        lowPowerBusy=true;defer { lowPowerBusy=false }
+        if helperStatus != .ready { await refreshHelperStatus() }
         guard helperStatus == .ready else { return LowPowerText.needsUpdate }
         let error:String?=await Task.detached {
             if let e=XPCChargeHelper().setLowPowerMode(on) { return e }
@@ -148,6 +152,11 @@ import BatteryPlatform
         lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
         refreshLowPowerSettings()
         return error
+    }
+    /// The probe can wait about 3 s on an old helper, so it runs off the main actor.
+    func refreshHelperStatus() async {
+        let s=await Task.detached { XPCChargeHelper().status() }.value
+        helperStatus=s
     }
     func checkHelper() { helperStatus=helper.status() }
     func updateHealthReport() {
@@ -232,7 +241,7 @@ import BatteryPlatform
         }
         // Permission is usually granted in System Settings; re-check when the user comes back.
         NotificationCenter.default.addObserver(forName:NSApplication.didBecomeActiveNotification,object:nil,queue:.main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.checkNotifications() }
+            MainActor.assumeIsolated { self?.checkNotifications();Task { await self?.refreshHelperStatus() } }
         }
         NotificationCenter.default.addObserver(forName:.NSProcessInfoPowerStateDidChange,object:nil,queue:.main) { [weak self] _ in
             MainActor.assumeIsolated { self?.lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled;self?.refreshLowPowerSettings() }

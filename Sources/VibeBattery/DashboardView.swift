@@ -27,6 +27,8 @@ struct DashboardView:View {
                     Button("배터리 설정 열기") { model.openBatterySettings() }.buttonStyle(.bordered)
                 }
             }
+            Divider()
+            LowPowerView(showsSettingsButton:false)
         }
         HStack(alignment:.top,spacing:16) {
             metric("용량 기반 건강도",value:model.battery.health.map { "\($0)%" } ?? "—",footnote:"설계 용량 대비 추정치",symbol:"heart.fill")
@@ -41,10 +43,6 @@ struct DashboardView:View {
             Text(ChargeText.limit(model.charge)).font(.title2.weight(.semibold))
             if let why=model.lastChangeText { Text(why).foregroundStyle(.secondary) }
             Text(model.nextSchedule.map { "다음 일정: \(ScheduleText.when($0.at,now:Date(),calendar:.current)) · \($0.rule.name)" } ?? "예약된 일정 없음").font(.callout).foregroundStyle(.secondary)
-        }
-        Card {
-            Label("배터리",systemImage:"battery.75percent").font(.headline)
-            LowPowerView()
         }
         Card {
             HStack {

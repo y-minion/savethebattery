@@ -35,7 +35,8 @@ ditto "$TMP/x/VibeBattery.app" "$DIR/.VibeBattery.app.new"
 [ -e "$DIR/VibeBattery.app" ] && mv "$DIR/VibeBattery.app" "$DIR/.VibeBattery.app.old"
 if ! mv "$DIR/.VibeBattery.app.new" "$DIR/VibeBattery.app"; then
     [ -e "$DIR/.VibeBattery.app.old" ] && mv "$DIR/.VibeBattery.app.old" "$DIR/VibeBattery.app"
-    msg "Could not put the new app in place." "새 앱을 설치하지 못했습니다." >&2; exit 1
+    rm -rf "$DIR/.VibeBattery.app.new"
+    msg "Could not put the new app in place. The previous version was restored." "새 앱을 설치하지 못했습니다. 이전 버전을 복원했습니다." >&2; exit 1
 fi
 rm -rf "$DIR/.VibeBattery.app.old"
 msg "Installed $DIR/VibeBattery.app" "$DIR/VibeBattery.app 에 설치했습니다."

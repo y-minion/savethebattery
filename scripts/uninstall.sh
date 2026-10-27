@@ -22,7 +22,7 @@ if [ -e "/Library/LaunchDaemons/$LABEL.plist" ]; then
         CMD="/bin/sh '$APP/Contents/Resources/uninstall-helper.sh'"
     else
         H=/Library/PrivilegedHelperTools/$LABEL
-        CMD="[ -x $H ] && $H --led system; /bin/launchctl bootout system/$LABEL; /bin/rm -f /Library/LaunchDaemons/$LABEL.plist $H; true"
+        CMD="if [ -x $H ]; then $H --led system >/dev/null 2>&1 & P=\$!; ( sleep 5; kill \$P ) >/dev/null 2>&1 & W=\$!; wait \$P; kill \$W; fi; /bin/launchctl bootout system/$LABEL; /bin/rm -f /Library/LaunchDaemons/$LABEL.plist $H; true"
     fi
     osascript -e "do shell script \"$CMD\" with administrator privileges" || msg "The helper was not removed." "헬퍼를 제거하지 못했습니다." >&2
 fi

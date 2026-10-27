@@ -17,6 +17,7 @@ git rev-parse -q --verify "refs/tags/v$V" >/dev/null && die "Tag v$V already exi
 git ls-remote --exit-code --tags origin "refs/tags/v$V" >/dev/null 2>&1 && die "Tag v$V already exists on origin."
 [ -f "docs/release-notes/$V.md" ] || die "docs/release-notes/$V.md is missing."
 VB_RELEASE=1 scripts/build-app.sh
+[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' dist/VibeBattery.app/Contents/Info.plist)" = "$V" ] || die "The built app is not version $V."
 ARCHS=$(lipo -archs dist/VibeBattery.app/Contents/MacOS/VibeBattery)
 case " $ARCHS " in *" arm64 "*" x86_64 "*|*" x86_64 "*" arm64 "*) ;; *) die "Binary is not universal: $ARCHS";; esac
 ( cd dist && shasum -a 256 VibeBattery.zip >VibeBattery.zip.sha256 )
@@ -28,4 +29,7 @@ case "$ANSWER" in y|Y) ;; *) die "Not published.";; esac
 git tag -a "v$V" -m "VibeBattery $V"
 git push origin "v$V"
 gh release create "v$V" --title "VibeBattery $V" --notes-file "docs/release-notes/$V.md" \
-    dist/VibeBattery.zip dist/VibeBattery.zip.sha256 dist/install.sh dist/uninstall.sh
+    dist/VibeBattery.zip dist/VibeBattery.zip.sha256 dist/install.sh dist/uninstall.sh || {
+    printf 'The tag v%s is pushed but the release failed. Re-run the gh release create command by hand, or delete the tag: git push origin :refs/tags/v%s && git tag -d v%s\n' "$V" "$V" "$V" >&2
+    exit 1
+}

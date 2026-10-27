@@ -12,12 +12,14 @@ REL=$T/release; mkdir "$REL"
 cp dist/VibeBattery.zip "$REL/"
 ( cd "$REL" && shasum -a 256 VibeBattery.zip >VibeBattery.zip.sha256 )
 
-# 1. good install
+# 1. good install, twice into the same dir (second run replaces the first)
 D=$T/apps; mkdir "$D"
-VB_RELEASE_BASE="file://$REL" VB_INSTALL_DIR="$D" sh "$ROOT/scripts/install.sh" >"$T/out1" 2>&1 || { cat "$T/out1"; fail "install failed"; }
-[ -d "$D/VibeBattery.app" ] || fail "app missing"
-codesign --verify --strict "$D/VibeBattery.app" || fail "signature check"
-[ ! -e "$D/.VibeBattery.app.new" ] || fail "staging left behind"
+for run in 1 2; do
+    VB_RELEASE_BASE="file://$REL" VB_INSTALL_DIR="$D" sh "$ROOT/scripts/install.sh" >"$T/out1" 2>&1 || { cat "$T/out1"; fail "install $run failed"; }
+    [ -d "$D/VibeBattery.app" ] || fail "app missing after run $run"
+    codesign --verify --strict "$D/VibeBattery.app" || fail "signature check after run $run"
+    [ ! -e "$D/.VibeBattery.app.new" ] && [ ! -e "$D/.VibeBattery.app.old" ] || fail "staging left behind after run $run"
+done
 
 # 2. corrupt checksum: nonzero exit, install dir unchanged
 D2=$T/apps2; mkdir "$D2"

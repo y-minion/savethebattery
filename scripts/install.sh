@@ -5,6 +5,7 @@
 set -eu
 vb_lang() { case "${VB_LANG:-$(defaults read -g AppleLanguages 2>/dev/null | sed -n '2s/[^a-z]*\([a-z]*\).*/\1/p')}" in ko*) echo ko;; *) echo en;; esac; }
 msg() { if [ "$(vb_lang)" = ko ]; then printf '%s\n' "$2"; else printf '%s\n' "$1"; fi; }
+main() {
 BASE=${VB_RELEASE_BASE:-https://github.com/y-minion/vibebattery/releases/latest/download}
 DIR=${VB_INSTALL_DIR:-/Applications}
 OS=$(sw_vers -productVersion); ARCH=$(uname -m)
@@ -26,10 +27,19 @@ ditto -x -k "$TMP/VibeBattery.zip" "$TMP/x"
 [ -d "$TMP/x/VibeBattery.app" ] || { msg "The download has no VibeBattery.app." "내려받은 파일에 VibeBattery.app이 없습니다." >&2; exit 1; }
 # Only the /Applications copy can be the running one, so a test install leaves the app alone.
 [ "$DIR" = /Applications ] && osascript -e 'quit app "VibeBattery"' >/dev/null 2>&1 || true
-rm -rf "$DIR/.VibeBattery.app.new"
+if [ "$DIR" = /Applications ]; then
+    for _ in 1 2 3 4 5 6 7 8 9 10; do pgrep -x VibeBattery >/dev/null 2>&1 || break; sleep 1; done
+fi
+rm -rf "$DIR/.VibeBattery.app.new" "$DIR/.VibeBattery.app.old"
 ditto "$TMP/x/VibeBattery.app" "$DIR/.VibeBattery.app.new"
-rm -rf "$DIR/VibeBattery.app"
-mv "$DIR/.VibeBattery.app.new" "$DIR/VibeBattery.app"
+[ -e "$DIR/VibeBattery.app" ] && mv "$DIR/VibeBattery.app" "$DIR/.VibeBattery.app.old"
+if ! mv "$DIR/.VibeBattery.app.new" "$DIR/VibeBattery.app"; then
+    [ -e "$DIR/.VibeBattery.app.old" ] && mv "$DIR/.VibeBattery.app.old" "$DIR/VibeBattery.app"
+    msg "Could not put the new app in place." "새 앱을 설치하지 못했습니다." >&2; exit 1
+fi
+rm -rf "$DIR/.VibeBattery.app.old"
 msg "Installed $DIR/VibeBattery.app" "$DIR/VibeBattery.app 에 설치했습니다."
 [ -n "${VB_SKIP_OPEN:-}" ] || open "$DIR/VibeBattery.app"
 msg "To uninstall: curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/uninstall.sh | sh" "제거하려면: curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/uninstall.sh | sh"
+}
+main "$@"

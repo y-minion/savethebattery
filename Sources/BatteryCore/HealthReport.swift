@@ -137,7 +137,7 @@ public enum HealthText {
             if let m = r.marginTo80 { line += m > 0 ? String(format: tr(" · %.1f%%p to 80%%"," · 80%%까지 %.1f%%p"), m) : tr(" · 80% or below"," · 80% 이하") }
             out.append(line)
         } else { out.append(tr("No battery info","배터리 정보 없음")) }
-        out.append(tr("Lifespan trend: \(trend(r.trend, calendar: calendar))","수명 추세: \(trend(r.trend, calendar: calendar))"))
+        out.append(tr("Health trend: \(trend(r.trend, calendar: calendar))","건강도 추세: \(trend(r.trend, calendar: calendar))"))
         if let p = r.trend.cycles { out.append(tr("Cycles expected to reach 80%: \(p.low) ~ \(p.high.map(String.init) ?? "unknown")","80% 도달 예상 사이클: \(p.low) ~ \(p.high.map(String.init) ?? "알 수 없음")")) }
         let w = r.week
         out.append(tr("Last 7 days: measured \(hours(w.observed)) · 95% or higher \(hours(w.soc95)) · 35°C or higher \(hours(w.hot35))","최근 7일: 측정 \(hours(w.observed)) · 95% 이상 \(hours(w.soc95)) · 35°C 이상 \(hours(w.hot35))") + (w.observed > 0 ? tr(" · Adapter \(Int((w.onAC / w.observed * 100).rounded()))%"," · 어댑터 \(Int((w.onAC / w.observed * 100).rounded()))%") : ""))

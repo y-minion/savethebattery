@@ -44,7 +44,7 @@ struct HealthView:View {
                 }
             }
             Card {
-                Label(tr("Wear trend","수명 추세"),systemImage:"chart.line.downtrend.xyaxis").font(.headline)
+                Label(tr("Health trend","건강도 추세"),systemImage:"chart.line.downtrend.xyaxis").font(.headline)
                 Text(HealthText.trend(r.trend,calendar:.current)).font(.title3.weight(.semibold))
                 if let p=r.trend.cycles { Text(tr("Expected cycles to reach 80%: \(p.low) to \(p.high.map(String.init) ?? "unknown")","80% 도달 예상 사이클: \(p.low) ~ \(p.high.map(String.init) ?? "알 수 없음")")).foregroundStyle(.secondary) }
                 Text(tr("Calculated only from the trend of measured health (Theil–Sen). A period is shown only after 30 days, at least 5 days measured and a change of at least 1 point; less data gives a wider range. Replacing the battery starts a new calculation.","실측 건강도의 추세(Theil–Sen)로만 계산합니다. 30일 이상, 5일 이상 측정, 1%p 이상 변화가 있어야 기간을 표시하며 데이터가 적을수록 범위가 넓습니다. 배터리를 교체하면 새로 계산합니다.")).font(.caption).foregroundStyle(.secondary)

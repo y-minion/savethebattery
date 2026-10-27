@@ -57,7 +57,10 @@ struct DashboardView:View {
                 ForEach(Array(HealthText.factLines(r).enumerated()),id:\.offset) { _,l in Text(l).monospacedDigit() }
             }
             Text(model.healthReport.map { HealthText.trend($0.trend,calendar:.current) } ?? tr("Measuring","측정 중")).foregroundStyle(.secondary)
-            if let r=model.healthReport { Text(HealthText.stress(r.week)).font(.callout).foregroundStyle(.secondary) }
+            if let r=model.healthReport {
+                Text(HealthText.stress(r.week)).font(.callout).foregroundStyle(.secondary)
+                Text(HealthText.caveat).font(.caption).foregroundStyle(.secondary)
+            }
             DisclosureGroup(tr("Why a charge limit helps","충전 상한이 도움이 되는 이유")) {
                 VStack(alignment:.leading,spacing:6) {
                     ForEach(Array(ChargeLimitExplainer.paragraphs.enumerated()),id:\.offset) { _,p in Text(p).font(.callout).foregroundStyle(.secondary) }

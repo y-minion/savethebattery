@@ -104,7 +104,7 @@ People install a battery app because someone they trust wrote "use this to keep 
 - **New rule:**
   - The client requirement adds `anchor apple generic and certificate leaf[subject.OU] = "<team>"`.
   - The app's requirement for the helper gets the same addition.
-  - `<team>` is baked in at build time from the signing identity. `build-app.sh` reads the OU of the identity it signs with.
+  - `<team>` is read at runtime from the process's own code signature. *(Revised in the plan, ruling P2.)*
 - **Ad-hoc builds** (CI, source builders without a certificate) keep the identifier-only rule, and their helper logs and replies a "self-built, not team-pinned" notice. *(my call)* Only root can replace an installed helper, so a self-built helper is the user's own choice.
 - **Protocol:** the helper protocol version goes up, so the app's existing version check asks 3-3 users to reinstall the helper once. The reinstall prompt explains why, in both languages.
 - **Test:** helper and app agree on the pinned requirement string. Requirement strings are unit-tested.
@@ -126,7 +126,7 @@ People install a battery app because someone they trust wrote "use this to keep 
   - alerts
   - the menu bar accessibility labels
   - `vbctl` human output; `--json` output is not translated and its keys stay stable
-- **Mechanism:** String Catalogs (`.xcstrings`) per target that has user-visible text. All 583 Korean literals in 38 files move to keys.
+- **Mechanism:** a code-based `tr(en, ko)` function in BatteryCore, shared by every target. App Intents keys use English plus `ko.lproj/*.strings`. All 583 Korean literals move to it. *(Revised in the plan, ruling P1: SwiftPM's CLI build and the root helper cannot rely on String Catalogs.)*
   - Text that crosses a process boundary (helper replies, the control channel) must become stable codes, localized at display time in the app or CLI.
   - Comparisons against reply text, such as `MagSafeLEDPolicy.outcome(reply:)`, must compare codes, not Korean sentences.
 - **Formatting:** numbers, percentages, durations and dates use locale-aware formatting.

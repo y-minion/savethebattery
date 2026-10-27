@@ -91,5 +91,6 @@ Not claimed as validated: real high-temperature heat hold, physical display beha
   - dashboard power flow and hardware percentage
   - Low Power Mode switch on/off matches System Settings; System Settings changes are followed; Shortcut on/off works
   - LED: "끄기" turns it off, "상태별로 정하기" shows green while paused at the limit, "macOS 기본" restores, quitting the app restores macOS control
-- Not checked: LED value after a reboot. The LED works only with the MagSafe cable, not USB-C.
+- After a reboot (2026-10-28, mode "macOS 기본", paused at the 70% limit on AC): the app started at login, the dirty flag was clear and the LED was green under macOS control.
+- Not checked: whether "끄기" survives a reboot (before login, and after the app relaunches). The LED works only with the MagSafe cable, not USB-C.
 - Not included: stop charging while sleeping (by decision); sailing lower bound, forced discharge and calibration (firmware-blocked).

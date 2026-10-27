@@ -74,7 +74,7 @@ import BatteryPlatform
                 let e=JSONEncoder();e.dateEncodingStrategy = .iso8601;e.outputFormatting=[.sortedKeys]
                 print(String(data:(try? e.encode(report)) ?? Data(),encoding:.utf8)!)
             } else {
-                print(tr("Charging: ","충전: ")+ChargeText.limit(s))
+                print(tr("Charge: ","충전: ")+ChargeText.limit(s))
                 for o in ChargeControllerScan.current() { print(tr("Other charge manager: \(o.name) (\(o.evidence))","다른 충전 관리: \(o.name) (\(o.evidence))")) }
             }
             return 0

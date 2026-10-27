@@ -17,7 +17,7 @@ The Xcode project is generated from `project.yml` with XcodeGen. After changing 
 
 ## Self-built copies and the helper
 
-`scripts/build-app.sh` signs with an "Apple Development" certificate from your keychain, or the one in `VB_SIGN_IDENTITY`. Without one it signs ad-hoc. An ad-hoc app works, but Shortcuts will not list its actions, and the root helper is not team-pinned: official builds pin the helper to team `JQWWU7443A`, and your build cannot match it. A self-built helper accepts the identifier-only rule and says so. Do not expect an official helper to accept your build, or the other way round. Never commit a certificate or `dev.pem`.
+`scripts/build-app.sh` signs with an "Apple Development" certificate from your keychain, or the one in `VB_SIGN_IDENTITY`. Without one it signs ad-hoc. An ad-hoc app works, but Shortcuts will not list its actions, and the root helper is not team-pinned: official builds pin the helper to team `JQWWU7443A`, and your build cannot match it. A self-built helper accepts the identifier-only rule; it logs a "self-built (ad-hoc), not team-pinned" line, and the app shows a self-built note on the helper card. Do not expect an official helper to accept your build, or the other way round. Never commit a certificate or `dev.pem`.
 
 ## Rules for changes
 

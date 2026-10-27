@@ -5,11 +5,25 @@ import Foundation
 
 struct HelperV3Tests {
     @Test func pinnedRequirement() {
-        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.vibebattery",team:"JQWWU7443A") ==
+        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.vibebattery",signing:.team("JQWWU7443A")) ==
           "identifier \"io.github.y-minion.vibebattery\" and anchor apple generic and certificate leaf[subject.OU] = \"JQWWU7443A\"")
-        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.vibebattery",team:nil) == "identifier \"io.github.y-minion.vibebattery\"")
-        #expect(HelperPolicy.clientRequirement(team:nil) == "identifier \"io.github.y-minion.vibebattery\"")
-        #expect(HelperPolicy.helperRequirement(team:"JQWWU7443A").hasPrefix("identifier \"io.github.y-minion.vibebattery.helper\" and anchor apple generic"))
+        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.vibebattery",signing:.adHoc) == "identifier \"io.github.y-minion.vibebattery\"")
+        #expect(HelperPolicy.clientRequirement(.adHoc) == "identifier \"io.github.y-minion.vibebattery\"")
+        #expect(HelperPolicy.helperRequirement(.team("JQWWU7443A")).hasPrefix("identifier \"io.github.y-minion.vibebattery.helper\" and anchor apple generic"))
+    }
+    /// An unreadable signature must never fall back to identifier-only pinning.
+    @Test func unknownSigningMatchesNothing() {
+        #expect(HelperPolicy.helperRequirement(.unknown(-67050)) == "identifier \"io.github.y-minion.vibebattery.helper\" and never")
+        #expect(HelperPolicy.clientRequirement(.unknown(0)).hasSuffix(" and never"))
+    }
+    @Test func signingTeamFromSignatureInfo() {
+        let adhoc=SigningTeam.adhocFlag
+        #expect(SigningTeam(status:0,team:"JQWWU7443A",flags:0,hasCertificates:true) == .team("JQWWU7443A"))
+        #expect(SigningTeam(status:0,team:nil,flags:adhoc|0x20000,hasCertificates:false) == .adHoc)
+        #expect(SigningTeam(status:0,team:nil,flags:nil,hasCertificates:false) == .adHoc)
+        #expect(SigningTeam(status:0,team:nil,flags:0,hasCertificates:true) == .unknown(0))
+        #expect(SigningTeam(status:-67050,team:nil,flags:adhoc,hasCertificates:false) == .unknown(-67050))
+        #expect(SigningTeam(status:0,team:"",flags:0,hasCertificates:true) == .unknown(0))
     }
     @Test func replyCodesRoundTrip() {
         for r in HelperReply.allCases { #expect(HelperReply(rawValue:r.rawValue)==r); #expect(!r.text.isEmpty) }
@@ -25,9 +39,12 @@ struct HelperV3Tests {
         #expect(MagSafeLEDPolicy.outcome(reply:"led.failed") == (false,false))
     }
     @Test func v2HelperIsOutdated() { #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{true},version:{2}) == .outdated) }
-    @Test func ownTeamIDDoesNotCrashWhenUnsigned() {
-        let t=CodeSigningIdentity.ownTeamID()
-        #expect(t == nil || t?.count == 10)
+    @Test func ownSigningDoesNotCrashWhenUnsigned() {
+        switch CodeSigningIdentity.own {
+        case .adHoc:break
+        case .team(let t):#expect(t.count == 10)
+        case .unknown(let s):Issue.record("signature unreadable: \(s)")
+        }
     }
     @Test func reinstallReasonMentionsOfficialApp() {
         AppLanguage.$forced.withValue(.en) { #expect(LowPowerText.unavailable(.outdated) == "Reinstall the helper: this version only accepts the official VibeBattery app.") }

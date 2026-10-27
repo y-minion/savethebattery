@@ -15,7 +15,7 @@ enum ChargeHelperText {
 /// Install, reinstall and remove the root helper with the system password dialog; the Terminal command stays as a fallback.
 struct HelperInstallControls:View {
     @EnvironmentObject var model:AppModel
-    private static let selfBuilt=CodeSigningIdentity.ownTeamID() == nil
+    private static let selfBuilt=CodeSigningIdentity.own == .adHoc
     private static let inApplications=(Bundle.main.bundlePath as NSString).standardizingPath == "/Applications/VibeBattery.app"
     private var installed:Bool { model.helperStatus != .notInstalled }
     var body:some View {

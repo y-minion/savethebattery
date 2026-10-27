@@ -4,15 +4,18 @@ public enum HelperPolicy {
     public static let appIdentifier="io.github.y-minion.vibebattery"
     public static let helperIdentifier="io.github.y-minion.vibebattery.helper"
     /// Code signing requirement for a peer. With a team it must also be Apple-anchored and signed by that team;
-    /// ad-hoc builds have no team, so they pin only the identifier.
-    public static func requirement(identifier:String,team:String?) -> String {
-        guard let team else { return "identifier \"\(identifier)\"" }
-        return "identifier \"\(identifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(team)\""
+    /// ad-hoc builds have no team, so they pin only the identifier. An unreadable signature matches nothing.
+    public static func requirement(identifier:String,signing:SigningTeam) -> String {
+        switch signing {
+        case .team(let team):return "identifier \"\(identifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(team)\""
+        case .adHoc:return "identifier \"\(identifier)\""
+        case .unknown:return "identifier \"\(identifier)\" and never"
+        }
     }
     /// What the helper demands of the app.
-    public static func clientRequirement(team:String?) -> String { requirement(identifier:appIdentifier,team:team) }
+    public static func clientRequirement(_ signing:SigningTeam) -> String { requirement(identifier:appIdentifier,signing:signing) }
     /// What the app demands of the helper.
-    public static func helperRequirement(team:String?) -> String { requirement(identifier:helperIdentifier,team:team) }
+    public static func helperRequirement(_ signing:SigningTeam) -> String { requirement(identifier:helperIdentifier,signing:signing) }
     public static let appPrefix="/Applications/VibeBattery.app/"
     public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.vibebattery.helper.plist"
     /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED. 3: replies are `HelperReply` codes and the helper is team-pinned.
@@ -23,7 +26,7 @@ public enum HelperPolicy {
     }
 }
 public enum HelperStatus: Equatable, Sendable {
-    /// `outdated`: an older helper that still sets limits but lacks the version 2 requests.
+    /// `outdated`: a helper that predates the current protocol; it still sets limits, but the app asks for a reinstall.
     case notInstalled, wrongLocation, unreachable, outdated, ready
     /// The helper only answers the app in /Applications, so probing from elsewhere would only fail.
     /// A helper without a version answer predates version 2.

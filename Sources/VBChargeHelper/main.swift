@@ -82,11 +82,14 @@ final class Gate:NSObject,NSXPCListenerDelegate {
     }
 }
 /// Official builds carry a team ID, and only a client signed by the same team is accepted.
-let clientRequirement:String={
-    let team=CodeSigningIdentity.ownTeamID()
-    if team==nil { NSLog("VibeBattery helper: self-built (ad-hoc), not team-pinned") }
-    return HelperPolicy.clientRequirement(team:team)
-}()
+/// An unreadable signature must not fall back to identifier-only, so the helper exits and launchd retries.
+let signing=CodeSigningIdentity.own
+switch signing {
+case .unknown(let status):NSLog("VibeBattery helper: cannot read own code signature (OSStatus %d), exiting",status);exit(1)
+case .adHoc:NSLog("VibeBattery helper: self-built (ad-hoc), not team-pinned")
+case .team:break
+}
+let clientRequirement=HelperPolicy.clientRequirement(signing)
 let gate=Gate()
 let listener=NSXPCListener(machServiceName:HelperPolicy.label)
 listener.delegate=gate;listener.resume()

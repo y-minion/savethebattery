@@ -18,10 +18,11 @@ public final class XPCChargeHelper: ChargeHelperClient {
         HelperStatus.evaluate(installed:plistInstalled,appPath:Bundle.main.bundlePath,probe:{ !probe || readState() != nil },
                               version:{ probe ? helperVersion():HelperPolicy.protocolVersion })
     }
+    private static let helperRequirement=HelperPolicy.helperRequirement(CodeSigningIdentity.own)
     private func connect() -> NSXPCConnection {
         let c=NSXPCConnection(machServiceName:HelperPolicy.label,options:.privileged)
         c.remoteObjectInterface=NSXPCInterface(with:ChargeHelperProtocol.self)
-        c.setCodeSigningRequirement(HelperPolicy.helperRequirement(team:CodeSigningIdentity.ownTeamID()))
+        c.setCodeSigningRequirement(Self.helperRequirement)
         c.resume();return c
     }
     // Bounded wait: a stalled helper must not freeze the app's main thread.

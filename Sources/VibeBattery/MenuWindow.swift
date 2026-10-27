@@ -46,6 +46,7 @@ struct MenuWindow:View {
                 Button(tr("Open dashboard","대시보드 열기")) { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
                 Button(tr("Copy Claude launch command","Claude 실행 명령 복사")) { model.copyCommand("claude") }
                 Button(tr("Copy Codex launch command","Codex 실행 명령 복사")) { model.copyCommand("codex") }
+                if let u=model.availableUpdate { Button(tr("Update \(u.version)","업데이트 \(u.version)")) { NSWorkspace.shared.open(u.url) }.foregroundStyle(.tint) }
                 Button(tr("Quit app","앱 종료")) { NSApp.terminate(nil) }
             }.buttonStyle(.plain)
         }.padding(16).frame(width:300).onAppear { model.menuWindowOpen=true }.onDisappear { model.menuWindowOpen=false }

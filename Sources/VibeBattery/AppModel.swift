@@ -32,6 +32,8 @@ import BatteryPlatform
     @Published var healthReport:HealthReport?
     @Published var sleeps:[SleepEvent]=[]
     @Published var notificationAccess=NotificationAccess.unavailable
+    @Published var availableUpdate:(version:String,url:URL)?
+    private var updateTimer:Timer?
     var openMain:(()->Void)?
     var menuStatus:MenuBarStatus { .make(onAC:battery.onAC,charging:battery.charging,heatHolding:chargeController.record.heat.holdLimit != nil) }
     var activeSessions:[SessionRecord] { sessions.filter { $0.ended==nil && ownerAlive($0) } }
@@ -334,10 +336,31 @@ import BatteryPlatform
             MainActor.assumeIsolated { self?.lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled;self?.refreshLowPowerSettings() }
         }
         refreshLowPowerSettings()
+        scheduleUpdateChecks()
         let ws=NSWorkspace.shared.notificationCenter
         ws.addObserver(forName:NSWorkspace.willSleepNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.willSleep() } }
         ws.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } }
         timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true) { [weak self] _ in Task { @MainActor in self?.tick() } }
+    }
+    /// Checks GitHub for a newer release at launch and then daily, while the setting is on.
+    private var currentVersion:String { ProcessInfo.processInfo.environment["VB_FAKE_CURRENT_VERSION"] ?? Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "0" }
+    func scheduleUpdateChecks() {
+        updateTimer?.invalidate();updateTimer=nil
+        guard preferences.checkUpdates else { availableUpdate=nil;return }
+        checkForUpdate()
+        updateTimer=Timer.scheduledTimer(withTimeInterval:UpdateCheck.interval,repeats:true) { [weak self] _ in Task { @MainActor in self?.checkForUpdate() } }
+    }
+    private func checkForUpdate() {
+        Task {
+            let r=await ReleaseClient.latest()
+            guard preferences.checkUpdates else { return }
+            if let r,let v=UpdateCheck.newer(latestTag:r.tag,current:currentVersion) { availableUpdate=(v.description,r.url) }
+            else if r != nil { availableUpdate=nil }
+        }
+    }
+    func copyInstallCommand() {
+        NSPasteboard.general.clearContents();NSPasteboard.general.setString(UpdateCheck.installCommand,forType:.string)
+        message=tr("Install command copied. Paste it into Terminal.","설치 명령을 복사했습니다. 터미널에 붙여 넣으세요.")
     }
     func tick() {
         ticks+=1

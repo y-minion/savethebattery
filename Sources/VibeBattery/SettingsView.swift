@@ -103,6 +103,16 @@ struct SettingsView:View {
             Button(tr("Open system battery settings","시스템 배터리 설정 열기")) { model.openBatterySettings() }
         }
         Card {
+            Text(tr("Updates","업데이트")).font(.headline)
+            Toggle(tr("Check for new versions","새 버전 확인"),isOn:$model.preferences.checkUpdates).onChange(of:model.preferences.checkUpdates) { _,_ in model.savePreferences();model.scheduleUpdateChecks() }
+            Text(tr("Once a day, VibeBattery asks GitHub for the latest release. Nothing about you or your Mac is sent.","하루에 한 번 GitHub에 최신 릴리스를 물어봅니다. 사용자나 Mac에 관한 정보는 보내지 않습니다.")).font(.callout).foregroundStyle(.secondary)
+            if let u=model.availableUpdate {
+                Text(tr("New version \(u.version)","새 버전 \(u.version)")).font(.subheadline.weight(.semibold))
+                Link(tr("Open release page","릴리스 페이지 열기"),destination:u.url)
+                Button(tr("Copy install command","설치 명령 복사")) { model.copyInstallCommand() }
+            }
+        }
+        Card {
             Text(tr("History and privacy","기록과 개인정보")).font(.headline)
             Toggle(tr("Record battery history (charge 7 days · health analysis 1 year)","배터리 이력 기록 (잔량 7일 · 건강 분석 1년)"),isOn:$model.preferences.backgroundHistory).onChange(of:model.preferences.backgroundHistory) { _,_ in model.savePreferences() }
             Text(tr("Readings are stored on this Mac. AI conversations, command arguments, terminal output and API keys are never recorded.","측정값은 이 맥에 저장합니다. AI 대화, 명령 인수, 터미널 출력, API 키는 기록하지 않습니다.")).foregroundStyle(.secondary)

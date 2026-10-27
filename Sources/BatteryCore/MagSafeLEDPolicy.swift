@@ -42,8 +42,8 @@ public enum MagSafeLEDPolicy {
 }
 /// Fixed screen text for the LED; the raw error code never reaches the screen.
 public enum MagSafeLEDText {
-    public static var unsupported:String { tr("The MagSafe LED cannot be changed on this Mac.","이 맥에서는 MagSafe LED를 바꿀 수 없습니다.") }
-    public static var failed:String { tr("Could not change the MagSafe LED.","MagSafe LED를 바꾸지 못했습니다.") }
+    public static let unsupported="이 맥에서는 MagSafe LED를 바꿀 수 없습니다."
+    public static let failed="MagSafe LED를 바꾸지 못했습니다."
 }
 extension MagSafeLEDPolicy {
     /// What a helper reply means for the app. Only the unsupported reply proves nothing was written, so only it clears the dirty flag and stops retries.

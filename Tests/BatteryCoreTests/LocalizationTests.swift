@@ -42,6 +42,19 @@ struct LocalizationTests {
         "Sources/VibeCLI/ResourceRunner.swift",
         "Sources/VibeCLI/SessionRunner.swift",
     ]
+    /// True when the line calls `tr(` that is not the tail of another identifier (`str(`, `attr(`).
+    static func hasTr(_ line: String) -> Bool {
+        let u = Array(line.unicodeScalars)
+        var i = 0
+        while i + 2 < u.count {
+            if u[i] == "t", u[i+1] == "r", u[i+2] == "(" {
+                let p = i > 0 ? u[i-1] : " "
+                if !(p == "_" || CharacterSet.alphanumerics.contains(p)) { return true }
+            }
+            i += 1
+        }
+        return false
+    }
     @Test func hangulOnlyInsideTr() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let src = root.appendingPathComponent("Sources")
@@ -54,10 +67,10 @@ struct LocalizationTests {
             for (i, line) in try String(contentsOf: url, encoding: .utf8).components(separatedBy: "\n").enumerated() {
                 let triples = line.components(separatedBy: "\"\"\"").count - 1
                 let hasHangul = line.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }
-                let ok = line.contains("tr(") || (inMulti && multiAllowed)
+                let ok = Self.hasTr(line) || (inMulti && multiAllowed)
                 if hasHangul && !ok { bad.append("\(rel):\(i + 1)") }
                 if triples % 2 == 1 {
-                    if !inMulti { multiAllowed = line.contains("tr(") }
+                    if !inMulti { multiAllowed = Self.hasTr(line) }
                     inMulti.toggle()
                 }
             }

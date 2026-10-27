@@ -84,7 +84,7 @@ public struct HealthReport: Codable, Sendable {
     }
 }
 public enum HealthText {
-    public static let caveat = tr("Stress is a relative value based on general lithium-ion research (Battery University BU-808), not measured on this battery.","스트레스는 일반 리튬이온 연구(Battery University BU-808) 기반 상대값이며 이 배터리에서 검증된 값이 아닙니다.")
+    public static var caveat: String { tr("Stress is a relative value based on general lithium-ion research (Battery University BU-808), not measured on this battery.","스트레스는 일반 리튬이온 연구(Battery University BU-808) 기반 상대값이며 이 배터리에서 검증된 값이 아닙니다.") }
     static func month(_ d: Date, _ calendar: Calendar) -> String { let c = calendar.dateComponents([.year, .month], from: d); return tr("\(["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][(c.month!-1)%12]) \(c.year!)","\(c.year!)년 \(c.month!)월") }
     public static func trend(_ t: HealthTrend, calendar: Calendar) -> String {
         switch t.status {

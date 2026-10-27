@@ -21,17 +21,11 @@ struct LocalizationTests {
     /// Files not converted yet; later tasks remove their entries.
     static let pending: Set<String> = [
         "Sources/VibeBattery/App.swift",
-        "Sources/VibeBattery/AppModel.swift",
-        "Sources/VibeBattery/ChargeControlView.swift",
         "Sources/VibeBattery/ChargeIntents.swift",
-        "Sources/VibeBattery/ChargeView.swift",
-        "Sources/VibeBattery/DashboardView.swift",
         "Sources/VibeBattery/HealthView.swift",
         "Sources/VibeBattery/LowPowerView.swift",
-        "Sources/VibeBattery/MenuWindow.swift",
         "Sources/VibeBattery/ProcessesView.swift",
         "Sources/VibeBattery/SessionsView.swift",
-        "Sources/VibeBattery/SettingsView.swift",
     ]
     /// Files whose Hangul sits outside tr() on purpose: the v2 helper's wire sentence, which is not UI text.
     static let allowedLegacy: Set<String> = ["Sources/BatteryCore/MagSafeLEDPolicy.swift"]

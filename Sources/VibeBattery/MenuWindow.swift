@@ -43,10 +43,10 @@ struct MenuWindow:View {
             ForEach(model.preferences.menuBar.sections.filter(\.visible),id:\.section) { s in section(s.section) }
             Divider()
             VStack(alignment:.leading,spacing:6) {
-                Button("대시보드 열기") { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
-                Button("Claude 실행 명령 복사") { model.copyCommand("claude") }
-                Button("Codex 실행 명령 복사") { model.copyCommand("codex") }
-                Button("앱 종료") { NSApp.terminate(nil) }
+                Button(tr("Open dashboard","대시보드 열기")) { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
+                Button(tr("Copy Claude launch command","Claude 실행 명령 복사")) { model.copyCommand("claude") }
+                Button(tr("Copy Codex launch command","Codex 실행 명령 복사")) { model.copyCommand("codex") }
+                Button(tr("Quit app","앱 종료")) { NSApp.terminate(nil) }
             }.buttonStyle(.plain)
         }.padding(16).frame(width:300).onAppear { model.menuWindowOpen=true }.onDisappear { model.menuWindowOpen=false }
             .background(KeyWindowObserver { model.menuWindowOpen=$0 })
@@ -66,13 +66,13 @@ struct MenuWindow:View {
     var statusSection:some View {
         VStack(alignment:.leading,spacing:2) {
             Text("\(model.battery.percent.map(String.init) ?? "—")%").font(.system(size:34,weight:.bold,design:.rounded))
-            let parts=[ChargeText.limit(model.charge),model.battery.onAC ? "충전기 연결":"배터리 사용"]+(model.battery.temperature.map { [String(format:"%.1f°C",$0)] } ?? [])
+            let parts=[ChargeText.limit(model.charge),model.battery.onAC ? tr("Charger connected","충전기 연결"):tr("On battery","배터리 사용")]+(model.battery.temperature.map { [String(format:"%.1f°C",$0)] } ?? [])
             Text(parts.joined(separator:" · ")).font(.callout).foregroundStyle(.secondary)
         }
     }
     /// Why charge writes are unavailable, shared by the limit and topUp sections.
     var writeBlock:String? {
-        if !model.chargeConflicts.isEmpty { return "\(model.chargeConflicts.map(\.name).joined(separator:", "))이(가) 충전을 관리하고 있어 바꿀 수 없습니다." }
+        if !model.chargeConflicts.isEmpty { return tr("\(model.chargeConflicts.map(\.name).joined(separator:", ")) is managing charging, so it cannot be changed.","\(model.chargeConflicts.map(\.name).joined(separator:", "))이(가) 충전을 관리하고 있어 바꿀 수 없습니다.") }
         if model.charge.supported==false { return ChargeSupport.requirementText }
         return model.charge.supported==true ? nil:tr("Charge limit status is unknown right now.","지금은 충전 상한 상태를 알 수 없습니다.")
     }
@@ -88,27 +88,27 @@ struct MenuWindow:View {
                         .buttonStyle(.bordered).tint(on ? .mint:nil).fontWeight(on ? .bold:.regular)
                         .disabled(!canWrite || (l<ChargeCommand.userFloor && !model.helperStatus.canSetLimit))
                 }
-                Button("끄기") { model.applyCharge(.clearLimit) }.buttonStyle(.bordered).disabled(!canWrite)
+                Button(tr("Off","끄기")) { model.applyCharge(.clearLimit) }.buttonStyle(.bordered).disabled(!canWrite)
             }.controlSize(.small)
             if let b=writeBlock { Text(b).font(.caption).foregroundStyle(model.chargeConflicts.isEmpty ? Color.secondary:Color.orange) }
-            else if !model.helperStatus.canSetLimit { Text("80% 미만은 헬퍼가 필요합니다").font(.caption).foregroundStyle(.secondary) }
+            else if !model.helperStatus.canSetLimit { Text(tr("Limits below 80% need the helper","80% 미만은 헬퍼가 필요합니다")).font(.caption).foregroundStyle(.secondary) }
         }
     }
     var topUpSection:some View {
         let canWrite=writeBlock==nil
         return VStack(alignment:.leading,spacing:6) {
-            if model.topUpActive { Button("완충 종료") { model.applyCharge(.endTopUp) }.disabled(!canWrite) }
-            else { Button("한 번 100% 충전") { model.applyCharge(.startTopUp) }.disabled(!canWrite) }
+            if model.topUpActive { Button(tr("End top-up","완충 종료")) { model.applyCharge(.endTopUp) }.disabled(!canWrite) }
+            else { Button(tr("Charge to 100% once","한 번 100% 충전")) { model.applyCharge(.startTopUp) }.disabled(!canWrite) }
             if let b=writeBlock { Text(b).font(.caption).foregroundStyle(model.chargeConflicts.isEmpty ? Color.secondary:Color.orange) }
-            if let n=model.nextSchedule { Text("다음 일정 "+ScheduleText.when(n.at,now:Date(),calendar:.current)).font(.caption).foregroundStyle(.secondary) }
+            if let n=model.nextSchedule { Text(tr("Next schedule ","다음 일정 ")+ScheduleText.when(n.at,now:Date(),calendar:.current)).font(.caption).foregroundStyle(.secondary) }
         }.controlSize(.small)
     }
     var batterySection:some View {
         let b=model.battery
         return VStack(alignment:.leading,spacing:4) {
-            row("하드웨어 잔량",b.hardwarePercent.map { "\($0)%" }).help("macOS는 배터리 보호를 위해 표시 값을 조정합니다. 이 값은 배터리가 직접 보고한 남은 용량입니다.")
-            row("건강도(추정)",b.health.map { "\($0)%" })
-            row("사이클",b.cycles.map(String.init))
+            row(tr("Hardware charge","하드웨어 잔량"),b.hardwarePercent.map { "\($0)%" }).help(DashboardView.hardwareCaption)
+            row(tr("Health (est.)","건강도(추정)"),b.health.map { "\($0)%" })
+            row(tr("Cycles","사이클"),b.cycles.map(String.init))
         }
     }
     func row(_ title:String,_ value:String?) -> some View {
@@ -117,10 +117,10 @@ struct MenuWindow:View {
     var sessionsSection:some View {
         let active=model.activeSessions
         return VStack(alignment:.leading,spacing:2) {
-            Text(active.isEmpty ? "실행 중인 작업 없음":"실행 중인 작업 \(active.count)개").font(.callout)
+            Text(active.isEmpty ? tr("No running tasks","실행 중인 작업 없음"):tr("\(active.count) running task\(active.count == 1 ? "":"s")","실행 중인 작업 \(active.count)개")).font(.callout)
             if let s=active.max(by:{ $0.started<$1.started }) {
                 let name=s.command.split(separator:" ").first.map { ($0 as NSString).lastPathComponent } ?? s.command
-                Text(([name]+(s.protected ? ["잠자기 방지 중"]:[])+["\(max(0,Int(Date().timeIntervalSince(s.started)/60)))분"]).joined(separator:" · ")).font(.caption).foregroundStyle(.secondary)
+                Text(([name]+(s.protected ? [tr("Sleep prevented","잠자기 방지 중")]:[])+[tr("\(max(0,Int(Date().timeIntervalSince(s.started)/60))) min","\(max(0,Int(Date().timeIntervalSince(s.started)/60)))분")]).joined(separator:" · ")).font(.caption).foregroundStyle(.secondary)
             }
         }
     }

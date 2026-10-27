@@ -62,11 +62,11 @@ import BatteryPlatform
     var topUpActive:Bool { chargeController.topUpActive }
     @Published var scheduleRuns:[ScheduleRun]=[]
     @Published var nextSchedule:ScheduleOccurrence?
-    /// "22:00 일정 '밤에는 70%'로 바뀜": why the limit is what it is.
+    /// Why the limit is what it is, e.g. "Schedule 'Night 70%' at 22:00 changed it".
     var lastChangeText:String? { ChargeText.currentReason(record:chargeController.record,state:charge,now:Date(),calendar:.current) }
     var chargeLog:[ChargeWrite] { chargeController.record.log }
     private lazy var scheduleRunner=ScheduleRunner(file:JSONFile(url:AppPaths.schedule)) { [weak self] command,rule in
-        MainActor.assumeIsolated { self?.runSchedule(command,rule) ?? .failed("앱을 사용할 수 없습니다.") }
+        MainActor.assumeIsolated { self?.runSchedule(command,rule) ?? .failed(tr("The app is not available.","앱을 사용할 수 없습니다.")) }
     }
     private var controlServer:ControlServer?
     private func runSchedule(_ command:ChargeCommand,_ rule:ChargeScheduleRule) -> ScheduleApplyResult {
@@ -82,9 +82,9 @@ import BatteryPlatform
         guard let run else { return }
         switch run.result {
         case .failed(let reason) where preferences.notifications.scheduleFailed:
-            notifier.deliver(AlertEvent(id:"schedule.failed",title:"일정 '\(run.ruleName)' 실행 실패",body:reason,section:"charge",thread:"charge"))
+            notifier.deliver(AlertEvent(id:"schedule.failed",title:tr("Schedule '\(run.ruleName)' failed","일정 '\(run.ruleName)' 실행 실패"),body:reason,section:"charge",thread:"charge"))
         case .ran where preferences.notifications.scheduleRan:
-            notifier.deliver(AlertEvent(id:"schedule.ran",title:"일정 '\(run.ruleName)' 실행됨",body:run.action,section:"charge",thread:"charge"))
+            notifier.deliver(AlertEvent(id:"schedule.ran",title:tr("Schedule '\(run.ruleName)' ran","일정 '\(run.ruleName)' 실행됨"),body:run.action,section:"charge",thread:"charge"))
         default:break
         }
     }
@@ -105,7 +105,7 @@ import BatteryPlatform
         nextSchedule=SchedulePolicy.nextAny(preferences.schedules,after:Date(),calendar:.current)
     }
     static func chargeMessage(_ c:ChargeCommand,_ s:ChargeLimitState) -> String {
-        c == .startTopUp ? "한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다.":"적용을 확인했습니다. \(ChargeText.limit(s))"
+        c == .startTopUp ? tr("Top-up requested. macOS decides when the limit comes back.","한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다."):tr("Applied and confirmed. \(ChargeText.limit(s))","적용을 확인했습니다. \(ChargeText.limit(s))")
     }
     /// A request from vbctl or Shortcuts; applied like a user change and logged with its source.
     func perform(_ c:ChargeCommand,source:ChargeWrite.Source) -> ControlResponse {
@@ -119,7 +119,7 @@ import BatteryPlatform
     private func startControlServer() {
         try? FileManager.default.createDirectory(at:AppPaths.directory,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
         let server=ControlServer(path:AppPaths.controlSocket) { [weak self] c in
-            MainActor.assumeIsolated { self?.perform(c,source:.cli) ?? ControlResponse(ok:false,message:"앱을 사용할 수 없습니다.",state:nil) }
+            MainActor.assumeIsolated { self?.perform(c,source:.cli) ?? ControlResponse(ok:false,message:tr("The app is not available.","앱을 사용할 수 없습니다."),state:nil) }
         }
         // Without the channel only vbctl writes are unavailable; the app itself keeps working.
         do { try server.start();controlServer=server } catch { controlServer=nil }
@@ -140,7 +140,7 @@ import BatteryPlatform
     }
     /// nil on success. The helper call and the wait for macOS to report the change stay off the main actor.
     func setLowPower(_ on:Bool) async -> String? {
-        guard !lowPowerBusy else { return "저전력 모드를 바꾸는 중입니다. 잠시 뒤 다시 시도해 주세요." }
+        guard !lowPowerBusy else { return tr("Low Power Mode is being changed. Try again in a moment.","저전력 모드를 바꾸는 중입니다. 잠시 뒤 다시 시도해 주세요.") }
         lowPowerBusy=true;defer { lowPowerBusy=false }
         if helperStatus != .ready { await refreshHelperStatus() }
         guard helperStatus == .ready else { return LowPowerText.unavailable(helperStatus) }
@@ -244,17 +244,17 @@ import BatteryPlatform
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     var heatStatus:String {
         let h=preferences.heat
-        if !h.enabled { return "꺼짐" }
+        if !h.enabled { return tr("Off","꺼짐") }
         let record=chargeController.record
-        if record.heatPaused,let hold=record.heat.holdLimit { return "복원 실패로 멈춤 · 상한이 \(hold)%로 남아 있음 (원래 \(record.heat.userLimit.map { "\($0)%" } ?? "상한 없음"))" }
-        if record.heatPaused { return "멈춤 · 상한이 외부에서 바뀌었거나 적용에 실패함. 다시 켜거나 상한을 적용하면 재개" }
-        if let hold=chargeController.record.heat.holdLimit { return "보류 중 · 상한을 \(hold)%로 낮춤, \(Int(h.resumeAt))°C 이하 5분 유지 시 복원" }
+        if record.heatPaused,let hold=record.heat.holdLimit { return tr("Stopped after a failed restore · limit left at \(hold)% (was \(record.heat.userLimit.map { "\($0)%" } ?? tr("no limit","상한 없음")))","복원 실패로 멈춤 · 상한이 \(hold)%로 남아 있음 (원래 \(record.heat.userLimit.map { "\($0)%" } ?? "상한 없음"))") }
+        if record.heatPaused { return tr("Stopped · the limit was changed elsewhere or could not be applied. Turn it on again or apply a limit to resume.","멈춤 · 상한이 외부에서 바뀌었거나 적용에 실패함. 다시 켜거나 상한을 적용하면 재개") }
+        if let hold=chargeController.record.heat.holdLimit { return tr("On hold · limit lowered to \(hold)%, restored after 5 minutes at or below \(Int(h.resumeAt))°C","보류 중 · 상한을 \(hold)%로 낮춤, \(Int(h.resumeAt))°C 이하 5분 유지 시 복원") }
         switch lastHeatAction {
-        case .sensorUnavailable:return "중지됨 · 배터리 온도를 읽지 못함"
-        case .cannotHold(.lowCharge):return "보류 불가 · 잔량 50% 미만"
-        case .cannotHold(.needsHelper):return "보류 불가 · 80% 미만으로 낮추려면 헬퍼가 필요"
-        case .cannotHold(.limitUnknown):return "보류 불가 · 현재 충전 상한을 읽지 못함"
-        default:return "감시 중 · \(Int(h.holdAt))°C 이상 충전 시 보류 (앱 실행 중에만)"
+        case .sensorUnavailable:return tr("Paused · cannot read the battery temperature","중지됨 · 배터리 온도를 읽지 못함")
+        case .cannotHold(.lowCharge):return tr("Cannot hold · charge below 50%","보류 불가 · 잔량 50% 미만")
+        case .cannotHold(.needsHelper):return tr("Cannot hold · the helper is needed to go below 80%","보류 불가 · 80% 미만으로 낮추려면 헬퍼가 필요")
+        case .cannotHold(.limitUnknown):return tr("Cannot hold · cannot read the current charge limit","보류 불가 · 현재 충전 상한을 읽지 못함")
+        default:return tr("Watching · holds charging at \(Int(h.holdAt))°C or above (only while the app is running)","감시 중 · \(Int(h.holdAt))°C 이상 충전 시 보류 (앱 실행 중에만)")
         }
     }
     func refreshCharge() {
@@ -262,7 +262,7 @@ import BatteryPlatform
         lastHeatAction=step.action
         var failed=false;if case .failure?=step.result { failed=true }
         if let e=HeatEvent.from(action:step.action,failed:failed) { pendingHeatEvent=e }
-        if case .failure(let e)?=step.result { message="과열 보류를 멈췄습니다. \(e.localizedDescription) 현재 상태: \(heatStatus)" }
+        if case .failure(let e)?=step.result { message=tr("Heat hold stopped. \(e.localizedDescription) Current state: \(heatStatus)","과열 보류를 멈췄습니다. \(e.localizedDescription) 현재 상태: \(heatStatus)") }
         charge=chargeController.state();chargeConflicts=ChargeControllerScan.current()
         loginItem=SMAppService.mainApp.status == .enabled
         applyLED()
@@ -282,7 +282,7 @@ import BatteryPlatform
     }
     func setLoginItem(_ on:Bool) {
         do { if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } }
-        catch { message="로그인 시 실행 설정 실패: \(error.localizedDescription)" }
+        catch { message=tr("Could not change launch at login: \(error.localizedDescription)","로그인 시 실행 설정 실패: \(error.localizedDescription)") }
         loginItem=SMAppService.mainApp.status == .enabled
     }
     private let reader=ProcessReader()
@@ -357,7 +357,7 @@ import BatteryPlatform
     func checkNotifications() { notifier.access { [weak self] in self?.notificationAccess=$0 } }
     func requestNotifications() { notifier.request { [weak self] in self?.notificationAccess=$0 } }
     func sendTestNotification() {
-        notifier.deliver(AlertEvent(id:"test",title:"VibeBattery 테스트 알림",body:"알림이 정상적으로 표시됩니다. 누르면 설정 화면이 열립니다.",section:"settings",thread:"test"))
+        notifier.deliver(AlertEvent(id:"test",title:tr("VibeBattery test notification","VibeBattery 테스트 알림"),body:tr("Notifications are working. Click to open Settings.","알림이 정상적으로 표시됩니다. 누르면 설정 화면이 열립니다."),section:"settings",thread:"test"))
     }
     func openNotificationSettings() { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.notifications")!) }
     func show(_ s:String) { section=s;openMain?();NSApp.activate(ignoringOtherApps:true) }
@@ -379,11 +379,11 @@ import BatteryPlatform
         NSWorkspace.shared.open(URL(fileURLWithPath:"/System/Applications/Utilities/Activity Monitor.app"))
     }
     func release(_ r:SessionRecord) {
-        do { try AppPaths.sessions.release(r.id);sessions=AppPaths.sessions.all();message="보호 해제를 요청했습니다. 실행 중인 명령은 계속 실행됩니다." }
+        do { try AppPaths.sessions.release(r.id);sessions=AppPaths.sessions.all();message=tr("Release requested. The running command keeps running.","보호 해제를 요청했습니다. 실행 중인 명령은 계속 실행됩니다.") }
         catch { message=error.localizedDescription }
     }
     func terminate(_ p:ProcessSample,force:Bool) {
-        do { try ProcessReader.terminate(p,force:force);message="종료를 요청했습니다. 다음 측정에서 결과를 확인할 수 있습니다." }
+        do { try ProcessReader.terminate(p,force:force);message=tr("Quit requested. The result shows at the next reading.","종료를 요청했습니다. 다음 측정에서 결과를 확인할 수 있습니다.") }
         catch { message=error.localizedDescription }
     }
     func openBatterySettings() {
@@ -399,23 +399,23 @@ import BatteryPlatform
     }
     func copyCommand(_ executable:String) {
         NSPasteboard.general.clearContents();NSPasteboard.general.setString(command(for:executable),forType:.string)
-        message="명령을 복사했습니다. iTerm2 또는 Ghostty에 붙여 넣어 시작하세요."
+        message=tr("Command copied. Paste it into iTerm2 or Ghostty to start.","명령을 복사했습니다. iTerm2 또는 Ghostty에 붙여 넣어 시작하세요.")
     }
     func copyText(_ text:String) {
         NSPasteboard.general.clearContents();NSPasteboard.general.setString(text,forType:.string)
-        message="경로를 복사했습니다: \(text)"
+        message=tr("Path copied: \(text)","경로를 복사했습니다: \(text)")
     }
     func ownerAlive(_ r:SessionRecord) -> Bool { guard let o=r.owner else { return false };return ProcessReader.one(o.pid)?.identity==o }
     func status(_ r:SessionRecord) -> String {
-        if r.ended==nil && !ownerAlive(r) { return "관리 연결 끊김" }
-        if r.ended==nil && AppPaths.sessions.isReleased(r.id) { return "보호 해제 요청됨" }
+        if r.ended==nil && !ownerAlive(r) { return tr("Managed link lost","관리 연결 끊김") }
+        if r.ended==nil && AppPaths.sessions.isReleased(r.id) { return tr("Release requested","보호 해제 요청됨") }
         switch r.outcome {
-        case .running:return r.protected ? "작업 보호 중":"실행 중"
-        case .succeeded:return "완료"
-        case .failed:return "실패"
-        case .cancelled:return "취소"
-        case .detached:return r.ended==nil ? "보호 해제 · 작업 실행 중":"보호 해제 후 종료"
-        case .expired:return r.ended==nil ? "시간 만료 · 작업 실행 중":"시간 만료 후 종료"
+        case .running:return r.protected ? tr("Protecting the task","작업 보호 중"):tr("Running","실행 중")
+        case .succeeded:return tr("Done","완료")
+        case .failed:return tr("Failed","실패")
+        case .cancelled:return tr("Cancelled","취소")
+        case .detached:return r.ended==nil ? tr("Released · task still running","보호 해제 · 작업 실행 중"):tr("Ended after release","보호 해제 후 종료")
+        case .expired:return r.ended==nil ? tr("Timed out · task still running","시간 만료 · 작업 실행 중"):tr("Ended after timeout","시간 만료 후 종료")
         }
     }
 }

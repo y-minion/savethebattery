@@ -79,8 +79,8 @@ public enum ChargeText {
         }
         return "\(stamp(w.date,now:now,calendar:calendar)) \(cause)"
     }
-    public static func limit(_ s:ChargeLimitState) -> String {
-        if s.supported==false { return ChargeSupport.requirementText }
+    public static func limit(_ s:ChargeLimitState,platformAllows:Bool=ChargeSupport.current) -> String {
+        if s.supported==false { return ChargeSupport.unsupportedText(platformAllows:platformAllows) }
         if s.enabled==false { return tr("Limit off (charges to 100%)","상한 꺼짐 (100%까지 충전)") }
         return s.limit.map { tr("Current limit \($0)%","현재 상한 \($0)%") } ?? tr("Limit unknown","상한 알 수 없음")
     }

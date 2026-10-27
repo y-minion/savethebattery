@@ -56,4 +56,11 @@ struct ChargeCLITests {
             #expect(ChargeStatusReport.make(state:s,record:nil,rules:rules,appRunning:false,now:now,calendar:cal).nextSchedule==nil)
         }
     }
+    @Test func limitTextWhenUnsupported() {
+        AppLanguage.$forced.withValue(.en) {
+            let s=ChargeLimitState(supported:false)
+            #expect(ChargeText.limit(s,platformAllows:true) == "Charge limiting isn't available on this Mac.")
+            #expect(ChargeText.limit(s,platformAllows:false) == ChargeSupport.requirementText)
+        }
+    }
 }

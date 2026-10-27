@@ -1,5 +1,6 @@
 import SwiftUI
 import BatteryCore
+import BatteryPlatform
 struct SettingsView:View {
     @EnvironmentObject var model:AppModel
     var accessText:String {
@@ -103,7 +104,7 @@ struct SettingsView:View {
             Button(tr("Open system battery settings","시스템 배터리 설정 열기")) { model.openBatterySettings() }
         }
         Card {
-            Text(tr("Updates","업데이트")).font(.headline)
+            HStack { Text(tr("Updates","업데이트")).font(.headline);Spacer();Text(tr("Version \(ReleaseClient.bundleVersion)","버전 \(ReleaseClient.bundleVersion)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
             Toggle(tr("Check for new versions","새 버전 확인"),isOn:$model.preferences.checkUpdates).onChange(of:model.preferences.checkUpdates) { _,_ in model.savePreferences();model.scheduleUpdateChecks() }
             Text(tr("Once a day, VibeBattery asks GitHub for the latest release. Nothing about you or your Mac is sent.","하루에 한 번 GitHub에 최신 릴리스를 물어봅니다. 사용자나 Mac에 관한 정보는 보내지 않습니다.")).font(.callout).foregroundStyle(.secondary)
             if let u=model.availableUpdate {

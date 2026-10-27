@@ -22,4 +22,9 @@ public enum ChargeSupport {
     public static var requirementText: String {
         tr("Charge limiting needs macOS 26.4 or later on Apple silicon (support for more Macs is planned).","충전 상한은 macOS 26.4 이상의 Apple Silicon 맥에서 쓸 수 있습니다(지원 기기 확대 예정).")
     }
+
+    /// Why the limit is unsupported: the platform gate, or macOS reporting no charge limit on a Mac that passes it.
+    public static func unsupportedText(platformAllows: Bool = current) -> String {
+        platformAllows ? tr("Charge limiting isn't available on this Mac.","이 맥에서는 충전 상한을 쓸 수 없습니다.") : requirementText
+    }
 }

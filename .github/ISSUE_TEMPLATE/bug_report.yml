@@ -20,7 +20,7 @@ body:
     id: version
     attributes:
       label: VibeBattery version
-      description: Shown in the app's Settings.
+      description: Shown in the app's Settings, on the Updates card (for example 0.2.0).
   - type: textarea
     id: status
     attributes:

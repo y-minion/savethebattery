@@ -60,6 +60,19 @@ struct HealthReportTests {
             #expect(r.sleeps.first?.endPercent==70)
         }
     }
+    /// `--json` output stays English even when the UI language is Korean.
+    @Test func jsonReportIsEnglishUnderKorean() throws {
+        try AppLanguage.$forced.withValue(.ko) {
+            let json=try AppLanguage.json {
+                var b=BatterySnapshot();b.temperature=30;b.temperatureSource=tr("IORegistry battery sensor","IORegistry 배터리 센서")
+                let r=HealthReport.make(snapshot:b,days:[day(0,soc95:6*3600,hot35:2*3600)],sleeps:[event(hours:2,from:80,to:76)],context:AdvisorContext(limit:nil,heatEnabled:false),now:now,calendar:c)
+                return String(decoding:try JSONEncoder().encode(r),as:UTF8.self)+String(decoding:try JSONEncoder().encode(b),as:UTF8.self)
+            }
+            #expect(json.contains("In the last 7 days"));#expect(json.contains("IORegistry battery sensor"))
+            #expect(!json.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) })
+            #expect(tr("Off","끄기")=="끄기")
+        }
+    }
     @Test func reportWithoutBatteryHasNoHealth() {
         AppLanguage.$forced.withValue(.ko) {
             let r=HealthReport.make(snapshot:BatterySnapshot(),days:[],sleeps:[],context:AdvisorContext(limit:nil,heatEnabled:false),now:now,calendar:c)
@@ -117,5 +130,8 @@ struct HealthReportTests {
             #expect(ChargeLimitExplainer.paragraphs.allSatisfy { !$0.contains(where:\.isNumber) })
         } }
         #expect(ChargeLimitExplainer.sources.map(\.url.absoluteString)==["https://support.apple.com/102338","https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries"])
+        // Titles follow the current language rather than the one active at first access.
+        AppLanguage.$forced.withValue(.en) { #expect(ChargeLimitExplainer.sources[0].title.hasPrefix("About")) }
+        AppLanguage.$forced.withValue(.ko) { #expect(ChargeLimitExplainer.sources[0].title.hasPrefix("Mac의")) }
     }
 }

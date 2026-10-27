@@ -7,9 +7,8 @@ import BatteryPlatform
         do {
             switch args.first {
             case "status":
-                let b=BatteryReader.read()
-                if args.contains("--json") { print(String(data:try JSONEncoder().encode(b),encoding:.utf8)!) }
-                else { let p=b.percent.map(String.init) ?? "—",h=b.health.map(String.init) ?? "—",t=b.temperature.map { String(format:"%.1f°C",$0) } ?? tr("unavailable","조회 불가")
+                if args.contains("--json") { print(try AppLanguage.json { String(data:try JSONEncoder().encode(BatteryReader.read()),encoding:.utf8)! }) }
+                else { let b=BatteryReader.read(),p=b.percent.map(String.init) ?? "—",h=b.health.map(String.init) ?? "—",t=b.temperature.map { String(format:"%.1f°C",$0) } ?? tr("unavailable","조회 불가")
                     print(tr("Battery \(p)% · Health (est.) \(h)% · Temperature \(t) · \(b.onAC ? "Adapter":"Battery")","배터리 \(p)% · 건강도(추정) \(h)% · 온도 \(t) · \(b.onAC ? "어댑터":"배터리")")) }
             case "run":exit(try runSession(RunOptions.parse(Array(args.dropFirst()))))
             case "resource":exit(try runResource(Array(args.dropFirst())))
@@ -20,14 +19,16 @@ import BatteryPlatform
                 try AppPaths.sessions.release(id);print(tr("Asked to release protection. The task is not stopped.","보호 해제를 요청했습니다. 작업은 종료하지 않습니다."))
             case "charge":exit(charge(Array(args.dropFirst())))
             case "health":
-                let b=BatteryReader.read(),s=PowerUIChargeBackend().read()
-                let prefs=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) } ?? UserPreferences()
-                let r=HealthReport.make(snapshot:b,days:HealthStore(url:AppPaths.health).read(repair:false).days,sleeps:SleepStore(url:AppPaths.sleep).read(repair:false),
-                                        context:AdvisorContext(limit:s.enabled==true ? s.limit:nil,heatEnabled:prefs.heat.enabled),now:Date(),calendar:.current)
+                let report={ () -> HealthReport in
+                    let b=BatteryReader.read(),s=PowerUIChargeBackend().read()
+                    let prefs=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) } ?? UserPreferences()
+                    return HealthReport.make(snapshot:b,days:HealthStore(url:AppPaths.health).read(repair:false).days,sleeps:SleepStore(url:AppPaths.sleep).read(repair:false),
+                                             context:AdvisorContext(limit:s.enabled==true ? s.limit:nil,heatEnabled:prefs.heat.enabled),now:Date(),calendar:.current)
+                }
                 if args.contains("--json") {
                     let e=JSONEncoder();e.dateEncodingStrategy = .iso8601;e.outputFormatting=[.prettyPrinted,.sortedKeys]
-                    print(String(data:try e.encode(r),encoding:.utf8)!)
-                } else { HealthText.lines(r,calendar:.current).forEach { print($0) } }
+                    print(try AppLanguage.json { String(data:try e.encode(report()),encoding:.utf8)! })
+                } else { HealthText.lines(report(),calendar:.current).forEach { print($0) } }
             default:print(tr("""
             VibeBattery — battery and terminal task management
               vbctl status [--json]
@@ -67,13 +68,14 @@ import BatteryPlatform
             return code
         case .success(.status(let json)):
             let s=PowerUIChargeBackend().read()
-            if json {
+            if json { return AppLanguage.json {
                 let record=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("charge.json"))).flatMap { try? JSONDecoder().decode(ChargeRecord.self,from:$0) }
                 let rules=(try? Data(contentsOf:AppPaths.directory.appendingPathComponent("preferences.json"))).flatMap { try? JSONDecoder().decode(UserPreferences.self,from:$0) }?.schedules ?? []
                 let report=ChargeStatusReport.make(state:s,record:record,rules:rules,appRunning:ControlClient.isListening(path:AppPaths.controlSocket),now:Date(),calendar:.current)
                 let e=JSONEncoder();e.dateEncodingStrategy = .iso8601;e.outputFormatting=[.sortedKeys]
                 print(String(data:(try? e.encode(report)) ?? Data(),encoding:.utf8)!)
-            } else {
+                return 0
+            } } else {
                 print(tr("Charge: ","충전: ")+ChargeText.limit(s))
                 for o in ChargeControllerScan.current() { print(tr("Other charge manager: \(o.name) (\(o.evidence))","다른 충전 관리: \(o.name) (\(o.evidence))")) }
             }

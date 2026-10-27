@@ -34,6 +34,8 @@ import BatteryPlatform
     @Published var notificationAccess=NotificationAccess.unavailable
     @Published var availableUpdate:(version:String,url:URL)?
     private var updateTimer:Timer?
+    /// When the last update check started, successful or not; in memory only.
+    private var lastUpdateCheck:Date?
     var openMain:(()->Void)?
     var menuStatus:MenuBarStatus { .make(onAC:battery.onAC,charging:battery.charging,heatHolding:chargeController.record.heat.holdLimit != nil) }
     var activeSessions:[SessionRecord] { sessions.filter { $0.ended==nil && ownerAlive($0) } }
@@ -243,6 +245,8 @@ import BatteryPlatform
             do { try sleepStore.append(e);sleeps=sleepStore.read() } catch { message=error.localizedDescription }
         }
         sleepStart=nil;resetLEDCache();refresh(wake:wake)
+        // Restarting the schedule checks now and keeps the daily timer from firing again soon after.
+        if preferences.checkUpdates && UpdateCheck.isDue(last:lastUpdateCheck,now:Date()) { scheduleUpdateChecks() }
     }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
     /// Asks for the administrator password in the system dialog, then installs the root helper. Returns nil on success or cancel, else the error text.
@@ -342,7 +346,7 @@ import BatteryPlatform
         ws.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } }
         timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true) { [weak self] _ in Task { @MainActor in self?.tick() } }
     }
-    /// Checks GitHub for a newer release at launch and then daily, while the setting is on.
+    /// Checks GitHub for a newer release at launch, then daily and on wake once a day has passed, while the setting is on.
     private var currentVersion:String { ProcessInfo.processInfo.environment["VB_FAKE_CURRENT_VERSION"] ?? ReleaseClient.bundleVersion }
     func scheduleUpdateChecks() {
         updateTimer?.invalidate();updateTimer=nil
@@ -351,6 +355,7 @@ import BatteryPlatform
         updateTimer=Timer.scheduledTimer(withTimeInterval:UpdateCheck.interval,repeats:true) { [weak self] _ in Task { @MainActor in self?.checkForUpdate() } }
     }
     private func checkForUpdate() {
+        lastUpdateCheck=Date()
         Task {
             let r=await ReleaseClient.latest()
             guard preferences.checkUpdates else { return }

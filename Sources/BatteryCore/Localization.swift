@@ -15,6 +15,9 @@ public enum AppLanguage: String, Sendable, CaseIterable {
     public static let system: AppLanguage = resolve(env: ProcessInfo.processInfo.environment["VB_LANG"], preferred: Locale.preferredLanguages)
     public static var current: AppLanguage { forced ?? system }
 
+    /// `--json` output is never translated: runs `body`, including any reads it makes, in English.
+    public static func json<T>(_ body: () throws -> T) rethrows -> T { try $forced.withValue(.en, operation: body) }
+
     public var locale: Locale { Locale(identifier: self == .ko ? "ko_KR" : "en_US") }
 }
 

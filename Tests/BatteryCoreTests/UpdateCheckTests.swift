@@ -21,6 +21,12 @@ struct UpdateCheckTests {
         #expect(SemVer("v+1.0.0") == nil)
         #expect(SemVer("1.-2.0") == nil)
     }
+    @Test func dueAfterAFullInterval() {
+        let t=Date(timeIntervalSince1970:1_790_000_000)
+        #expect(UpdateCheck.isDue(last:nil,now:t))
+        #expect(!UpdateCheck.isDue(last:t,now:t.addingTimeInterval(UpdateCheck.interval-1)))
+        #expect(UpdateCheck.isDue(last:t,now:t.addingTimeInterval(UpdateCheck.interval)))
+    }
     @Test func trustedReleaseURL() {
         let ok={ (s:String) in UpdateCheck.isTrustedReleaseURL(URL(string:s)!) }
         #expect(ok("https://github.com/y-minion/vibebattery/releases/tag/v0.2.0"))

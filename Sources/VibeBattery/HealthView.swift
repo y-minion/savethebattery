@@ -20,7 +20,7 @@ struct HealthView:View {
         }
     }
     var body:some View {
-        PageTitle(title:tr("Health analysis","건강 분석"),subtitle:tr("See your battery wear trend and charging habits from real measurements.","실제 측정값으로 수명 추세와 충전 습관을 확인하세요."))
+        PageTitle(title:tr("Health analysis","건강 분석"),subtitle:tr("See your battery wear trend and charging habits from real measurements.","실제 측정값으로 건강도 추세와 충전 습관을 확인하세요."))
         if let r=model.healthReport {
             Card {
                 Label(tr("Current state","현재 상태"),systemImage:"heart.fill").font(.headline)

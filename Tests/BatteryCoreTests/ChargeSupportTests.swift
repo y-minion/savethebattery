@@ -14,4 +14,12 @@ struct ChargeSupportTests {
         AppLanguage.$forced.withValue(.en) { #expect(ChargeSupport.requirementText.hasPrefix("Charge limiting needs macOS 26.4")) }
         AppLanguage.$forced.withValue(.ko) { #expect(ChargeSupport.requirementText.hasPrefix("충전 상한은 macOS 26.4")) }
     }
+    /// A Mac that passes the gate but where macOS reports no charge limit gets its own text, not the requirement.
+    @Test func unsupportedTextSeparatesGateFromMac() {
+        AppLanguage.$forced.withValue(.en) {
+            #expect(ChargeSupport.unsupportedText(platformAllows:false) == ChargeSupport.requirementText)
+            #expect(ChargeSupport.unsupportedText(platformAllows:true) == "Charge limiting isn't available on this Mac.")
+        }
+        AppLanguage.$forced.withValue(.ko) { #expect(ChargeSupport.unsupportedText(platformAllows:true) == "이 맥에서는 충전 상한을 쓸 수 없습니다.") }
+    }
 }

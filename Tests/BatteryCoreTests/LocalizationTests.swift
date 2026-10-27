@@ -20,11 +20,6 @@ struct LocalizationTests {
     /// Hangul in Sources/ must sit inside tr(...) (or a """ literal opened on a tr( line).
     /// Files not converted yet; later tasks remove their entries.
     static let pending: Set<String> = [
-        "Sources/BatteryCore/LowPowerSettings.swift",
-        "Sources/BatteryCore/MagSafeLEDPolicy.swift",
-        "Sources/BatteryPlatform/ChargeHelperXPC.swift",
-        "Sources/BatteryPlatform/ControlChannel.swift",
-        "Sources/VBChargeHelper/main.swift",
         "Sources/VibeBattery/App.swift",
         "Sources/VibeBattery/AppModel.swift",
         "Sources/VibeBattery/ChargeControlView.swift",
@@ -42,6 +37,9 @@ struct LocalizationTests {
         "Sources/VibeCLI/ResourceRunner.swift",
         "Sources/VibeCLI/SessionRunner.swift",
     ]
+    /// Files whose Hangul sits outside tr() on purpose: the v2 helper's wire sentence, which is not UI text.
+    static let allowedLegacy: Set<String> = ["Sources/BatteryCore/MagSafeLEDPolicy.swift"]
+    static let legacyNames = ["legacyUnsupportedV2"]
     /// True when the line calls `tr(` that is not the tail of another identifier (`str(`, `attr(`).
     static func hasTr(_ line: String) -> Bool {
         let u = Array(line.unicodeScalars)
@@ -67,7 +65,7 @@ struct LocalizationTests {
             for (i, line) in try String(contentsOf: url, encoding: .utf8).components(separatedBy: "\n").enumerated() {
                 let triples = line.components(separatedBy: "\"\"\"").count - 1
                 let hasHangul = line.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }
-                let ok = Self.hasTr(line) || (inMulti && multiAllowed)
+                let ok = Self.hasTr(line) || (inMulti && multiAllowed) || (Self.allowedLegacy.contains(rel) && Self.legacyNames.contains { line.contains($0) })
                 if hasHangul && !ok { bad.append("\(rel):\(i + 1)") }
                 if triples % 2 == 1 {
                     if !inMulti { multiAllowed = Self.hasTr(line) }

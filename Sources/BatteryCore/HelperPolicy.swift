@@ -2,14 +2,21 @@ import Foundation
 public enum HelperPolicy {
     public static let label="io.github.y-minion.vibebattery.helper"
     public static let appIdentifier="io.github.y-minion.vibebattery"
-    // Ad-hoc builds have no team ID, so the requirement pins only the identifier.
-    // Developer ID signing must add the team (spec section 8).
-    public static let clientRequirement="identifier \"io.github.y-minion.vibebattery\""
-    public static let helperRequirement="identifier \"io.github.y-minion.vibebattery.helper\""
+    public static let helperIdentifier="io.github.y-minion.vibebattery.helper"
+    /// Code signing requirement for a peer. With a team it must also be Apple-anchored and signed by that team;
+    /// ad-hoc builds have no team, so they pin only the identifier.
+    public static func requirement(identifier:String,team:String?) -> String {
+        guard let team else { return "identifier \"\(identifier)\"" }
+        return "identifier \"\(identifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(team)\""
+    }
+    /// What the helper demands of the app.
+    public static func clientRequirement(team:String?) -> String { requirement(identifier:appIdentifier,team:team) }
+    /// What the app demands of the helper.
+    public static func helperRequirement(team:String?) -> String { requirement(identifier:helperIdentifier,team:team) }
     public static let appPrefix="/Applications/VibeBattery.app/"
     public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.vibebattery.helper.plist"
-    /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED.
-    public static let protocolVersion=2
+    /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED. 3: replies are `HelperReply` codes and the helper is team-pinned.
+    public static let protocolVersion=3
     public static func allows(clientUID:UInt32,consoleUID:UInt32?,clientPath:String?) -> Bool {
         guard let consoleUID,consoleUID != 0,clientUID==consoleUID,let clientPath else { return false }
         return (clientPath as NSString).standardizingPath.hasPrefix(appPrefix)

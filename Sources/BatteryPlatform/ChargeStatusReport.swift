@@ -11,7 +11,7 @@ extension ChargeCLI {
     }
     public static func message(_ r:Result<ControlResponse,ControlClient.Failure>) -> String {
         switch r {
-        case .success(let response):return response.message
+        case .success(let response):return HelperReply.display(response.message) ?? response.message
         case .failure(.timedOut):return tr("Could not confirm the result. Check with vbctl charge status","결과를 확인하지 못했습니다. vbctl charge status로 확인하세요")
         case .failure(.notRunning):return tr("VibeBattery must be running. Open the app and try again.","VibeBattery 앱이 실행 중이어야 합니다. 앱을 열고 다시 시도하세요.")
         }

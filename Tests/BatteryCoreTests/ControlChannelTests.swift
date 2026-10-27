@@ -38,7 +38,7 @@ struct ControlChannelTests {
             let p=path();var calls=0
             let s=try server(p) { _ in calls+=1;return ControlResponse(ok:true,message:"",state:nil) };defer { s.stop() }
             let r=try ControlClient.send(ControlRequest(command:"reboot",value:nil),path:p)
-            #expect(!r.ok);#expect(r.message=="지원하지 않는 요청입니다.");#expect(calls==0)
+            #expect(!r.ok);#expect(r.message==HelperReply.unsupportedRequest.rawValue);#expect(calls==0)
         }
     }
     @Test func oversizedLineRejected() throws {

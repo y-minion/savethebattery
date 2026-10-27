@@ -49,7 +49,7 @@ public final class ControlServer {
         if let line=ControlSocket.readLine(c,limit:Self.maxLine),let request=try? JSONDecoder().decode(ControlRequest.self,from:line),let command=request.chargeCommand() {
             response=queue.sync { handler(command) }
         } else {
-            response=ControlResponse(ok:false,message:"지원하지 않는 요청입니다.",state:nil)
+            response=ControlResponse(ok:false,message:HelperReply.unsupportedRequest.rawValue,state:nil)
         }
         if let data=try? JSONEncoder().encode(response) { ControlSocket.writeAll(c,data+Data("\n".utf8)) }
     }

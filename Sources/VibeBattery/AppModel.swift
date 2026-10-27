@@ -145,7 +145,7 @@ import BatteryPlatform
         if helperStatus != .ready { await refreshHelperStatus() }
         guard helperStatus == .ready else { return LowPowerText.unavailable(helperStatus) }
         let error:String?=await Task.detached {
-            if let e=XPCChargeHelper().setLowPowerMode(on) { return e }
+            if let e=XPCChargeHelper().setLowPowerMode(on) { return HelperReply.display(e) }
             for _ in 0..<20 {
                 if ProcessInfo.processInfo.isLowPowerModeEnabled==on { return nil }
                 try? await Task.sleep(for:.milliseconds(100))
@@ -184,7 +184,7 @@ import BatteryPlatform
                 let outcome=MagSafeLEDPolicy.outcome(reply:error)
                 if outcome.clearDirty { ledDirty=false } // nothing landed, so there is nothing to release
                 if outcome.unsupported { ledUnsupported=true;return } // the card says so; no alert, no retry
-                if error != ledError { ledError=error;message=error }
+                if error != ledError { ledError=error;message=HelperReply.display(error) }
                 return
             }
             ledError=nil;if value == .system { ledDirty=false }

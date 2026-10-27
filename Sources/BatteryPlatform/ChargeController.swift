@@ -114,7 +114,7 @@ public final class ChargeController {
         if case .setLimit(let p)=c,c.requiresHelper {
             guard let helper,helper.isInstalled else { return .failure(.helperRequired) }
             record.writes+=1
-            if let m=helper.setLimit(p) { return .failure(.rejected(m)) }
+            if let m=helper.setLimit(p) { return .failure(.rejected(HelperReply.display(m) ?? m)) }
         } else {
             record.writes+=1
             if !backend.perform(c) { return .failure(.rejected(tr("macOS rejected the request.","macOS가 요청을 거부했습니다."))) }

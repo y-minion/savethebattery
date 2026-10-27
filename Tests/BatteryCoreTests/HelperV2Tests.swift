@@ -40,8 +40,8 @@ struct HelperV2Tests {
     }
     @Test func currentHelperIsReady() {
         AppLanguage.$forced.withValue(.ko) {
-            #expect(HelperPolicy.protocolVersion==2)
-            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{ true },version:{ 2 }) == .ready)
+            #expect(HelperPolicy.protocolVersion==3)
+            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{ true },version:{ 3 }) == .ready)
             #expect(HelperStatus.ready.canSetLimit)
         }
     }

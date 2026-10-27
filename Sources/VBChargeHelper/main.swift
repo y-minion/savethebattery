@@ -21,28 +21,28 @@ final class Service:NSObject,ChargeHelperProtocol {
     let domain=TopoffDomain.name as CFString
     func value(_ key:String) -> CFPropertyList? { CFPreferencesCopyValue(key as CFString,domain,kCFPreferencesCurrentUser,kCFPreferencesAnyHost) }
     func setLimit(_ percent:Int,reply:@escaping (String?)->Void) {
-        guard let writes=TopoffDomain.writes(limit:percent,existingFeature:value(TopoffDomain.featureKey)) else { return reply("허용 범위를 벗어난 상한입니다.") }
+        guard let writes=TopoffDomain.writes(limit:percent,existingFeature:value(TopoffDomain.featureKey)) else { return reply(HelperReply.limitOutOfRange.rawValue) }
         for (key,v) in writes { CFPreferencesSetValue(key as CFString,v as CFPropertyList,domain,kCFPreferencesCurrentUser,kCFPreferencesAnyHost) }
-        guard CFPreferencesSynchronize(domain,kCFPreferencesCurrentUser,kCFPreferencesAnyHost) else { return reply("설정을 저장하지 못했습니다.") }
+        guard CFPreferencesSynchronize(domain,kCFPreferencesCurrentUser,kCFPreferencesAnyHost) else { return reply(HelperReply.limitSaveFailed.rawValue) }
         _=vb_notify(TopoffDomain.notification)
         reply(nil)
     }
     func readState(reply:@escaping ([String:String])->Void) {
         var r:[String:String]=[:]
-        for key in [TopoffDomain.limitKey,TopoffDomain.featureKey] { r[key]=value(key).map { "\($0)" } ?? "없음" }
+        for key in [TopoffDomain.limitKey,TopoffDomain.featureKey] { r[key]=value(key).map { "\($0)" } ?? "none" }
         reply(r)
     }
     func version(reply:@escaping (Int)->Void) { reply(HelperPolicy.protocolVersion) }
     func setLowPowerMode(_ on:Bool,reply:@escaping (String?)->Void) {
-        guard let (code,text)=run(pmset,["-g","custom"]),code==0 else { return reply("저전력 모드 설정을 읽지 못했습니다.") }
-        guard let arguments=LowPowerSettings.parse(text).arguments(on:on) else { return reply("이 맥에서 저전력 모드 설정을 찾지 못했습니다.") }
-        guard let (status,_)=run(pmset,arguments),status==0 else { return reply("저전력 모드를 바꾸지 못했습니다.") }
+        guard let (code,text)=run(pmset,["-g","custom"]),code==0 else { return reply(HelperReply.lowPowerReadFailed.rawValue) }
+        guard let arguments=LowPowerSettings.parse(text).arguments(on:on) else { return reply(HelperReply.lowPowerMissing.rawValue) }
+        guard let (status,_)=run(pmset,arguments),status==0 else { return reply(HelperReply.lowPowerFailed.rawValue) }
         reply(nil)
     }
     func setMagSafeLED(_ raw:Int,reply:@escaping (String?)->Void) {
-        guard let led=MagSafeLED(rawValue:raw) else { return reply("허용되지 않은 LED 값입니다.") }
+        guard let led=MagSafeLED(rawValue:raw) else { return reply(HelperReply.ledValueRejected.rawValue) }
         let r=vb_smc_write_aclc(UInt8(led.rawValue))
-        reply(r==0 ? nil:r==VB_SMC_UNSUPPORTED ? MagSafeLEDText.unsupported:MagSafeLEDText.failed)
+        reply(r==0 ? nil:r==VB_SMC_UNSUPPORTED ? HelperReply.ledUnsupported.rawValue:HelperReply.ledFailed.rawValue)
     }
 }
 /// Root-only test command, used when the binary is started by hand (launchd passes no arguments).
@@ -52,17 +52,17 @@ func ledCommand(_ args:[String]) -> Int32 {
     func fail(_ text:String,_ code:Int32) -> Int32 { FileHandle.standardError.write((text+"\n").data(using:.utf8)!);return code }
     let names=["system":MagSafeLED.system,"off":.off,"green":.green,"orange":.orange]
     guard args.count==2,args[0]=="--led",args[1]=="read"||names[args[1]] != nil else {
-        return fail("사용법: \(CommandLine.arguments[0]) --led read|system|off|green|orange",2)
+        return fail(tr("Usage: \(CommandLine.arguments[0]) --led read|system|off|green|orange","사용법: \(CommandLine.arguments[0]) --led read|system|off|green|orange"),2)
     }
-    guard getuid()==0 else { return fail("관리자 권한이 필요합니다: sudo \(CommandLine.arguments[0]) --led \(args[1])",1) }
+    guard getuid()==0 else { return fail(tr("Administrator rights are required: sudo \(CommandLine.arguments[0]) --led \(args[1])","관리자 권한이 필요합니다: sudo \(CommandLine.arguments[0]) --led \(args[1])"),1) }
     var old:UInt8=0
     let r=vb_smc_read_u8(ledKey,&old)
-    guard r==0 else { return fail("\(ledKey) 값을 읽지 못했습니다. (\(r))",1) }
-    guard let led=names[args[1]] else { print("\(ledKey) 이전 값 \(old)");return 0 }
+    guard r==0 else { return fail(tr("Could not read \(ledKey). (\(r))","\(ledKey) 값을 읽지 못했습니다. (\(r))"),1) }
+    guard let led=names[args[1]] else { print(tr("\(ledKey) previous value \(old)","\(ledKey) 이전 값 \(old)"));return 0 }
     let w=vb_smc_write_aclc(UInt8(led.rawValue))
-    guard w==0 else { return fail("\(ledKey) 이전 값 \(old) · 쓰지 못했습니다. (\(w))",1) }
+    guard w==0 else { return fail(tr("\(ledKey) previous value \(old) · could not write. (\(w))","\(ledKey) 이전 값 \(old) · 쓰지 못했습니다. (\(w))"),1) }
     // The key reads the LED's displayed color, not the control mode, so a read-back proves nothing.
-    print("\(ledKey) 이전 값 \(old) → \(led.rawValue) 썼습니다")
+    print(tr("\(ledKey) previous value \(old) → wrote \(led.rawValue)","\(ledKey) 이전 값 \(old) → \(led.rawValue) 썼습니다"))
     return 0
 }
 let cliArguments=Array(CommandLine.arguments.dropFirst())
@@ -75,12 +75,18 @@ final class Gate:NSObject,NSXPCListenerDelegate {
         let path=vb_pid_path(c.processIdentifier,&buffer,Int32(buffer.count))==0 ? String(cString:buffer):nil
         guard HelperPolicy.allows(clientUID:c.effectiveUserIdentifier,consoleUID:user==nil ? nil:console,clientPath:path) else { return false }
         // The signature check is enforced by XPC on every message, so a PID swap after the path check fails.
-        c.setCodeSigningRequirement(HelperPolicy.clientRequirement)
+        c.setCodeSigningRequirement(clientRequirement)
         c.exportedInterface=NSXPCInterface(with:ChargeHelperProtocol.self)
         c.exportedObject=Service()
         c.resume();return true
     }
 }
+/// Official builds carry a team ID, and only a client signed by the same team is accepted.
+let clientRequirement:String={
+    let team=CodeSigningIdentity.ownTeamID()
+    if team==nil { NSLog("VibeBattery helper: self-built (ad-hoc), not team-pinned") }
+    return HelperPolicy.clientRequirement(team:team)
+}()
 let gate=Gate()
 let listener=NSXPCListener(machServiceName:HelperPolicy.label)
 listener.delegate=gate;listener.resume()

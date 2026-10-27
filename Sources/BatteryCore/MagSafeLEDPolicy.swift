@@ -40,15 +40,14 @@ public enum MagSafeLEDPolicy {
         return dirty && last != .system ? .system : nil
     }
 }
-/// Fixed screen text for the LED; the raw error code never reaches the screen.
 public enum MagSafeLEDText {
-    public static let unsupported="이 맥에서는 MagSafe LED를 바꿀 수 없습니다."
-    public static let failed="MagSafe LED를 바꾸지 못했습니다."
+    /// The sentence a version 2 helper sends for "unsupported". Not UI text (the guard test allows it), kept only so `outcome` still recognises it.
+    public static let legacyUnsupportedV2="이 맥에서는 MagSafe LED를 바꿀 수 없습니다."
 }
 extension MagSafeLEDPolicy {
     /// What a helper reply means for the app. Only the unsupported reply proves nothing was written, so only it clears the dirty flag and stops retries.
     public static func outcome(reply: String?) -> (clearDirty: Bool, unsupported: Bool) {
-        let unsupported = reply == MagSafeLEDText.unsupported
+        let unsupported = reply == HelperReply.ledUnsupported.rawValue || reply == MagSafeLEDText.legacyUnsupportedV2
         return (unsupported, unsupported)
     }
 }

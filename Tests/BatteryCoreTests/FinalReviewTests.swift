@@ -4,7 +4,7 @@ import Foundation
 struct FinalReviewTests {
     @Test func unsupportedReplyClearsDirtyAndStopsRetries() {
         AppLanguage.$forced.withValue(.ko) {
-            let o=MagSafeLEDPolicy.outcome(reply:MagSafeLEDText.unsupported)
+            let o=MagSafeLEDPolicy.outcome(reply:HelperReply.ledUnsupported.rawValue)
             #expect(o.clearDirty);#expect(o.unsupported)
             #expect(MagSafeLEDPolicy.write(target:.off,last:nil,dirty:false,unsupported:o.unsupported) == nil)
             #expect(MagSafeLEDPolicy.write(target:nil,last:nil,dirty:true,unsupported:o.unsupported) == nil)
@@ -12,11 +12,11 @@ struct FinalReviewTests {
     }
     @Test func otherRepliesKeepDirtyAndRetry() {
         AppLanguage.$forced.withValue(.ko) {
-            for r in [MagSafeLEDText.failed,"헬퍼에 연결하지 못했거나 3초 안에 응답이 없습니다."] {
+            for r in [HelperReply.ledFailed.rawValue,HelperReply.noReply.rawValue] {
                 let o=MagSafeLEDPolicy.outcome(reply:r);#expect(!o.clearDirty);#expect(!o.unsupported)
             }
             #expect(MagSafeLEDPolicy.write(target:.off,last:nil,dirty:true) == .off)
-            #expect(!MagSafeLEDText.failed.contains("("))
+            #expect(!HelperReply.ledFailed.text.contains("("))
         }
     }
     @Test func acWithoutBatteryReadingHidesBar() {

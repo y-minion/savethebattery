@@ -82,7 +82,7 @@ struct SettingsView:View {
                     }
                 }
             }
-            if model.ledUnsupported { Text(MagSafeLEDText.unsupported).font(.caption).foregroundStyle(.secondary) }
+            if model.ledUnsupported { Text(HelperReply.ledUnsupported.text).font(.caption).foregroundStyle(.secondary) }
             else if let caption=LowPowerText.caption(model.helperStatus) { Text(caption).font(.caption).foregroundStyle(.secondary) }
             else if !model.chargeConflicts.isEmpty { Text("다른 충전 관리 앱이 있어 LED를 바꾸지 않습니다.").font(.caption).foregroundStyle(.secondary) }
             Text("MagSafe 케이블로 연결했을 때만 켜집니다. USB-C 단자로 충전하면 효과가 없습니다.").font(.caption).foregroundStyle(.secondary)

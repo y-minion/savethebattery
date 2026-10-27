@@ -69,18 +69,32 @@ public struct HealthReport: Codable, Sendable {
     public var cycles: Int?, designCycles: Int?
     public var trend: HealthTrend
     public var week: UsageSummary, month: UsageSummary
+    /// The 7 days before `week`; empty in reports saved before it existed.
+    public var previousWeek = UsageSummary()
     public var sleeps: [SleepEvent]
     public var suggestions: [Suggestion]
     public static func make(snapshot: BatterySnapshot, days: [DailyUsage], sleeps: [SleepEvent], context: AdvisorContext, now: Date, calendar: Calendar, trend: HealthTrend? = nil) -> HealthReport {
-        func window(_ n: Int) -> [DailyUsage] {
-            let from = calendar.date(byAdding: .day, value: -(n - 1), to: calendar.startOfDay(for: now))!
-            return days.filter { $0.day >= from }
+        func window(_ n: Int, skipping skip: Int = 0) -> [DailyUsage] {
+            let today = calendar.startOfDay(for: now)
+            let from = calendar.date(byAdding: .day, value: -(n + skip - 1), to: today)!, to = calendar.date(byAdding: .day, value: 1 - skip, to: today)!
+            return days.filter { $0.day >= from && (skip == 0 || $0.day < to) }
         }
         let health = snapshot.healthPrecise ?? snapshot.health.map(Double.init)
         let week = UsageSummary.make(window(7))
         return HealthReport(generated: now, health: health, marginTo80: health.map { $0 - 80 }, cycles: snapshot.cycles, designCycles: snapshot.designCycles,
-                            trend: trend ?? HealthTrend.make(BatterySegment.current(days), now: now, calendar: calendar), week: week, month: UsageSummary.make(window(30)),
+                            trend: trend ?? HealthTrend.make(BatterySegment.current(days), now: now, calendar: calendar), week: week, month: UsageSummary.make(window(30)), previousWeek: UsageSummary.make(window(7, skipping: 7)),
                             sleeps: Array(sleeps.reversed()), suggestions: HealthAdvisor.suggestions(week: week, sleeps: sleeps, context: context))
+    }
+}
+extension HealthReport {
+    private enum CodingKeys: String, CodingKey { case generated, health, marginTo80, cycles, designCycles, trend, week, month, previousWeek, sleeps, suggestions }
+    public init(from d: Decoder) throws {
+        let c = try d.container(keyedBy: CodingKeys.self)
+        self.init(generated: try c.decode(Date.self, forKey: .generated), health: try c.decodeIfPresent(Double.self, forKey: .health), marginTo80: try c.decodeIfPresent(Double.self, forKey: .marginTo80),
+                  cycles: try c.decodeIfPresent(Int.self, forKey: .cycles), designCycles: try c.decodeIfPresent(Int.self, forKey: .designCycles), trend: try c.decode(HealthTrend.self, forKey: .trend),
+                  week: try c.decode(UsageSummary.self, forKey: .week), month: try c.decode(UsageSummary.self, forKey: .month),
+                  previousWeek: try c.decodeIfPresent(UsageSummary.self, forKey: .previousWeek) ?? UsageSummary(),
+                  sleeps: try c.decode([SleepEvent].self, forKey: .sleeps), suggestions: try c.decode([Suggestion].self, forKey: .suggestions))
     }
 }
 public enum HealthText {
@@ -104,6 +118,17 @@ public enum HealthText {
         return tr("Stress −\(Int((r * 100).rounded()))% with an 80% limit","상한 80%였다면 스트레스 −\(Int((r * 100).rounded()))%")
     }
     static func hours(_ s: Double) -> String { String(format: tr("%.1f h","%.1f시간"), s / 3600) }
+    /// Measured facts, led by this week against the previous week. No previous week data shows this week alone.
+    public static func factLines(_ r: HealthReport) -> [String] {
+        let hasPrev = r.previousWeek != UsageSummary()
+        func row(_ label: String, _ now: Double, _ before: Double) -> String { "\(label): " + (hasPrev ? "\(hours(before)) → " : "") + hours(now) }
+        let w = r.week, p = r.previousWeek
+        var out = [row(tr("≥90% charge","잔량 90% 이상"), w.soc90, p.soc90), row(tr("≥95% charge","잔량 95% 이상"), w.soc95, p.soc95),
+                   row(tr("≥35 °C","35°C 이상"), w.hot35, p.hot35), row(tr("≥40 °C","40°C 이상"), w.hot40, p.hot40)]
+        if let c = r.cycles { out.append(tr("Cycles: \(c)","사이클: \(c)")) }
+        if let h = r.health { out.append(String(format: tr("Health (estimate): %.1f%%","건강도(추정): %.1f%%"), h)) }
+        return out
+    }
     public static func lines(_ r: HealthReport, calendar: Calendar) -> [String] {
         var out: [String] = []
         if let h = r.health {

@@ -77,4 +77,45 @@ struct HealthReportTests {
             #expect(HealthText.stress(UsageSummary.make([]))=="측정 중")
         }
     }
+    func report(prev: Double?) -> HealthReport {
+        var r=HealthReport.make(snapshot:BatterySnapshot(),days:[],sleeps:[],context:AdvisorContext(limit:nil,heatEnabled:false),now:now,calendar:c)
+        r.week.soc90=10800
+        if let prev { r.previousWeek.soc90=prev }
+        return r
+    }
+    @Test func factLinesCompareWithPreviousWeek() {
+        AppLanguage.$forced.withValue(.en) { #expect(HealthText.factLines(report(prev:403200)).contains("≥90% charge: 112.0 h → 3.0 h")) }
+        AppLanguage.$forced.withValue(.ko) { #expect(HealthText.factLines(report(prev:403200)).contains("잔량 90% 이상: 112.0시간 → 3.0시간")) }
+    }
+    @Test func factLinesWithoutPreviousWeekHaveNoArrow() {
+        AppLanguage.$forced.withValue(.en) {
+            let l=HealthText.factLines(report(prev:nil))
+            #expect(l.contains("≥90% charge: 3.0 h"));#expect(!l.joined().contains("→"))
+        }
+    }
+    @Test func factLinesLabelHealthAsEstimate() {
+        var r=report(prev:nil);r.health=91.5;r.cycles=120
+        AppLanguage.$forced.withValue(.en) { let l=HealthText.factLines(r);#expect(l.contains("Health (estimate): 91.5%"));#expect(l.contains("Cycles: 120")) }
+        AppLanguage.$forced.withValue(.ko) { #expect(HealthText.factLines(r).contains("건강도(추정): 91.5%")) }
+    }
+    @Test func previousWeekCoversDaysEightToFourteen() {
+        let r=HealthReport.make(snapshot:BatterySnapshot(),days:[day(0,soc95:100),day(6,soc95:200),day(7,soc95:400),day(13,soc95:800),day(14,soc95:1600)],sleeps:[],context:AdvisorContext(limit:nil,heatEnabled:false),now:now,calendar:c)
+        #expect(r.week.soc95==300);#expect(r.previousWeek.soc95==1200)
+    }
+    @Test func oldJSONWithoutPreviousWeekDecodes() throws {
+        let r=report(prev:5)
+        let e=JSONEncoder();e.dateEncodingStrategy = .secondsSince1970
+        var o=try JSONSerialization.jsonObject(with:e.encode(r)) as! [String:Any]
+        o.removeValue(forKey:"previousWeek")
+        let d=JSONDecoder();d.dateDecodingStrategy = .secondsSince1970
+        let back=try d.decode(HealthReport.self,from:JSONSerialization.data(withJSONObject:o))
+        #expect(back.previousWeek==UsageSummary());#expect(back.week.soc90==10800)
+    }
+    @Test func explainerHasNoLifespanNumbersAndCitesSources() {
+        for lang in [AppLanguage.en,.ko] { AppLanguage.$forced.withValue(lang) {
+            #expect(!ChargeLimitExplainer.paragraphs.isEmpty)
+            #expect(ChargeLimitExplainer.paragraphs.allSatisfy { !$0.contains(where:\.isNumber) })
+        } }
+        #expect(ChargeLimitExplainer.sources.map(\.url.absoluteString)==["https://support.apple.com/102338","https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries"])
+    }
 }

@@ -49,9 +49,20 @@ struct DashboardView:View {
         Card {
             HStack {
                 Label(tr("Health analysis","건강 분석"),systemImage:"heart.text.square").font(.headline)
-                Text(model.healthReport.map { HealthText.trend($0.trend,calendar:.current) } ?? tr("Measuring","측정 중")).foregroundStyle(.secondary)
                 Spacer()
                 Button(tr("Details","자세히")) { model.section="health" }.buttonStyle(.bordered)
+            }
+            if let r=model.healthReport {
+                Text(tr("This week vs. last week","이번 주와 지난주 비교")).font(.caption).foregroundStyle(.secondary)
+                ForEach(Array(HealthText.factLines(r).enumerated()),id:\.offset) { _,l in Text(l).monospacedDigit() }
+            }
+            Text(model.healthReport.map { HealthText.trend($0.trend,calendar:.current) } ?? tr("Measuring","측정 중")).foregroundStyle(.secondary)
+            if let r=model.healthReport { Text(HealthText.stress(r.week)).font(.callout).foregroundStyle(.secondary) }
+            DisclosureGroup(tr("Why a charge limit helps","충전 상한이 도움이 되는 이유")) {
+                VStack(alignment:.leading,spacing:6) {
+                    ForEach(Array(ChargeLimitExplainer.paragraphs.enumerated()),id:\.offset) { _,p in Text(p).font(.callout).foregroundStyle(.secondary) }
+                    ForEach(Array(ChargeLimitExplainer.sources.enumerated()),id:\.offset) { _,s in Link(s.title,destination:s.url).font(.caption) }
+                }.frame(maxWidth:.infinity,alignment:.leading).padding(.top,4)
             }
         }
         Card {

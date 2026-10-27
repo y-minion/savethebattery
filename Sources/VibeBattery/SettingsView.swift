@@ -37,7 +37,7 @@ struct SettingsView:View {
             Text(tr("Protection alerts","보호 경고")).font(.subheadline.weight(.semibold))
             flag(tr("Battery too hot","배터리 고온"),tr("At or above the level below (+2°C while on battery)","아래 기준 이상(배터리 사용 중에는 +2°C)이면"),\.highTemperature)
             Stepper(tr("Hot threshold (while charging) \(Int(model.preferences.notifications.hotAt))°C","고온 기준(충전 중) \(Int(model.preferences.notifications.hotAt))°C"),value:$model.preferences.notifications.hotAt,in:NotificationSettings.hotRange,step:1).onChange(of:model.preferences.notifications.hotAt) { _,_ in model.savePreferences() }
-            flag(tr("Other charge manager detected","다른 충전 관리 앱 감지"),tr("When AlDente or similar is detected and changes are blocked","AlDente 등이 감지되어 변경을 막으면"),\.conflict)
+            flag(tr("Other charge manager detected","다른 충전 관리 앱 감지"),tr("When another charge manager is detected and changes are blocked","다른 충전 관리 앱이 감지되어 변경을 막으면"),\.conflict)
             flag(tr("Heat hold problem","과열 보류 문제"),tr("Restore failed, stopped, apply failed, no temperature sensor","복원 실패, 멈춤, 적용 실패, 온도 센서 없음"),\.heatProblem)
             flag(tr("Heat hold started or ended","과열 보류 시작·해제"),tr("Every time a hold is set or released","보류를 걸거나 풀 때마다"),\.heatActivity)
             Text(tr("Vibe coding","바이브 코딩")).font(.subheadline.weight(.semibold))

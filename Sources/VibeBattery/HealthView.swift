@@ -34,6 +34,16 @@ struct HealthView:View {
                 } else { Text(tr("No battery information","배터리 정보 없음")).foregroundStyle(.secondary) }
             }
             Card {
+                Label(tr("Measured this week vs. last week","이번 주와 지난주 측정값 비교"),systemImage:"checkmark.seal").font(.headline)
+                ForEach(Array(HealthText.factLines(r).enumerated()),id:\.offset) { _,l in Text(l).monospacedDigit() }
+                DisclosureGroup(tr("Why a charge limit helps","충전 상한이 도움이 되는 이유")) {
+                    VStack(alignment:.leading,spacing:6) {
+                        ForEach(Array(ChargeLimitExplainer.paragraphs.enumerated()),id:\.offset) { _,p in Text(p).font(.callout).foregroundStyle(.secondary) }
+                        ForEach(Array(ChargeLimitExplainer.sources.enumerated()),id:\.offset) { _,s in Link(s.title,destination:s.url).font(.caption) }
+                    }.frame(maxWidth:.infinity,alignment:.leading).padding(.top,4)
+                }
+            }
+            Card {
                 Label(tr("Wear trend","수명 추세"),systemImage:"chart.line.downtrend.xyaxis").font(.headline)
                 Text(HealthText.trend(r.trend,calendar:.current)).font(.title3.weight(.semibold))
                 if let p=r.trend.cycles { Text(tr("Expected cycles to reach 80%: \(p.low) to \(p.high.map(String.init) ?? "unknown")","80% 도달 예상 사이클: \(p.low) ~ \(p.high.map(String.init) ?? "알 수 없음")")).foregroundStyle(.secondary) }

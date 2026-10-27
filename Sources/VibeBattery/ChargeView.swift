@@ -167,6 +167,7 @@ struct HelperLogCard:View {
             DisclosureGroup(tr("Helper and log","헬퍼와 기록")) {
                 VStack(alignment:.leading,spacing:8) {
                     HStack { Text(ChargeHelperText.status(model)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled);Spacer();Button(tr("Check again","다시 확인")) { model.checkHelper() }.controlSize(.small) }
+                    HelperInstallControls()
                     Divider()
                     Text(tr("Recent charge changes","최근 충전 변경")).font(.subheadline.weight(.semibold))
                     if model.chargeLog.isEmpty { Text(tr("No records yet.","아직 기록이 없습니다.")).font(.caption).foregroundStyle(.secondary) }

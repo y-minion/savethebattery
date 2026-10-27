@@ -4,12 +4,32 @@ import BatteryPlatform
 enum ChargeHelperText {
     @MainActor static func status(_ model:AppModel) -> String {
         switch model.helperStatus {
-        case .notInstalled:return tr("Helper not installed · needed only for limits below 80%. Run in Terminal: \(model.helperInstallCommand)","헬퍼 설치 안 됨 · 80% 미만 상한에만 필요합니다. 터미널에서 실행: \(model.helperInstallCommand)")
+        case .notInstalled:return tr("Helper not installed · needed only for limits below 80%. Install it below.","헬퍼 설치 안 됨 · 80% 미만 상한에만 필요합니다. 아래에서 설치하세요.")
         case .wrongLocation:return tr("Helper installed · run the app from /Applications/VibeBattery.app so the helper accepts requests.","헬퍼 설치됨 · 앱을 /Applications/VibeBattery.app에서 실행해야 헬퍼가 요청을 받습니다.")
-        case .unreachable:return tr("The helper is not responding. Run the install script again: \(model.helperInstallCommand)","헬퍼가 응답하지 않습니다. 설치 스크립트를 다시 실행하세요: \(model.helperInstallCommand)")
-        case .outdated:return tr("Helper update needed · reinstall it to use Low Power Mode and MagSafe LED: \(model.helperInstallCommand)","헬퍼 업데이트 필요 · 저전력 모드와 MagSafe LED를 쓰려면 다시 설치하세요: \(model.helperInstallCommand)")
+        case .unreachable:return tr("The helper is not responding. Reinstall it below.","헬퍼가 응답하지 않습니다. 아래에서 다시 설치하세요.")
+        case .outdated:return tr("Helper update needed · reinstall it below to use Low Power Mode and MagSafe LED.","헬퍼 업데이트 필요 · 저전력 모드와 MagSafe LED를 쓰려면 아래에서 다시 설치하세요.")
         case .ready:return tr("Helper ready","헬퍼 사용 가능")
         }
+    }
+}
+/// Install, reinstall and remove the root helper with the system password dialog; the Terminal command stays as a fallback.
+struct HelperInstallControls:View {
+    @EnvironmentObject var model:AppModel
+    @State private var busy=false
+    private var installed:Bool { model.helperStatus != .notInstalled }
+    var body:some View {
+        VStack(alignment:.leading,spacing:6) {
+            HStack(spacing:12) {
+                Button(installed ? tr("Reinstall helper…","헬퍼 다시 설치…"):tr("Install helper…","헬퍼 설치…")) { run { await model.installHelper() } }
+                if installed { Button(tr("Remove helper…","헬퍼 제거…")) { run { await model.uninstallHelper() } } }
+            }.disabled(busy)
+            Text(tr("Or run in Terminal: \(model.helperInstallCommand)","또는 터미널에서 실행: \(model.helperInstallCommand)")).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+            if CodeSigningIdentity.ownTeamID() == nil { Text(tr("Self-built copy: the installed helper will not be team-pinned.","직접 빌드한 앱: 설치되는 헬퍼가 팀 서명으로 묶이지 않습니다.")).font(.caption).foregroundStyle(.secondary) }
+        }
+    }
+    private func run(_ work:@escaping () async -> String?) {
+        busy=true
+        Task { if let e=await work() { model.message=e };busy=false }
     }
 }
 struct ChargeControlCard:View {
@@ -39,7 +59,7 @@ struct ChargeControlCard:View {
                 Button(tr("Apply","적용")) { model.applyCharge(.setLimit(target)) }.buttonStyle(.borderedProminent).disabled(!canWrite || needsHelper)
                 Button(tr("Turn off limit","상한 끄기")) { model.applyCharge(.clearLimit) }.disabled(!canWrite)
             }
-            if needsHelper { Text(tr("Limits below 80% are unavailable. \(helperText)","80% 미만 상한을 쓸 수 없습니다. \(helperText)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
+            if needsHelper { Text(tr("Limits below 80% are unavailable. \(helperText)","80% 미만 상한을 쓸 수 없습니다. \(helperText)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled);HelperInstallControls() }
             HStack(spacing:12) {
                 Button(tr("Charge to 100% once","한 번 100% 충전")) { model.applyCharge(.startTopUp) }.disabled(!canWrite)
                 if model.topUpActive { Button(tr("End top-up","완충 종료")) { model.applyCharge(.endTopUp) }.disabled(!canWrite) }

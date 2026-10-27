@@ -1,6 +1,7 @@
 # Generates VibeBattery.xcodeproj (committed). After editing, run: xcodegen generate
 name: VibeBattery
 options:
+  developmentLanguage: en
   deploymentTarget: { macOS: "15.0" }
   projectFormat: xcode16_0
   createIntermediateGroups: true
@@ -28,6 +29,8 @@ targets:
         buildPhase: resources
       - path: scripts/uninstall-helper.sh
         buildPhase: resources
+      - path: Resources/ko.lproj
+        buildPhase: resources
     dependencies:
       - { package: VibeBatteryKit, product: BatteryCore }
       - { package: VibeBatteryKit, product: BatteryPlatform }
@@ -38,6 +41,8 @@ targets:
       properties:
         CFBundleName: VibeBattery
         CFBundleDisplayName: VibeBattery
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, ko]
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
         CFBundlePackageType: APPL

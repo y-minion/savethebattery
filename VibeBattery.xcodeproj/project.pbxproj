@@ -19,6 +19,7 @@
 		4BF83CC5E31D6E323CE4AA67 /* VBChargeHelper in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 582B35FC88C983331FA3E54B /* VBChargeHelper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5597993BA10B64959DE1CD47 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45B1ACBB0CFFCD6463701837 /* Main.swift */; };
 		614932E0AE1873D851DF2807 /* ProcessesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD95128FE5024E3262D7B55B /* ProcessesView.swift */; };
+		638B5A6A5CC917731AF1C7EE /* ko.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 85F38A815A6CCBFA9F7D5D8E /* ko.lproj */; };
 		6B0CBDB6427FDC01CA52E0F7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE431B8D94C975301BF43C /* main.swift */; };
 		7D50C5F89ADBB93CD17D1C4A /* ChargeControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28234EBE31B5A4B8CCE662B /* ChargeControlView.swift */; };
 		7FF86A066E987BF2F6A0A695 /* LowPowerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0073EB690EEB08C68AFE4B9D /* LowPowerView.swift */; };
@@ -89,6 +90,7 @@
 		69238EE300AEAC6E22ED6727 /* ChargeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeView.swift; sourceTree = "<group>"; };
 		7E5647D6A28B0D5FA1C64B04 /* ChildCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildCommand.swift; sourceTree = "<group>"; };
 		7FEC7CC828570B37A896E19C /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
+		85F38A815A6CCBFA9F7D5D8E /* ko.lproj */ = {isa = PBXFileReference; path = ko.lproj; sourceTree = "<group>"; };
 		B2CEF701FD15671F19F52B58 /* SessionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsView.swift; sourceTree = "<group>"; };
 		B35434FE6441A6B8C8843C5A /* VibeBattery */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeBattery; path = .; sourceTree = SOURCE_ROOT; };
 		BD9A9BD4128EBDCC34F4EDC5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 			isa = PBXGroup;
 			children = (
 				4B1A0039A307CD4438E90D31 /* Packages */,
+				C843401F5EA998B23A540A02 /* Resources */,
 				CAA360D2F23924747B2A67BE /* scripts */,
 				56AB3A573192C541317D6294 /* Sources */,
 				46A190D2DE3BE1E9A992BA68 /* Frameworks */,
@@ -211,6 +214,14 @@
 				38B88B180D71C8B5B11E84C3 /* SessionRunner.swift */,
 			);
 			path = VibeCLI;
+			sourceTree = "<group>";
+		};
+		C843401F5EA998B23A540A02 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				85F38A815A6CCBFA9F7D5D8E /* ko.lproj */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		C8D414013A9299E11BB59CF7 /* Products */ = {
@@ -354,6 +365,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				09B6A926C8358BCAF4257D62 /* install-helper.sh in Resources */,
+				638B5A6A5CC917731AF1C7EE /* ko.lproj in Resources */,
 				02C3A468AD308533B7CC6A4F /* uninstall-helper.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

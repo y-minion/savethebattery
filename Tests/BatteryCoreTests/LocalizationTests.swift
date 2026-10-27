@@ -18,15 +18,8 @@ struct LocalizationTests {
     }
 
     /// Hangul in Sources/ must sit inside tr(...) (or a """ literal opened on a tr( line).
-    /// Files not converted yet; later tasks remove their entries.
-    static let pending: Set<String> = [
-        "Sources/VibeBattery/App.swift",
-        "Sources/VibeBattery/ChargeIntents.swift",
-        "Sources/VibeBattery/HealthView.swift",
-        "Sources/VibeBattery/LowPowerView.swift",
-        "Sources/VibeBattery/ProcessesView.swift",
-        "Sources/VibeBattery/SessionsView.swift",
-    ]
+    /// Files not converted yet (none left).
+    static let pending: Set<String> = []
     /// Files whose Hangul sits outside tr() on purpose: the v2 helper's wire sentence, which is not UI text.
     static let allowedLegacy: Set<String> = ["Sources/BatteryCore/MagSafeLEDPolicy.swift"]
     static let legacyNames = ["legacyUnsupportedV2"]
@@ -64,6 +57,37 @@ struct LocalizationTests {
             }
         }
         #expect(bad.isEmpty, "Hangul outside tr(): \(bad.joined(separator: ", "))")
+    }
+
+    /// Every compile-time App Intents key is English and has a Korean entry in ko.lproj.
+    @Test func koreanStringsCoverIntents() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let src = try String(contentsOf: root.appendingPathComponent("Sources/VibeBattery/ChargeIntents.swift"), encoding: .utf8)
+        func table(_ name: String) throws -> [String: String] {
+            let data = try Data(contentsOf: root.appendingPathComponent("Resources/ko.lproj/\(name).strings"))
+            return try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String])
+        }
+        func matches(_ pattern: String, in text: String) throws -> [String] {
+            let re = try NSRegularExpression(pattern: pattern)
+            return re.matches(in: text, range: NSRange(text.startIndex..., in: text)).map { String(text[Range($0.range(at: 1), in: text)!]) }
+        }
+        let quoted = #""((?:[^"\\]|\\.)*)""#
+        // Keys with interpolation are runtime strings, not catalog keys.
+        let keys = try matches(#"(?:LocalizedStringResource\s*=|\btitle\s*:|shortTitle\s*:|IntentDescription\(|TypeDisplayRepresentation\s*=)\s*"# + quoted, in: src).filter { !$0.contains("\\(") }
+        var phrases: [String] = []
+        for list in try matches(#"phrases\s*:\s*\[([^\]]*)\]"#, in: src) {
+            phrases += try matches(quoted, in: list).map { $0.replacingOccurrences(of: "\\(.applicationName)", with: "${applicationName}") }
+        }
+        #expect(keys.count >= 20 && phrases.count >= 3)
+        let ko = try table("Localizable"), shortcuts = try table("AppShortcuts")
+        for k in keys {
+            #expect(ko[k] != nil, "Localizable.strings lacks \(k)")
+            #expect(!k.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }, "Hangul key \(k)")
+        }
+        for k in phrases {
+            #expect(shortcuts[k] != nil, "AppShortcuts.strings lacks \(k)")
+            #expect(!k.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }, "Hangul key \(k)")
+        }
     }
 
     /// Every scripts/*.sh line with Hangul must go through `msg `; Python scripts carry none.

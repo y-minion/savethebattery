@@ -29,7 +29,7 @@ struct MenuLabel:View {
 }
 struct RootView:View {
     @EnvironmentObject var model:AppModel
-    private let items=[("dashboard","대시보드","square.grid.2x2"),("charge","충전","bolt.batteryblock"),("health","건강 분석","heart.text.square"),("processes","앱과 프로세스","waveform.path.ecg"),("sessions","바이브 코딩","terminal"),("settings","설정","slider.horizontal.3")]
+    private var items:[(String,String,String)] {[("dashboard",tr("Dashboard","대시보드"),"square.grid.2x2"),("charge",tr("Charge","충전"),"bolt.batteryblock"),("health",tr("Health analysis","건강 분석"),"heart.text.square"),("processes",tr("Apps and processes","앱과 프로세스"),"waveform.path.ecg"),("sessions",tr("Vibe coding","바이브 코딩"),"terminal"),("settings",tr("Settings","설정"),"slider.horizontal.3")]}
     var body:some View {
         HStack(spacing:0) {
             VStack(alignment:.leading,spacing:26) {
@@ -43,8 +43,8 @@ struct RootView:View {
                     }
                 }
                 Spacer()
-                Label("로컬 저장 · 무료 · 오픈소스",systemImage:"lock.shield").font(.caption).foregroundStyle(.secondary)
-                Text("개발 미리보기 0.1").font(.caption2).foregroundStyle(.tertiary).padding(.bottom,20)
+                Label(tr("Stored locally · Free · Open source","로컬 저장 · 무료 · 오픈소스"),systemImage:"lock.shield").font(.caption).foregroundStyle(.secondary)
+                Text(tr("Development preview 0.1","개발 미리보기 0.1")).font(.caption2).foregroundStyle(.tertiary).padding(.bottom,20)
             }.padding(.horizontal,16).frame(width:210).background(.ultraThinMaterial)
             Divider()
             ScrollView {
@@ -59,7 +59,7 @@ struct RootView:View {
                     }
                 }.padding(30).frame(maxWidth:.infinity,alignment:.leading)
             }.background(Color(nsColor:.windowBackgroundColor))
-        }.alert("VibeBattery",isPresented:Binding(get:{model.message != nil},set:{if !$0 {model.message=nil}})) { Button("확인") { model.message=nil } } message: { Text(model.message ?? "") }
+        }.alert("VibeBattery",isPresented:Binding(get:{model.message != nil},set:{if !$0 {model.message=nil}})) { Button(tr("OK","확인")) { model.message=nil } } message: { Text(model.message ?? "") }
     }
 }
 struct Card<Content:View>:View {

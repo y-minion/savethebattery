@@ -12,51 +12,51 @@ struct ShortcutFailure: Error, CustomLocalizedStringResourceConvertible {
     return .result(dialog:"\(r.message)")
 }
 struct SetChargeLimitIntent: AppIntent {
-    static let title:LocalizedStringResource="충전 상한 설정"
-    static let description=IntentDescription("충전 상한을 50~100% 사이에서 5% 단위로 바꿉니다. 80% 미만은 충전 헬퍼가 필요합니다.")
+    static let title:LocalizedStringResource="Set Charge Limit"
+    static let description=IntentDescription("Changes the charge limit between 50% and 100% in steps of 5%. Limits below 80% need the charge helper.")
     static let openAppWhenRun=false
-    @Parameter(title:"상한",default:80,inclusiveRange:(50,100)) var percent:Int
+    @Parameter(title:"Limit",default:80,inclusiveRange:(50,100)) var percent:Int
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
         guard ChargeCommand.setLimit(percent).isValid else { throw ShortcutFailure(message:ChargeError.invalid.localizedDescription) }
         return try run(.setLimit(percent))
     }
 }
 struct StartTopUpIntent: AppIntent {
-    static let title:LocalizedStringResource="한 번 완충 시작"
-    static let description=IntentDescription("이번 한 번만 100%까지 충전합니다. 끝나면 원래 상한으로 돌아갑니다.")
+    static let title:LocalizedStringResource="Start One-Time Full Charge"
+    static let description=IntentDescription("Charges to 100% this one time. The limit returns when it ends.")
     static let openAppWhenRun=false
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog { try run(.startTopUp) }
 }
 struct EndTopUpIntent: AppIntent {
-    static let title:LocalizedStringResource="완충 종료"
-    static let description=IntentDescription("진행 중인 한 번 완충을 끝내고 원래 상한으로 돌아갑니다.")
+    static let title:LocalizedStringResource="End Full Charge"
+    static let description=IntentDescription("Ends the one-time full charge and returns to the usual limit.")
     static let openAppWhenRun=false
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog { try run(.endTopUp) }
 }
 struct ClearChargeLimitIntent: AppIntent {
-    static let title:LocalizedStringResource="충전 상한 끄기"
-    static let description=IntentDescription("충전 상한을 끄고 100%까지 충전합니다.")
+    static let title:LocalizedStringResource="Turn Off Charge Limit"
+    static let description=IntentDescription("Turns off the charge limit and charges to 100%.")
     static let openAppWhenRun=false
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog { try run(.clearLimit) }
 }
 struct SetLowPowerModeIntent: AppIntent {
-    static let title:LocalizedStringResource="저전력 모드 설정"
-    static let description=IntentDescription("저전력 모드를 켜거나 끕니다. 전원 종류별로 따로 정한 설정이 있어도 이 동작이 덮어씁니다. 충전 헬퍼가 필요합니다.")
+    static let title:LocalizedStringResource="Set Low Power Mode"
+    static let description=IntentDescription("Turns Low Power Mode on or off. This overrides any per-power-source setting. Needs the charge helper.")
     static let openAppWhenRun=false
-    @Parameter(title:"켜기",default:true) var on:Bool
+    @Parameter(title:"Turn On",default:true) var on:Bool
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
         if let e=await AppModel.shared.setLowPower(on) { throw ShortcutFailure(message:e) }
         return .result(dialog:"\(LowPowerText.done(on))")
     }
 }
 struct BatteryStatusEntity: TransientAppEntity {
-    static let typeDisplayRepresentation:TypeDisplayRepresentation="배터리 상태"
-    @Property(title:"잔량") var percent:Int?
-    @Property(title:"충전 중") var charging:Bool?
-    @Property(title:"어댑터 연결") var onAC:Bool?
-    @Property(title:"상한") var limit:Int?
-    @Property(title:"건강도(추정)") var health:Int?
-    @Property(title:"온도") var temperature:Double?
+    static let typeDisplayRepresentation:TypeDisplayRepresentation="Battery Status"
+    @Property(title:"Charge") var percent:Int?
+    @Property(title:"Charging") var charging:Bool?
+    @Property(title:"Adapter Connected") var onAC:Bool?
+    @Property(title:"Limit") var limit:Int?
+    @Property(title:"Health (estimated)") var health:Int?
+    @Property(title:"Temperature") var temperature:Double?
     var summary=""
     var displayRepresentation:DisplayRepresentation { DisplayRepresentation(title:"\(summary)") }
     init() {}
@@ -65,8 +65,8 @@ struct BatteryStatusEntity: TransientAppEntity {
     }
 }
 struct GetBatteryStatusIntent: AppIntent {
-    static let title:LocalizedStringResource="배터리 상태 가져오기"
-    static let description=IntentDescription("잔량, 충전 상태, 충전 상한, 건강도(추정), 온도를 가져옵니다.")
+    static let title:LocalizedStringResource="Get Battery Status"
+    static let description=IntentDescription("Gets the charge, charging state, charge limit, estimated health and temperature.")
     static let openAppWhenRun=false
     @MainActor func perform() async throws -> some IntentResult & ReturnsValue<BatteryStatusEntity> & ProvidesDialog {
         let s=AppModel.shared.shortcutStatus()
@@ -75,8 +75,8 @@ struct GetBatteryStatusIntent: AppIntent {
 }
 struct VibeBatteryShortcuts: AppShortcutsProvider {
     static var appShortcuts:[AppShortcut] {
-        AppShortcut(intent:SetChargeLimitIntent(),phrases:["\(.applicationName) 상한 80%"],shortTitle:"충전 상한 설정",systemImageName:"battery.75percent")
-        AppShortcut(intent:StartTopUpIntent(),phrases:["\(.applicationName) 한 번 완충"],shortTitle:"한 번 완충",systemImageName:"battery.100percent.bolt")
-        AppShortcut(intent:GetBatteryStatusIntent(),phrases:["\(.applicationName) 배터리 상태"],shortTitle:"배터리 상태",systemImageName:"info.circle")
+        AppShortcut(intent:SetChargeLimitIntent(),phrases:["\(.applicationName) limit 80%"],shortTitle:"Set Charge Limit",systemImageName:"battery.75percent")
+        AppShortcut(intent:StartTopUpIntent(),phrases:["\(.applicationName) one-time full charge"],shortTitle:"One-Time Full Charge",systemImageName:"battery.100percent.bolt")
+        AppShortcut(intent:GetBatteryStatusIntent(),phrases:["\(.applicationName) battery status"],shortTitle:"Battery Status",systemImageName:"info.circle")
     }
 }

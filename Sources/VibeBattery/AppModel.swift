@@ -242,6 +242,24 @@ import BatteryPlatform
         sleepStart=nil;resetLEDCache();refresh(wake:wake)
     }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
+    /// Asks for the administrator password in the system dialog, then installs the root helper. Returns nil on success or cancel, else the error text.
+    func installHelper() async -> String? { await runHelperScript("install-helper.sh") }
+    func uninstallHelper() async -> String? { await runHelperScript("uninstall-helper.sh") }
+    private func runHelperScript(_ name:String) async -> String? {
+        // Fixed path and language code only; no user input reaches the shell command.
+        let command="VB_LANG=\(AppLanguage.current.rawValue) '/Applications/VibeBattery.app/Contents/Resources/\(name)'"
+        let quoted=command.replacingOccurrences(of:"\\",with:"\\\\").replacingOccurrences(of:"\"",with:"\\\"")
+        let source="do shell script \"\(quoted)\" with administrator privileges"
+        let error=await Task.detached { () -> String? in
+            var info:NSDictionary?
+            _=NSAppleScript(source:source)?.executeAndReturnError(&info)
+            guard let info else { return nil }
+            if (info[NSAppleScript.errorNumber] as? Int) == -128 { return nil } // the user cancelled the password dialog
+            return (info[NSAppleScript.errorMessage] as? String) ?? tr("The helper script failed.","헬퍼 스크립트가 실패했습니다.")
+        }.value
+        checkHelper()
+        return error
+    }
     var heatStatus:String {
         let h=preferences.heat
         if !h.enabled { return tr("Off","꺼짐") }

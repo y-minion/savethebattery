@@ -37,7 +37,7 @@ public struct BatterySnapshot: Codable, Sendable {
         if let design, design > 0, design < 1e9 { result.designCapacity = Int(design) }
         result.designCycles = (values["DesignCycleCount9C"] as? NSNumber)?.intValue
         if let serial = values["Serial"] as? String, !serial.isEmpty { result.batteryID = BatteryIdentity.hash(serial) }
-        if let raw = number("Temperature"), raw > 0, raw / 100 < 100 { result.temperature = raw / 100; result.temperatureSource = "IORegistry 배터리 센서" }
+        if let raw = number("Temperature"), raw > 0, raw / 100 < 100 { result.temperature = raw / 100; result.temperatureSource = tr("IORegistry battery sensor","IORegistry 배터리 센서") }
         if let voltage = number("Voltage"), let current = (values["InstantAmperage"] ?? values["Amperage"]) as? NSNumber {
             let signed = Int64(bitPattern: current.uint64Value)
             if abs(Double(signed)) < 100000, voltage > 0, voltage < 100000 { result.watts = voltage * Double(signed) / 1_000_000 }

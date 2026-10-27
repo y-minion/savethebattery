@@ -9,14 +9,14 @@ public enum ChargeError: Error, Equatable, LocalizedError {
     case invalid, conflict([String]), helperRequired, unavailable, rejected(String), notApplied, heatHoldActive, noTopUp
     public var errorDescription:String? {
         switch self {
-        case .invalid:return "충전 상한은 50~100% 사이에서 5% 단위로 고를 수 있습니다."
-        case .conflict(let names):return "\(names.joined(separator:", "))이(가) 충전을 관리하고 있습니다. 해당 앱을 종료하거나 삭제하면 제어할 수 있습니다."
-        case .helperRequired:return "80% 미만 상한에는 VibeBattery 헬퍼 설치가 필요합니다."
-        case .unavailable:return "이 macOS에서 충전 상한 제어를 확인하지 못했습니다."
+        case .invalid:return tr("The charge limit can be set from 50 to 100% in steps of 5%.","충전 상한은 50~100% 사이에서 5% 단위로 고를 수 있습니다.")
+        case .conflict(let names):return tr("\(names.joined(separator:", ")) is managing charging. Quit or remove that app to take control.","\(names.joined(separator:", "))이(가) 충전을 관리하고 있습니다. 해당 앱을 종료하거나 삭제하면 제어할 수 있습니다.")
+        case .helperRequired:return tr("Limits below 80% need the VibeBattery helper.","80% 미만 상한에는 VibeBattery 헬퍼 설치가 필요합니다.")
+        case .unavailable:return tr("Could not confirm charge limit control on this macOS.","이 macOS에서 충전 상한 제어를 확인하지 못했습니다.")
         case .rejected(let m):return m
-        case .notApplied:return "적용 실패: 다시 읽은 값이 요청과 다릅니다. 자동으로 재시도하지 않습니다."
-        case .noTopUp:return "진행 중인 한 번 완충이 없습니다."
-        case .heatHoldActive:return "과열 보류 중에는 한 번 완충을 시작할 수 없습니다. 배터리가 식은 뒤 다시 시도하세요."
+        case .notApplied:return tr("Not applied: the value read back differs from the request. It will not retry automatically.","적용 실패: 다시 읽은 값이 요청과 다릅니다. 자동으로 재시도하지 않습니다.")
+        case .noTopUp:return tr("No top-up is in progress.","진행 중인 한 번 완충이 없습니다.")
+        case .heatHoldActive:return tr("Cannot start a top-up during heat hold. Try again after the battery cools down.","과열 보류 중에는 한 번 완충을 시작할 수 없습니다. 배터리가 식은 뒤 다시 시도하세요.")
         }
     }
 }
@@ -117,7 +117,7 @@ public final class ChargeController {
             if let m=helper.setLimit(p) { return .failure(.rejected(m)) }
         } else {
             record.writes+=1
-            if !backend.perform(c) { return .failure(.rejected("macOS가 요청을 거부했습니다.")) }
+            if !backend.perform(c) { return .failure(.rejected(tr("macOS rejected the request.","macOS가 요청을 거부했습니다."))) }
         }
         var s=backend.read()
         for _ in 0..<Self.settleSteps where s.matches(c)==false { pause(Self.settleStep);s=backend.read() }

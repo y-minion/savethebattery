@@ -174,7 +174,7 @@ public enum NotificationPolicy {
             let key=g.kind.rawValue
             guard o.memory.suggestionSent[key].map({ now.timeIntervalSince($0)>=suggestionRepeat }) ?? true else { continue }
             o.memory.suggestionSent[key]=now
-            o.send(s.suggestions,AlertEvent(id:"health.suggestion.\(key)",title:"배터리 관리 제안",body:g.message,section:"health",thread:"health"))
+            o.send(s.suggestions,AlertEvent(id:"health.suggestion.\(key)",title:tr("Battery care suggestion","배터리 관리 제안"),body:g.message,section:"health",thread:"health"))
         }
         if let u=i.week,u.observed>0,let w=week(now,i.calendar),now>=w.opens,o.memory.weekKey != w.key {
             o.memory.weekKey=w.key

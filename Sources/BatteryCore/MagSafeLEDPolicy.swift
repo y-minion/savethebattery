@@ -2,11 +2,11 @@ import Foundation
 public enum LEDColor: String, Codable, CaseIterable, Sendable {
     case green, orange, off
     public var led: MagSafeLED { switch self { case .green: .green; case .orange: .orange; case .off: .off } }
-    public var title: String { switch self { case .green: "초록"; case .orange: "주황"; case .off: "꺼짐" } }
+    public var title: String { switch self { case .green: tr("Green","초록"); case .orange: tr("Orange","주황"); case .off: tr("Off","꺼짐") } }
 }
 public enum LEDMode: String, Codable, CaseIterable, Sendable {
     case system, off, perState
-    public var title: String { switch self { case .system: "macOS 기본"; case .off: "끄기"; case .perState: "상태별로 정하기" } }
+    public var title: String { switch self { case .system: tr("macOS default","macOS 기본"); case .off: tr("Off","끄기"); case .perState: tr("Set per state","상태별로 정하기") } }
 }
 public struct LEDSettings: Codable, Equatable, Sendable {
     public var mode = LEDMode.system
@@ -42,8 +42,8 @@ public enum MagSafeLEDPolicy {
 }
 /// Fixed screen text for the LED; the raw error code never reaches the screen.
 public enum MagSafeLEDText {
-    public static let unsupported="이 맥에서는 MagSafe LED를 바꿀 수 없습니다."
-    public static let failed="MagSafe LED를 바꾸지 못했습니다."
+    public static var unsupported:String { tr("The MagSafe LED cannot be changed on this Mac.","이 맥에서는 MagSafe LED를 바꿀 수 없습니다.") }
+    public static var failed:String { tr("Could not change the MagSafe LED.","MagSafe LED를 바꾸지 못했습니다.") }
 }
 extension MagSafeLEDPolicy {
     /// What a helper reply means for the app. Only the unsupported reply proves nothing was written, so only it clears the dirty flag and stops retries.

@@ -26,7 +26,7 @@ public struct SessionStore {
         let fm=FileManager.default
         if fm.fileExists(atPath:directory.path) {
             let a=try fm.attributesOfItem(atPath:directory.path)
-            guard a[.type] as? FileAttributeType == .typeDirectory,(a[.ownerAccountID] as? NSNumber)?.uint32Value==geteuid() else { throw PlatformError.message("안전하지 않은 세션 폴더입니다.") }
+            guard a[.type] as? FileAttributeType == .typeDirectory,(a[.ownerAccountID] as? NSNumber)?.uint32Value==geteuid() else { throw PlatformError.message(tr("The session folder is not safe.","안전하지 않은 세션 폴더입니다.")) }
         }
         try fm.createDirectory(at:directory,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
         try fm.setAttributes([.posixPermissions:0o700],ofItemAtPath:directory.path)
@@ -56,7 +56,7 @@ public struct SessionStore {
         }
     }
     public func release(_ id:UUID) throws {
-        guard load(id) != nil else { throw PlatformError.message("세션을 찾을 수 없습니다.") }
+        guard load(id) != nil else { throw PlatformError.message(tr("Session not found.","세션을 찾을 수 없습니다.")) }
         try prepare();let f=directory.appendingPathComponent(id.uuidString+".release")
         try Data().write(to:f,options:.atomic);try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:f.path)
     }

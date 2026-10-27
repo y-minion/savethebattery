@@ -1,6 +1,6 @@
 import Foundation
 import BatteryCore
-/// One schedule outcome, shown under "최근 실행".
+/// One schedule outcome, shown under "Recent runs".
 public struct ScheduleRun: Codable, Equatable {
     public enum Result: Codable, Equatable { case ran, failed(String), skipped }
     public var date:Date;public var ruleName:String;public var action:String;public var result:Result

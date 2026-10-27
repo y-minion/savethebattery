@@ -343,7 +343,7 @@ import BatteryPlatform
         timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true) { [weak self] _ in Task { @MainActor in self?.tick() } }
     }
     /// Checks GitHub for a newer release at launch and then daily, while the setting is on.
-    private var currentVersion:String { ProcessInfo.processInfo.environment["VB_FAKE_CURRENT_VERSION"] ?? Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "0" }
+    private var currentVersion:String { ProcessInfo.processInfo.environment["VB_FAKE_CURRENT_VERSION"] ?? ReleaseClient.bundleVersion }
     func scheduleUpdateChecks() {
         updateTimer?.invalidate();updateTimer=nil
         guard preferences.checkUpdates else { availableUpdate=nil;return }

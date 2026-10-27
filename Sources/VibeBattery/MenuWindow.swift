@@ -73,7 +73,8 @@ struct MenuWindow:View {
     /// Why charge writes are unavailable, shared by the limit and topUp sections.
     var writeBlock:String? {
         if !model.chargeConflicts.isEmpty { return "\(model.chargeConflicts.map(\.name).joined(separator:", "))이(가) 충전을 관리하고 있어 바꿀 수 없습니다." }
-        return model.charge.supported==true ? nil:"이 맥에서는 충전 상한을 바꿀 수 없습니다"
+        if model.charge.supported==false { return ChargeSupport.requirementText }
+        return model.charge.supported==true ? nil:tr("Charge limit status is unknown right now.","지금은 충전 상한 상태를 알 수 없습니다.")
     }
     var limitSection:some View {
         let canWrite=writeBlock==nil

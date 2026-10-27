@@ -29,7 +29,7 @@ struct ChargeControlCard:View {
     var body:some View {
         Card {
             HStack { Label("충전 제어",systemImage:"shield.lefthalf.filled").font(.headline);Spacer();Text(originText).font(.caption).foregroundStyle(.secondary) }
-            Text(ChargeText.limit(model.charge)).font(.system(size:27,weight:.semibold,design:.rounded))
+            Text(ChargeText.limit(model.charge)).font(model.charge.supported==false ? .callout:.system(size:27,weight:.semibold,design:.rounded))
             if let why=model.lastChangeText { Text(why).font(.callout).foregroundStyle(.secondary) }
             if !model.chargeConflicts.isEmpty {
                 Label("\(model.chargeConflicts.map(\.name).joined(separator:", "))이(가) 충전을 관리하고 있어 VibeBattery는 값을 바꾸지 않습니다. 해당 앱을 종료하거나 삭제하면 제어할 수 있습니다.",systemImage:"exclamationmark.triangle.fill").foregroundStyle(.orange)

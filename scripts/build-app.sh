@@ -3,6 +3,8 @@
 # Shortcuts only lists actions from apps signed with a team: set VB_SIGN_IDENTITY, or the first
 # "Apple Development" identity in the keychain is used. Without one the build is ad-hoc.
 set -eu
+vb_lang() { case "${VB_LANG:-$(defaults read -g AppleLanguages 2>/dev/null | sed -n '2s/[^a-z]*\([a-z]*\).*/\1/p')}" in ko*) echo ko;; *) echo en;; esac; }
+msg() { if [ "$(vb_lang)" = ko ]; then printf '%s\n' "$2"; else printf '%s\n' "$1"; fi; }
 cd "$(dirname "$0")/.."
 VB_OUTPUT_DIR=${VB_OUTPUT_DIR:-"$PWD/dist"}
 VB_DERIVED="$PWD/.build/xcode"
@@ -22,12 +24,12 @@ codesign --force --sign "$VB_SIGN_IDENTITY" --identifier io.github.y-minion.vibe
 codesign --force --sign "$VB_SIGN_IDENTITY" "$VB_APP"
 codesign --verify --strict "$VB_APP"
 for f in Contents/Resources/Metadata.appintents Contents/Resources/install-helper.sh Contents/Resources/uninstall-helper.sh Contents/MacOS/vbctl Contents/MacOS/VBChargeHelper; do
-    [ -e "$VB_APP/$f" ] || { echo "빌드 결과에 $f 가 없습니다." >&2;exit 1; }
+    [ -e "$VB_APP/$f" ] || { msg "The build is missing $f." "빌드 결과에 $f 가 없습니다." >&2;exit 1; }
 done
-codesign -dv "$VB_APP/Contents/MacOS/VBChargeHelper" 2>&1 | grep -q '^Identifier=io.github.y-minion.vibebattery.helper$' || { echo "헬퍼 서명 식별자가 다릅니다." >&2;exit 1; }
+codesign -dv "$VB_APP/Contents/MacOS/VBChargeHelper" 2>&1 | grep -q '^Identifier=io.github.y-minion.vibebattery.helper$' || { msg "The helper signing identifier does not match." "헬퍼 서명 식별자가 다릅니다." >&2;exit 1; }
 mkdir -p "$VB_OUTPUT_DIR"
 rm -rf "$VB_OUTPUT_DIR/VibeBattery.app"
 ditto --norsrc --noextattr "$VB_APP" "$VB_OUTPUT_DIR/VibeBattery.app"
 ditto -c -k --norsrc --noextattr --keepParent "$VB_APP" "$VB_OUTPUT_DIR/VibeBattery.zip"
-[ "$VB_SIGN_IDENTITY" = - ] && echo "임시 서명으로 빌드했습니다. 단축어 앱에는 동작이 보이지 않습니다." >&2
+[ "$VB_SIGN_IDENTITY" = - ] && msg "Built with an ad-hoc signature. Actions will not show up in the Shortcuts app." "임시 서명으로 빌드했습니다. 단축어 앱에는 동작이 보이지 않습니다." >&2
 printf '%s\n' "$VB_OUTPUT_DIR/VibeBattery.app"

@@ -13,7 +13,7 @@ func runSession(_ options:RunOptions) throws -> Int32 {
     if onAC || options.allowBattery { try lease.acquire(reason:"VibeBattery: \(record.command)");record.protected=true }
     defer { lease.release() }
     try store.save(record)
-    note("세션 \(record.id.uuidString) · 보호 시간 \(options.hours)h · 정리 \(options.cleanup ? "허용된 리소스만" : "관찰")")
+    note(tr("Session \(record.id.uuidString) · protected for \(options.hours)h · cleanup: \(options.cleanup ? "allowed resources only" : "observe only")","세션 \(record.id.uuidString) · 보호 시간 \(options.hours)h · 정리 \(options.cleanup ? "허용된 리소스만" : "관찰")"))
     var env=ProcessInfo.processInfo.environment;env["VIBEBATTERY_SESSION"]=record.id.uuidString
     vb_watch_signals()
     let child:ChildCommand
@@ -37,14 +37,14 @@ func runSession(_ options:RunOptions) throws -> Int32 {
             }
             if let reason {
                 record.outcome=reason;record.protected=false;record.cleanup = .observe;lease.release();try store.save(record)
-                note("보호 해제 (\(reason.rawValue)). 명령은 계속 실행되며 자동 정리는 하지 않습니다.")
+                note(tr("Protection released (\(reason.rawValue)). The command keeps running and nothing is cleaned up automatically.","보호 해제 (\(reason.rawValue)). 명령은 계속 실행되며 자동 정리는 하지 않습니다."))
             }
         }
         // Revocation/expiry must win when completion occurs between polling ticks.
         if let code=try child.exitStatus() {
             if record.outcome == .running { record.outcome=code==0 ? .succeeded:.failed }
             lease.release();record.exitCode=code;record.protected=false;record.ended=Date();try store.save(record)
-            note("작업 종료: \(code) · \(record.outcome.rawValue)");return code
+            note(tr("Command finished: \(code) · \(record.outcome.rawValue)","작업 종료: \(code) · \(record.outcome.rawValue)"));return code
         }
         Thread.sleep(forTimeInterval:0.5)
     }

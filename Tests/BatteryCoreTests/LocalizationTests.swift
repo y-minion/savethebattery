@@ -32,10 +32,6 @@ struct LocalizationTests {
         "Sources/VibeBattery/ProcessesView.swift",
         "Sources/VibeBattery/SessionsView.swift",
         "Sources/VibeBattery/SettingsView.swift",
-        "Sources/VibeCLI/ChildCommand.swift",
-        "Sources/VibeCLI/Main.swift",
-        "Sources/VibeCLI/ResourceRunner.swift",
-        "Sources/VibeCLI/SessionRunner.swift",
     ]
     /// Files whose Hangul sits outside tr() on purpose: the v2 helper's wire sentence, which is not UI text.
     static let allowedLegacy: Set<String> = ["Sources/BatteryCore/MagSafeLEDPolicy.swift"]
@@ -74,6 +70,20 @@ struct LocalizationTests {
             }
         }
         #expect(bad.isEmpty, "Hangul outside tr(): \(bad.joined(separator: ", "))")
+    }
+
+    /// Every scripts/*.sh line with Hangul must go through `msg `; Python scripts carry none.
+    @Test func scriptsSayBothLanguages() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let dir = root.appendingPathComponent("scripts")
+        var bad: [String] = []
+        for url in try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) where ["sh", "py"].contains(url.pathExtension) {
+            for (i, line) in try String(contentsOf: url, encoding: .utf8).components(separatedBy: "\n").enumerated() {
+                guard line.unicodeScalars.contains(where: { (0xAC00...0xD7A3).contains($0.value) }) else { continue }
+                if url.pathExtension == "py" || !line.contains("msg ") { bad.append("\(url.lastPathComponent):\(i + 1)") }
+            }
+        }
+        #expect(bad.isEmpty, "Hangul outside msg: \(bad.joined(separator: ", "))")
     }
 
     // One English assertion per text enum, plus the Korean counterpart.

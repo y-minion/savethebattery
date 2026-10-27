@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VibeBattery</title>
+<meta name="description" content="무료 오픈소스 macOS 메뉴 막대 배터리 관리. 충전 상한, 일정, 건강 수치까지 모두 무료입니다.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header><span>VibeBattery</span><a href="../">English</a></header>
+<main>
+<h1>노트북의 수명은 배터리가 좌우합니다.</h1>
+<p class="lead">VibeBattery는 내 배터리를 더 오래 건강하게 지켜 줍니다. 다른 앱이 돈을 받는 기능도 여기서는 모두 무료입니다. 오픈소스(MIT), 원격 측정 없음.</p>
+<p><a class="btn" href="https://github.com/y-minion/vibebattery/releases/latest">Mac용 내려받기</a><a class="btn alt" href="https://github.com/y-minion/vibebattery">GitHub에서 보기</a></p>
+<pre><code>curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/install.sh | sh</code></pre>
+<p class="first">가장 먼저 할 일: 충전 상한을 80%로 맞추세요.</p>
+<p>베타 0.2.0이며, 지금까지 Mac 한 대(M4 Pro, macOS 27.0.1)에서 테스트했습니다. 터미널로 설치하면 Gatekeeper 경고 없이 열립니다. 브라우저로 zip을 받았다면 앱을 한 번 열고 시스템 설정 › 개인정보 보호 및 보안 › 그래도 열기를 누르세요. 앱은 무료 Apple Development 인증서로 서명되어 있고 공증은 받지 않았습니다.</p>
+
+<h2>다른 앱이 돈을 받는 기능, 여기서는 모두 무료</h2>
+<ul>
+<li>메뉴 막대 상태 아이콘과 내 마음대로 바꾸는 메뉴 창</li>
+<li>충전 상한 50~100%, 요일별 일정, 한 번만 완충, 과열 시 충전 보류</li>
+<li>전력 흐름과 하드웨어 잔량</li>
+<li>저전력 모드 스위치와 MagSafe LED 모드</li>
+<li>실측 수치로 보는 건강 기록: 높은 충전량·고온 시간, 사이클, 건강도 추정</li>
+<li>코딩 에이전트가 일하는 동안 Mac을 깨워 두는 터미널 작업(<code>vbctl run</code>)</li>
+<li>단축어 동작, 알림, 한국어·영어 UI</li>
+</ul>
+
+<h2>충전 상한이 왜 도움이 되나요</h2>
+<p>리튬 이온 셀은 높은 충전량에서, 특히 따뜻할 때 더 빨리 낡습니다. Apple도 이 때문에 충전 상한을 안내하고(<a href="https://support.apple.com/102338">support.apple.com/102338</a>), Battery University가 스트레스 곡선을 설명합니다(<a href="https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries">BU-808</a>). VibeBattery는 몇 개월, 몇 년을 약속하지 않고 내 Mac에서 잰 값을 보여 줍니다.</p>
+
+<h2>지원 환경</h2>
+<table>
+<tr><th>내 Mac</th><th>충전 상한·일정·저전력 모드·MagSafe LED</th><th>나머지 기능</th></tr>
+<tr><td>Apple 실리콘, macOS 26.4 이상</td><td>가능</td><td>가능</td></tr>
+<tr><td>Apple 실리콘, macOS 15~26.3</td><td>계획 중</td><td>가능</td></tr>
+<tr><td>Intel, macOS 15 이상</td><td>계획 중</td><td>가능</td></tr>
+</table>
+
+<h2>안전하게 설계</h2>
+<p>AlDente, batt, battery, Battery Toolkit이 설치되어 있거나 실행 중이면 VibeBattery는 아무것도 바꾸지 않습니다. 선택 사항인 루트 헬퍼는 정해진 요청만 받고, SMC 키 하나(MagSafe LED)만 쓰며, 셸을 실행하지 않습니다. 네트워크 요청은 하루 한 번의 새 버전 확인뿐이며 끌 수 있습니다.</p>
+
+<h2>제거</h2>
+<pre><code>curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/uninstall.sh | sh</code></pre>
+</main>
+<footer>MIT · <a href="https://github.com/y-minion/vibebattery">GitHub</a> · <a href="https://github.com/y-minion/vibebattery/blob/main/SECURITY.md">보안</a> · <a href="https://github.com/y-minion/vibebattery/issues">문제 알리기</a></footer>
+</body>
+</html>

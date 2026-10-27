@@ -94,3 +94,13 @@ Not claimed as validated: real high-temperature heat hold, physical display beha
 - After a reboot (2026-10-28, mode "macOS 기본", paused at the 70% limit on AC): the app started at login, the dirty flag was clear and the LED was green under macOS control.
 - Not checked: whether "끄기" survives a reboot (before login, and after the app relaunches). The LED works only with the MagSafe cable, not USB-C.
 - Not included: stop charging while sleeping (by decision); sailing lower bound, forced discharge and calibration (firmware-blocked).
+
+## Free distribution (2026-10-28)
+
+Build facts: Apple's timestamp server accepted the development certificate (`codesign -dvv` shows `Timestamp=` and `TeamIdentifier=JQWWU7443A`); the build is universal (x86_64 arm64). The five validation steps from the design are not yet checked on a device.
+
+1. Install from a clean state: the one-liner, then the browser zip with the "Open Anyway" flow. Not yet checked.
+2. Language: switch macOS to English and check the UI, notifications, Shortcuts and `vbctl`, then switch back. Not yet checked.
+3. Helper pinning: reinstall the helper; an ad-hoc-signed copy of the app is refused by the pinned helper; the official build works (limit 70, Low Power Mode, LED). Not yet checked.
+4. Version notice: point the version check at a fake older version and confirm the notice appears. Not yet checked.
+5. Uninstall: run `uninstall.sh`; the app, helper and LaunchDaemon are gone and the data is kept or removed per the answer. Not yet checked.

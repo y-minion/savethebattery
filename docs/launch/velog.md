@@ -1,13 +1,14 @@
 <!-- velog 글 초안 (한국어). 제목 후보와 본문입니다. 올리기 전에 이미지 자리를 실제 캡처로 바꾸세요. -->
 
 # 제목 후보
-- 맥북 배터리, 80%에서 멈추게 했더니: 무료 오픈소스 VibeBattery 만든 이야기
+- 맥북 배터리 기록을 직접 재 보는 앱: 무료 오픈소스 VibeBattery 만든 이야기
 - 노트북 수명은 배터리가 정한다 — 돈 안 받는 맥 배터리 관리 앱을 만들었습니다
 
 # 본문
 
 노트북이 결국 낡는 이유는 대개 배터리입니다. 리튬 이온 배터리는 높은 충전량으로 오래 있을수록, 거기에 열까지 더해지면 더 빨리 낡습니다. Apple도 그래서 macOS에 충전 상한 기능을 넣었고([support.apple.com/102338](https://support.apple.com/102338)), 스트레스가 어떻게 쌓이는지는 Battery University에 잘 정리되어 있습니다([BU-808](https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries)).
 
+<!-- 작성자 확인: 실제 경험에 맞게 고치세요 -->
 저도 어느 블로그 글을 보고 배터리 앱을 깔았습니다. 그런데 깔고 나서도 "이게 정말 도움이 되고 있나?"를 알 방법이 없었습니다. 숫자가 하나도 안 보였거든요. 그래서 **VibeBattery**를 만들었습니다.
 
 ![메뉴 창](docs/images/menu-window.ko.gif)
@@ -32,7 +33,7 @@ curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/inst
 ```
 체크섬을 검증하고 sudo 없이 `/Applications`에 설치합니다. curl로 받으면 Gatekeeper 경고가 뜨지 않습니다. 앱은 무료 Apple Development 인증서로 서명했고 공증은 받지 않았습니다(유료 프로그램이 필요해서요). 브라우저로 zip을 받으면 시스템 설정 › 개인정보 보호 및 보안에서 "그래도 열기"를 한 번 눌러야 합니다. 스크립트 소스는 저장소에 있으니 `sh`에 넘기기 전에 읽어 보세요.
 
-**가장 먼저 할 일: 충전 상한을 80%로 맞추세요.**
+**가장 먼저 할 일: 충전 상한을 80%로 맞추세요(Apple Silicon, macOS 26.4 이상).**
 
 ## 솔직한 한계
 - 0.2.0 베타입니다. 지금까지 제 Mac 한 대(M4 Pro, macOS 27.0.1)에서만 직접 테스트했습니다.

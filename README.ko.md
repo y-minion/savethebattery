@@ -12,7 +12,7 @@
 curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/install.sh | sh
 ```
 
-**가장 먼저 할 일: 충전 상한을 80%로 맞추세요.** 메뉴 창에서 충전 상한을 80%로 고르면, VibeBattery가 꺼져 있어도 macOS가 그 값에서 충전을 멈춥니다.
+**가장 먼저 할 일: 충전 상한을 80%로 맞추세요(Apple Silicon, macOS 26.4 이상).** 메뉴 창에서 충전 상한을 80%로 고르면, VibeBattery가 꺼져 있어도 macOS가 그 값에서 충전을 멈춥니다.
 
 베타(0.2.0)입니다. 지금까지 Mac 한 대(M4 Pro, macOS 27.0.1)에서 테스트했습니다. 문제는 [이슈로 알려 주세요](https://github.com/y-minion/vibebattery/issues).
 
@@ -89,7 +89,7 @@ curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/inst
 curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/uninstall.sh | sh
 ```
 
-앱을 지우고, macOS 암호 창으로 헬퍼도 제거합니다(MagSafe LED는 macOS 제어로 돌아갑니다). 기록과 설정 삭제 여부(기본은 유지)와 macOS 충전 상한도 함께 끌지 여부(기본은 유지)를 먼저 묻습니다. 소스: [scripts/uninstall.sh](scripts/uninstall.sh).
+앱을 지우고, macOS 암호 창으로 헬퍼도 제거합니다(MagSafe LED는 macOS 제어로 돌아갑니다). 기록과 설정 삭제 여부(기본은 유지)를 묻습니다. 앱이 실행 중이면 macOS 충전 상한도 함께 끌지 묻고(기본은 유지), 그렇지 않으면 상한은 그대로 남으며 시스템 설정 › 배터리에서 바꿀 수 있습니다. 소스: [scripts/uninstall.sh](scripts/uninstall.sh).
 
 ## 소스에서 빌드
 

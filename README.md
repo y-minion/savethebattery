@@ -12,7 +12,7 @@ Free and open source (MIT). A macOS menu bar app for battery care, with helpers 
 curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/install.sh | sh
 ```
 
-**First thing: set the limit to 80%.** Open the menu window and pick 80% as the charge limit. macOS then stops charging there, even when VibeBattery is not running.
+**First thing: set the limit to 80% (Apple silicon, macOS 26.4 or later).** Open the menu window and pick 80% as the charge limit. macOS then stops charging there, even when VibeBattery is not running.
 
 This is a beta (0.2.0). It has been tested on one Mac so far (an M4 Pro with macOS 27.0.1). Please [report problems](https://github.com/y-minion/vibebattery/issues).
 
@@ -89,7 +89,7 @@ More in [SECURITY.md](SECURITY.md).
 curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/uninstall.sh | sh
 ```
 
-It removes the app and, with the macOS password dialog, the helper (the MagSafe LED goes back to macOS). It asks before it deletes your history and settings (kept by default) and whether to also turn off the macOS charge limit (kept by default). Source: [scripts/uninstall.sh](scripts/uninstall.sh).
+It removes the app and, with the macOS password dialog, the helper (the MagSafe LED goes back to macOS). It asks before it deletes your history and settings (kept by default). If the app is running, it also asks whether to turn off the macOS charge limit (kept by default); otherwise the limit stays as it is, and you can change it in System Settings › Battery. Source: [scripts/uninstall.sh](scripts/uninstall.sh).
 
 ## Build from source
 

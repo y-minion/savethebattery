@@ -8,7 +8,9 @@ msg() { if [ "$(vb_lang)" = ko ]; then printf '%s\n' "$2"; else printf '%s\n' "$
 main() {
 BASE=${VB_RELEASE_BASE:-https://github.com/y-minion/vibebattery/releases/latest/download}
 DIR=${VB_INSTALL_DIR:-/Applications}
-OS=$(sw_vers -productVersion); ARCH=$(uname -m)
+OS=$(sw_vers -productVersion)
+# uname -m says x86_64 under Rosetta; the hardware flag is 1 on Apple silicon either way.
+if [ "$(sysctl -n hw.optional.arm64 2>/dev/null || true)" = 1 ]; then ARCH=arm64; else ARCH=x86_64; fi
 [ "${OS%%.*}" -ge 15 ] || { msg "VibeBattery needs macOS 15 or later (this Mac runs $OS)." "VibeBattery는 macOS 15 이상이 필요합니다 (이 Mac은 $OS)." >&2; exit 1; }
 if [ "$ARCH" = arm64 ] && [ "$(printf '%s\n26.4\n' "$OS" | sort -V | head -1)" = 26.4 ]; then
     msg "macOS $OS on $ARCH: everything is supported, including the charge limit." "macOS $OS ($ARCH): 충전 상한을 포함한 모든 기능을 지원합니다."

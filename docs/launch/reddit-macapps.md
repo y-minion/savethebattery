@@ -23,7 +23,7 @@ Honest limits:
 - It is signed with a free Apple Development certificate and is not notarized. The terminal install opens without a prompt; a browser download needs System Settings > Privacy & Security > Open Anyway once.
 - Limits below 80%, Low Power Mode and the LED need an optional root helper, installed from the app with the admin-password dialog. It accepts fixed requests only and writes one SMC key (the MagSafe LED).
 
-First thing after installing: set the limit to 80%.
+First thing after installing: set the limit to 80% (Apple silicon, macOS 26.4 or later).
 
 Install (the script is in the repo, read it first):
 

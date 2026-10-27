@@ -15,21 +15,22 @@ enum ChargeHelperText {
 /// Install, reinstall and remove the root helper with the system password dialog; the Terminal command stays as a fallback.
 struct HelperInstallControls:View {
     @EnvironmentObject var model:AppModel
-    @State private var busy=false
+    private static let selfBuilt=CodeSigningIdentity.ownTeamID() == nil
+    private static let inApplications=(Bundle.main.bundlePath as NSString).standardizingPath == "/Applications/VibeBattery.app"
     private var installed:Bool { model.helperStatus != .notInstalled }
     var body:some View {
         VStack(alignment:.leading,spacing:6) {
             HStack(spacing:12) {
                 Button(installed ? tr("Reinstall helper…","헬퍼 다시 설치…"):tr("Install helper…","헬퍼 설치…")) { run { await model.installHelper() } }
                 if installed { Button(tr("Remove helper…","헬퍼 제거…")) { run { await model.uninstallHelper() } } }
-            }.disabled(busy)
+            }.disabled(model.helperBusy || !Self.inApplications)
+            if !Self.inApplications { Text(tr("Move VibeBattery to /Applications to install the helper.","헬퍼를 설치하려면 VibeBattery를 /Applications로 옮기세요.")).font(.caption).foregroundStyle(.orange) }
             Text(tr("Or run in Terminal: \(model.helperInstallCommand)","또는 터미널에서 실행: \(model.helperInstallCommand)")).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
-            if CodeSigningIdentity.ownTeamID() == nil { Text(tr("Self-built copy: the installed helper will not be team-pinned.","직접 빌드한 앱: 설치되는 헬퍼가 팀 서명으로 묶이지 않습니다.")).font(.caption).foregroundStyle(.secondary) }
+            if Self.selfBuilt { Text(tr("Self-built copy: the installed helper will not be team-pinned.","직접 빌드한 앱: 설치되는 헬퍼가 팀 서명으로 묶이지 않습니다.")).font(.caption).foregroundStyle(.secondary) }
         }
     }
     private func run(_ work:@escaping () async -> String?) {
-        busy=true
-        Task { if let e=await work() { model.message=e };busy=false }
+        Task { if let e=await work() { model.message=e } }
     }
 }
 struct ChargeControlCard:View {

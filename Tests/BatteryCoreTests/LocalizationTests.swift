@@ -86,6 +86,7 @@ struct LocalizationTests {
         }
         for k in phrases {
             #expect(shortcuts[k] != nil, "AppShortcuts.strings lacks \(k)")
+            #expect(shortcuts[k]?.contains("${applicationName}") == true, "Korean phrase lacks ${applicationName}: \(k)")
             #expect(!k.unicodeScalars.contains { (0xAC00...0xD7A3).contains($0.value) }, "Hangul key \(k)")
         }
     }

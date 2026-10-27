@@ -29,7 +29,9 @@ targets:
         buildPhase: resources
       - path: scripts/uninstall-helper.sh
         buildPhase: resources
-      - path: Resources/ko.lproj
+      - path: Resources/ko.lproj/Localizable.strings
+        buildPhase: resources
+      - path: Resources/ko.lproj/AppShortcuts.strings
         buildPhase: resources
     dependencies:
       - { package: VibeBatteryKit, product: BatteryCore }

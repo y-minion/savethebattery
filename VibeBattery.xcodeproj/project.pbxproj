@@ -19,7 +19,7 @@
 		4BF83CC5E31D6E323CE4AA67 /* VBChargeHelper in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 582B35FC88C983331FA3E54B /* VBChargeHelper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5597993BA10B64959DE1CD47 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45B1ACBB0CFFCD6463701837 /* Main.swift */; };
 		614932E0AE1873D851DF2807 /* ProcessesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD95128FE5024E3262D7B55B /* ProcessesView.swift */; };
-		638B5A6A5CC917731AF1C7EE /* ko.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 85F38A815A6CCBFA9F7D5D8E /* ko.lproj */; };
+		6AB7AEDE74467E6DBEA12031 /* AppShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = B5210F65B2F04C74BD656C09 /* AppShortcuts.strings */; };
 		6B0CBDB6427FDC01CA52E0F7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADE431B8D94C975301BF43C /* main.swift */; };
 		7D50C5F89ADBB93CD17D1C4A /* ChargeControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28234EBE31B5A4B8CCE662B /* ChargeControlView.swift */; };
 		7FF86A066E987BF2F6A0A695 /* LowPowerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0073EB690EEB08C68AFE4B9D /* LowPowerView.swift */; };
@@ -30,6 +30,7 @@
 		A6865023CDDD3ED0AFCE6805 /* BatteryPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = 096866D6B92443C5CB23E175 /* BatteryPlatform */; };
 		A6F34A4460456E43207CB21E /* BatteryCore in Frameworks */ = {isa = PBXBuildFile; productRef = 91721846BF0F00D782E2AD9E /* BatteryCore */; };
 		B934224508EE5C07C262BA54 /* BatteryPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = FBC1A1DC8559E38387C4D01D /* BatteryPlatform */; };
+		BD03260FFFC6E5E51BCB905E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 32F34BC0DC0EC6A090E2EE39 /* Localizable.strings */; };
 		C7C02E43FDFCEDD560F4F50A /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD850D5EAC9A9681D4F3103 /* Notifier.swift */; };
 		CF2F501713E443531AFE84C9 /* BatteryCore in Frameworks */ = {isa = PBXBuildFile; productRef = 33E14DA60A9D100A6EB8F8C6 /* BatteryCore */; };
 		DE11E10BDB1CC4A3BB873CD6 /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FEC7CC828570B37A896E19C /* HealthView.swift */; };
@@ -81,6 +82,7 @@
 		1B86C12E613BAA11B444A475 /* VibeBatteryApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeBatteryApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		25A19D326CC4E80033229CD4 /* MenuWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuWindow.swift; sourceTree = "<group>"; };
 		289196878332C8951082FB3F /* vbctl */ = {isa = PBXFileReference; includeInIndex = 0; path = vbctl; sourceTree = BUILT_PRODUCTS_DIR; };
+		32F34BC0DC0EC6A090E2EE39 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		3315A191359FEBF720F72706 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		38B88B180D71C8B5B11E84C3 /* SessionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRunner.swift; sourceTree = "<group>"; };
 		45B1ACBB0CFFCD6463701837 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
@@ -90,9 +92,9 @@
 		69238EE300AEAC6E22ED6727 /* ChargeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeView.swift; sourceTree = "<group>"; };
 		7E5647D6A28B0D5FA1C64B04 /* ChildCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildCommand.swift; sourceTree = "<group>"; };
 		7FEC7CC828570B37A896E19C /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
-		85F38A815A6CCBFA9F7D5D8E /* ko.lproj */ = {isa = PBXFileReference; path = ko.lproj; sourceTree = "<group>"; };
 		B2CEF701FD15671F19F52B58 /* SessionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsView.swift; sourceTree = "<group>"; };
 		B35434FE6441A6B8C8843C5A /* VibeBattery */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeBattery; path = .; sourceTree = SOURCE_ROOT; };
+		B5210F65B2F04C74BD656C09 /* AppShortcuts.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = AppShortcuts.strings; sourceTree = "<group>"; };
 		BD9A9BD4128EBDCC34F4EDC5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		C44FE5D78379B6CB8BAF4402 /* install-helper.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "install-helper.sh"; sourceTree = "<group>"; };
 		C620400A3E7FF15B0A4926D7 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -216,10 +218,19 @@
 			path = VibeCLI;
 			sourceTree = "<group>";
 		};
+		C7D9B768A1CBBF24E1C7BD8D /* ko.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				B5210F65B2F04C74BD656C09 /* AppShortcuts.strings */,
+				32F34BC0DC0EC6A090E2EE39 /* Localizable.strings */,
+			);
+			path = ko.lproj;
+			sourceTree = "<group>";
+		};
 		C843401F5EA998B23A540A02 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				85F38A815A6CCBFA9F7D5D8E /* ko.lproj */,
+				C7D9B768A1CBBF24E1C7BD8D /* ko.lproj */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -364,8 +375,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6AB7AEDE74467E6DBEA12031 /* AppShortcuts.strings in Resources */,
+				BD03260FFFC6E5E51BCB905E /* Localizable.strings in Resources */,
 				09B6A926C8358BCAF4257D62 /* install-helper.sh in Resources */,
-				638B5A6A5CC917731AF1C7EE /* ko.lproj in Resources */,
 				02C3A468AD308533B7CC6A4F /* uninstall-helper.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

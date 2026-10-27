@@ -23,6 +23,7 @@ import BatteryPlatform
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled
+    @Published var helperBusy=false
     @Published var lowPower=ProcessInfo.processInfo.isLowPowerModeEnabled
     @Published var lowPowerNotes:[String]=[]
     /// This Mac has no usable LED key (per launch); nothing is written again.
@@ -246,16 +247,20 @@ import BatteryPlatform
     func installHelper() async -> String? { await runHelperScript("install-helper.sh") }
     func uninstallHelper() async -> String? { await runHelperScript("uninstall-helper.sh") }
     private func runHelperScript(_ name:String) async -> String? {
+        guard !helperBusy else { return nil }
+        helperBusy=true;defer { helperBusy=false }
         // Fixed path and language code only; no user input reaches the shell command.
         let command="VB_LANG=\(AppLanguage.current.rawValue) '/Applications/VibeBattery.app/Contents/Resources/\(name)'"
         let quoted=command.replacingOccurrences(of:"\\",with:"\\\\").replacingOccurrences(of:"\"",with:"\\\"")
         let source="do shell script \"\(quoted)\" with administrator privileges"
         let error=await Task.detached { () -> String? in
-            var info:NSDictionary?
-            _=NSAppleScript(source:source)?.executeAndReturnError(&info)
-            guard let info else { return nil }
-            if (info[NSAppleScript.errorNumber] as? Int) == -128 { return nil } // the user cancelled the password dialog
-            return (info[NSAppleScript.errorMessage] as? String) ?? tr("The helper script failed.","헬퍼 스크립트가 실패했습니다.")
+            let p=Process(),err=Pipe()
+            p.executableURL=URL(fileURLWithPath:"/usr/bin/osascript");p.arguments=["-e",source];p.standardError=err;p.standardOutput=FileHandle.nullDevice
+            do { try p.run() } catch { return error.localizedDescription }
+            let text=String(decoding:err.fileHandleForReading.readDataToEndOfFile(),as:UTF8.self).trimmingCharacters(in:.whitespacesAndNewlines)
+            p.waitUntilExit()
+            if p.terminationStatus==0 || text.contains("(-128)") { return nil } // -128: the user cancelled the password dialog
+            return text.isEmpty ? tr("The helper script failed.","헬퍼 스크립트가 실패했습니다.") : text
         }.value
         checkHelper()
         return error

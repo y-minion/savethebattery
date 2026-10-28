@@ -41,10 +41,10 @@ Lithium-ion cells age faster when they sit at a high charge, and faster still wh
 | Your Mac | Charge limit, schedules, full charge, heat hold, Low Power Mode, MagSafe LED | Everything else |
 |---|---|---|
 | Apple silicon, macOS 26.4 or later | Yes | Yes |
-| Apple silicon, macOS 15 to 26.3 | Not yet | Yes |
-| Intel, macOS 15 or later | Not yet | Yes |
+| Apple silicon, macOS 15 to 26.3 | After updating macOS to 26.4 | Yes |
+| Intel, macOS 15 or later | Not supported | Yes |
 
-The app is a universal build. Charge limiting on Intel and older macOS is planned. The details are in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) and [docs/VALIDATION.md](docs/VALIDATION.md).
+The app is a universal build. On an Apple silicon Mac with an older macOS, a free macOS update to 26.4 or later turns on charge limiting. Intel Macs get everything except the charge features. The details are in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) and [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ## Install
 

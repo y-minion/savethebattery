@@ -37,7 +37,7 @@ curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/inst
 
 ## 솔직한 한계
 - 0.2.0 베타입니다. 지금까지 제 Mac 한 대(M4 Pro, macOS 27.0.1)에서만 직접 테스트했습니다.
-- 충전 상한은 Apple 실리콘 + macOS 26.4 이상에서만 됩니다. Intel과 이전 macOS에서는 나머지 기능은 되고 충전 상한은 계획 중입니다.
+- 충전 상한은 Apple 실리콘 + macOS 26.4 이상에서 됩니다. 이전 macOS의 Apple 실리콘 맥은 무료 업데이트로 쓸 수 있고, Intel 맥은 충전 상한을 뺀 나머지 기능을 씁니다.
 - 80% 미만 상한, 저전력 모드 스위치, MagSafe LED는 작은 루트 헬퍼가 필요합니다. 필요할 때만 앱에서 관리자 암호 창으로 설치하고, 정해진 요청만 받으며 SMC 키는 MagSafe LED 하나만 씁니다.
 
 문제를 찾으면 이슈로 알려 주세요. 제거도 한 줄입니다.

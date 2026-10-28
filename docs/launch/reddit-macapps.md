@@ -19,7 +19,7 @@ What it deliberately does not do: promise months or years of extra life. A lithi
 
 Honest limits:
 - 0.2.0 is a beta. I have tested it by hand on one Mac so far (M4 Pro, macOS 27.0.1).
-- The charge limit needs Apple silicon and macOS 26.4+. Intel and macOS 15 to 26.3 get everything except charge limiting, which is planned.
+- The charge limit needs Apple silicon and macOS 26.4+ (older Apple silicon Macs can update macOS for free). Intel Macs get everything except charge limiting.
 - It is signed with a free Apple Development certificate and is not notarized. The terminal install opens without a prompt; a browser download needs System Settings > Privacy & Security > Open Anyway once.
 - Limits below 80%, Low Power Mode and the LED need an optional root helper, installed from the app with the admin-password dialog. It accepts fixed requests only and writes one SMC key (the MagSafe LED).
 

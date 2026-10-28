@@ -7,7 +7,7 @@ public enum ChargeSupport {
     }
 
     /// A Rosetta-translated x86 process on Apple silicon counts as arm64.
-    static var runsOnArm64: Bool {
+    public static var runsOnArm64: Bool {
         #if arch(arm64)
         return true
         #else
@@ -19,12 +19,15 @@ public enum ChargeSupport {
 
     public static var current: Bool { platformAllows(os: ProcessInfo.processInfo.operatingSystemVersion, arm64: runsOnArm64) }
 
-    public static var requirementText: String {
-        tr("Charge limiting needs macOS 26.4 or later on Apple silicon (support for more Macs is planned).","충전 상한은 macOS 26.4 이상의 Apple Silicon 맥에서 쓸 수 있습니다(지원 기기 확대 예정).")
+    /// Apple silicon on an older macOS can update to get it; Intel Macs are not supported.
+    public static func requirementText(arm64: Bool = runsOnArm64) -> String {
+        arm64
+            ? tr("Charge limiting needs macOS 26.4 or later. Update macOS in System Settings › General › Software Update to use it.","충전 상한은 macOS 26.4 이상에서 쓸 수 있습니다. 시스템 설정 › 일반 › 소프트웨어 업데이트에서 macOS를 업데이트하세요.")
+            : tr("Charge limiting doesn't support Intel Macs yet.","충전 상한은 아직 Intel 맥을 지원하지 않습니다.")
     }
 
     /// Why the limit is unsupported: the platform gate, or macOS reporting no charge limit on a Mac that passes it.
     public static func unsupportedText(platformAllows: Bool = current) -> String {
-        platformAllows ? tr("Charge limiting isn't available on this Mac.","이 맥에서는 충전 상한을 쓸 수 없습니다.") : requirementText
+        platformAllows ? tr("Charge limiting isn't available on this Mac.","이 맥에서는 충전 상한을 쓸 수 없습니다.") : requirementText()
     }
 }

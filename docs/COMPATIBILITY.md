@@ -7,10 +7,10 @@ Target machine: Apple Silicon M4 Pro, macOS 27.0.1 (26A434). Other models and OS
 | Mac | Charge limit, one-time full charge, schedules, heat hold, Low Power Mode, MagSafe LED | Everything else (menu bar, power flow, health history, terminal sessions, Shortcuts, notifications, English/Korean UI) |
 |---|---|---|
 | Apple silicon, macOS 26.4 or later | Yes | Yes |
-| Apple silicon, macOS 15 to 26.3 | No (limit controls are disabled and say why) | Yes |
-| Intel, macOS 15 or later | No (same) | Yes |
+| Apple silicon, macOS 15 to 26.3 | No until macOS is updated to 26.4 (limit controls are disabled and say so) | Yes |
+| Intel, macOS 15 or later | No, not supported (limit controls are disabled and say so) | Yes |
 
-The release is a universal build (x86_64 and arm64). Charge limiting on Intel and older macOS is planned (project 3-5). Tested on: one Mac, an M4 Pro with macOS 27.0.1. CI builds and runs read-only checks on macOS 15. Other Macs are expected to work but are not validated by hand.
+The release is a universal build (x86_64 and arm64). Every Apple silicon Mac can update to macOS 26.4 or later for free, so the app tells those users to update. Intel Macs would need direct writes to SMC charging keys, which differ by model and firmware; that work (project 3-5) is deferred until an Intel Mac is available for testing, and the public copy promises nothing. Tested on: one Mac, an M4 Pro with macOS 27.0.1. CI builds and runs read-only checks on macOS 15. Other Macs are expected to work but are not validated by hand.
 
 Signing: releases are signed with a free Apple Development certificate (team `JQWWU7443A`) and a secure timestamp, and are not notarized. Task 8 result: Apple's timestamp server accepted the development certificate; `codesign -dvv` shows a `Timestamp=` line and `TeamIdentifier=JQWWU7443A`.
 

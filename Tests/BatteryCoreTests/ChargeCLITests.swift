@@ -60,7 +60,7 @@ struct ChargeCLITests {
         AppLanguage.$forced.withValue(.en) {
             let s=ChargeLimitState(supported:false)
             #expect(ChargeText.limit(s,platformAllows:true) == "Charge limiting isn't available on this Mac.")
-            #expect(ChargeText.limit(s,platformAllows:false) == ChargeSupport.requirementText)
+            #expect(ChargeText.limit(s,platformAllows:false) == ChargeSupport.requirementText())
         }
     }
 }

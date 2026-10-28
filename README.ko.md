@@ -41,10 +41,10 @@ curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/inst
 | 내 Mac | 충전 상한·일정·한 번 완충·과열 보류·저전력 모드·MagSafe LED | 나머지 기능 |
 |---|---|---|
 | Apple 실리콘, macOS 26.4 이상 | 가능 | 가능 |
-| Apple 실리콘, macOS 15~26.3 | 아직 불가 | 가능 |
-| Intel, macOS 15 이상 | 아직 불가 | 가능 |
+| Apple 실리콘, macOS 15~26.3 | macOS 26.4로 업데이트하면 가능 | 가능 |
+| Intel, macOS 15 이상 | 지원 안 함 | 가능 |
 
-앱은 유니버설 빌드입니다. Intel과 이전 macOS의 충전 상한은 계획 중입니다. 자세한 내용은 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)와 [docs/VALIDATION.md](docs/VALIDATION.md)에 있습니다.
+앱은 유니버설 빌드입니다. 이전 macOS를 쓰는 Apple 실리콘 맥은 macOS를 26.4 이상으로 무료 업데이트하면 충전 상한을 쓸 수 있습니다. Intel 맥은 충전 기능을 뺀 나머지 기능을 씁니다. 자세한 내용은 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)와 [docs/VALIDATION.md](docs/VALIDATION.md)에 있습니다.
 
 ## 설치
 

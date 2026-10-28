@@ -12,7 +12,7 @@ I did not want to claim "adds N years". The app shows what it measured on your M
 
 Things worth knowing:
 - Beta 0.2.0. I have verified it by hand on one Mac (M4 Pro, macOS 27.0.1). CI builds and runs read-only checks on macOS 15.
-- The charge limit works on Apple silicon with macOS 26.4+. macOS 15 and Intel (universal build) get everything else; limiting there is planned.
+- The charge limit works on Apple silicon with macOS 26.4+; older Apple silicon Macs can update macOS for free. Intel Macs (universal build) get everything else; charge limiting there is not supported.
 - I do not pay for the Apple Developer Program, so it is signed with a free development certificate and not notarized. The curl installer verifies SHA-256 and installs without sudo; curl downloads carry no quarantine flag, so there is no Gatekeeper prompt. The script is short, please read it.
 - The optional root helper (for limits below 80%, Low Power Mode and the LED) is installed from the app via the admin-password dialog. It takes fixed requests only, writes one SMC key (ACLC, the MagSafe LED), runs no shell, and official builds are pinned to the signing team. Details in SECURITY.md.
 - The only network request is a daily GitHub releases check, which can be switched off.

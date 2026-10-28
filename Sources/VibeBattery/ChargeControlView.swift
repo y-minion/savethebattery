@@ -30,7 +30,7 @@ struct HelperInstallControls:View {
         }
     }
     private func run(_ work:@escaping () async -> String?) {
-        Task { if let e=await work() { model.message=e } }
+        Task { if let text=await work() { model.message=text } }
     }
 }
 struct ChargeControlCard:View {

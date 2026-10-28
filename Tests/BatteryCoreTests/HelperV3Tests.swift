@@ -49,4 +49,18 @@ struct HelperV3Tests {
     @Test func reinstallReasonMentionsOfficialApp() {
         AppLanguage.$forced.withValue(.en) { #expect(LowPowerText.unavailable(.outdated) == "Reinstall the helper: this version only accepts the official VibeBattery app.") }
     }
+    /// A successful script run is confirmed only when the helper ends up in the state the script was for.
+    @Test func confirmationAfterScript() {
+        AppLanguage.$forced.withValue(.en) {
+            #expect(HelperStatus.ready.confirmation(afterInstall:true) == "The helper is installed and ready.")
+            #expect(HelperStatus.notInstalled.confirmation(afterInstall:false) == "The helper is removed.")
+            #expect(HelperStatus.unreachable.confirmation(afterInstall:true) == nil)
+            #expect(HelperStatus.outdated.confirmation(afterInstall:true) == nil)
+            #expect(HelperStatus.ready.confirmation(afterInstall:false) == nil)
+        }
+        AppLanguage.$forced.withValue(.ko) {
+            #expect(HelperStatus.ready.confirmation(afterInstall:true) == "헬퍼를 설치했습니다. 바로 사용할 수 있습니다.")
+            #expect(HelperStatus.notInstalled.confirmation(afterInstall:false) == "헬퍼를 제거했습니다.")
+        }
+    }
 }

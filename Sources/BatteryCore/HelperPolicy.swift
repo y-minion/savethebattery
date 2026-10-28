@@ -37,6 +37,14 @@ public enum HelperStatus: Equatable, Sendable {
         return (version() ?? 1)<HelperPolicy.protocolVersion ? .outdated:.ready
     }
     public var canSetLimit:Bool { self == .ready || self == .outdated }
+    /// Confirmation after the install or remove script exits 0; nil when the helper is not in the state the script was for.
+    public func confirmation(afterInstall install:Bool) -> String? {
+        switch (install,self) {
+        case (true,.ready):return tr("The helper is installed and ready.","헬퍼를 설치했습니다. 바로 사용할 수 있습니다.")
+        case (false,.notInstalled):return tr("The helper is removed.","헬퍼를 제거했습니다.")
+        default:return nil
+        }
+    }
 }
 /// MagSafe 3 LED values the helper may write. `init(rawValue:)` is the allow-list.
 public enum MagSafeLED: Int, Codable, CaseIterable, Sendable {

@@ -44,7 +44,7 @@ struct RootView:View {
                 }
                 Spacer()
                 Label(tr("Stored locally · Free · Open source","로컬 저장 · 무료 · 오픈소스"),systemImage:"lock.shield").font(.caption).foregroundStyle(.secondary)
-                Text(tr("Development preview 0.1","개발 미리보기 0.1")).font(.caption2).foregroundStyle(.tertiary).padding(.bottom,20)
+                Text(tr("Version \(ReleaseClient.bundleVersion)","버전 \(ReleaseClient.bundleVersion)")).font(.caption2).foregroundStyle(.tertiary).padding(.bottom,20)
             }.padding(.horizontal,16).frame(width:210).background(.ultraThinMaterial)
             Divider()
             ScrollView {

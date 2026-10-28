@@ -249,27 +249,34 @@ import BatteryPlatform
         if preferences.checkUpdates && UpdateCheck.isDue(last:lastUpdateCheck,now:Date()) { scheduleUpdateChecks() }
     }
     var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
-    /// Asks for the administrator password in the system dialog, then installs the root helper. Returns nil on success or cancel, else the error text.
-    func installHelper() async -> String? { await runHelperScript("install-helper.sh") }
-    func uninstallHelper() async -> String? { await runHelperScript("uninstall-helper.sh") }
-    private func runHelperScript(_ name:String) async -> String? {
+    /// Asks for the administrator password in the system dialog, then installs the root helper. Returns the text to show, or nil when the user cancelled.
+    func installHelper() async -> String? { await runHelperScript("install-helper.sh",install:true) }
+    func uninstallHelper() async -> String? { await runHelperScript("uninstall-helper.sh",install:false) }
+    private enum ScriptOutcome { case done,cancelled,failed(String) }
+    private func runHelperScript(_ name:String,install:Bool) async -> String? {
         guard !helperBusy else { return nil }
         helperBusy=true;defer { helperBusy=false }
         // Fixed path and language code only; no user input reaches the shell command.
         let command="VB_LANG=\(AppLanguage.current.rawValue) '/Applications/VibeBattery.app/Contents/Resources/\(name)'"
         let quoted=command.replacingOccurrences(of:"\\",with:"\\\\").replacingOccurrences(of:"\"",with:"\\\"")
         let source="do shell script \"\(quoted)\" with administrator privileges"
-        let error=await Task.detached { () -> String? in
+        let outcome=await Task.detached { () -> ScriptOutcome in
             let p=Process(),err=Pipe()
             p.executableURL=URL(fileURLWithPath:"/usr/bin/osascript");p.arguments=["-e",source];p.standardError=err;p.standardOutput=FileHandle.nullDevice
-            do { try p.run() } catch { return error.localizedDescription }
+            do { try p.run() } catch { return .failed(error.localizedDescription) }
             let text=String(decoding:err.fileHandleForReading.readDataToEndOfFile(),as:UTF8.self).trimmingCharacters(in:.whitespacesAndNewlines)
             p.waitUntilExit()
-            if p.terminationStatus==0 || text.contains("(-128)") { return nil } // -128: the user cancelled the password dialog
-            return text.isEmpty ? tr("The helper script failed.","헬퍼 스크립트가 실패했습니다.") : text
+            if p.terminationStatus==0 { return .done }
+            if text.contains("(-128)") { return .cancelled } // -128: the user cancelled the password dialog
+            return .failed(text.isEmpty ? tr("The helper script failed.","헬퍼 스크립트가 실패했습니다.") : text)
         }.value
         checkHelper()
-        return error
+        switch outcome {
+        case .cancelled:return nil
+        case .failed(let text):return text
+        // The script ran, but the helper may still not answer; then the status line says why.
+        case .done:return helperStatus.confirmation(afterInstall:install) ?? ChargeHelperText.status(self)
+        }
     }
     var heatStatus:String {
         let h=preferences.heat

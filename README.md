@@ -1,5 +1,7 @@
 **English** · [한국어](README.ko.md)
 
+<img src="site/icon.png" width="96" alt="Save the Battery icon">
+
 # Save the Battery
 
 **A laptop's lifespan is decided by its battery. Save the Battery keeps yours healthy for longer — and features other apps charge for are all free here.**
@@ -48,19 +50,24 @@ The app is a universal build. On an Apple silicon Mac with an older macOS, a fre
 
 ## Install
 
-### Terminal (no prompt)
+### Terminal (recommended, no warning)
 
 ```sh
 curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh
 ```
 
+1. Press ⌘ Space, type **Terminal** and press Return.
+2. Paste the line above with ⌘ V.
+3. Press Return. Save the Battery installs into Applications and opens.
+
 The script checks your macOS version, downloads `savethebattery.zip` and its checksum from the same release, verifies the SHA-256 and copies the app to `/Applications` without sudo. Files fetched with `curl` carry no quarantine flag, so macOS shows no Gatekeeper prompt. The app is not notarized (that needs the paid Apple program), so read the script before you pipe it to `sh`: [scripts/install.sh](scripts/install.sh).
 
 ### Browser download
 
-1. Download `savethebattery.zip` from the [latest release](https://github.com/y-minion/savethebattery/releases/latest), unzip it and move `Save the Battery.app` to `/Applications`.
-2. Open it once. macOS says it cannot verify the app.
-3. Open **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to Save the Battery, then confirm.
+1. Download [`savethebattery.dmg`](https://github.com/y-minion/savethebattery/releases/latest/download/savethebattery.dmg) and open it.
+2. Drag Save the Battery onto the Applications folder in that window.
+3. Open the app from Applications. macOS says it cannot verify the app; click **Done**.
+4. Open **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to Save the Battery, then confirm.
 
 ![Open Anyway in Privacy & Security](docs/images/open-anyway.png)
 

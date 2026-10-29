@@ -6,16 +6,27 @@
 <title>Save the Battery</title>
 <meta name="description" content="무료 오픈소스 macOS 메뉴 막대 배터리 관리. 충전 상한, 일정, 건강 수치까지 모두 무료입니다.">
 <link rel="stylesheet" href="../style.css">
+<link rel="icon" href="../icon.png">
 </head>
 <body>
-<header><span>Save the Battery</span><a href="../">English</a></header>
+<header><span class="brand"><img src="../icon.png" alt="" width="28" height="28">Save the Battery</span><a href="../">English</a></header>
 <main>
 <h1>노트북의 수명은 배터리가 좌우합니다.</h1>
 <p class="lead">Save the Battery는 내 배터리를 더 오래 건강하게 지켜 줍니다. 다른 앱이 돈을 받는 기능도 여기서는 모두 무료입니다. 오픈소스(MIT), 원격 측정 없음.</p>
-<p><a class="btn" href="https://github.com/y-minion/savethebattery/releases/latest">Mac용 내려받기</a><a class="btn alt" href="https://github.com/y-minion/savethebattery">GitHub에서 보기</a></p>
-<pre><code>curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh</code></pre>
-<p class="first">가장 먼저 할 일: 충전 상한을 80%로 맞추세요(Apple Silicon, macOS 26.4 이상).</p>
-<p>베타 0.2.0이며, 지금까지 Mac 한 대(M4 Pro, macOS 27.0.1)에서 테스트했습니다. 터미널로 설치하면 Gatekeeper 경고 없이 열립니다. 브라우저로 zip을 받았다면 앱을 한 번 열고 시스템 설정 › 개인정보 보호 및 보안 › 그래도 열기를 누르세요. 앱은 무료 Apple Development 인증서로 서명되어 있고 공증은 받지 않았습니다.</p>
+<p><a class="btn" href="#install">설치하기</a><a class="btn alt" href="https://github.com/y-minion/savethebattery">GitHub에서 보기</a></p>
+<p class="first">가장 먼저 할 일: 충전 상한을 80%로 맞추세요(Apple Silicon, macOS 26.4 이상). 앱을 처음 열면 바로 제안합니다.</p>
+<p>베타 0.2.0이며, 지금까지 Mac 한 대(M4 Pro, macOS 27.0.1)에서 테스트했습니다.</p>
+
+<h2 id="install">설치</h2>
+<p><strong>추천: 터미널에 한 줄 붙여 넣기.</strong> 보안 경고가 뜨지 않고, 설치가 끝나면 앱이 바로 열립니다.</p>
+<pre><code id="cmd">curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh</code></pre>
+<p><button class="btn" id="copy" type="button" data-label="명령 복사" data-done="복사했습니다" data-fail="위 줄을 선택해 복사하세요">명령 복사</button></p>
+<ol>
+<li><kbd>⌘</kbd> <kbd>Space</kbd>를 누르고 <strong>터미널</strong>을 입력한 뒤 Return을 누릅니다.</li>
+<li><kbd>⌘</kbd> <kbd>V</kbd>로 붙여 넣습니다.</li>
+<li>Return을 누릅니다. Save the Battery가 응용 프로그램 폴더에 설치되고 열립니다.</li>
+</ol>
+<p><strong>또는 디스크 이미지로 내려받기.</strong> <a href="https://github.com/y-minion/savethebattery/releases/latest/download/savethebattery.dmg">savethebattery.dmg 내려받기</a> 후 열어서 Save the Battery를 응용 프로그램 폴더로 끌어 놓으세요. 앱을 한 번 열면 macOS가 확인할 수 없는 앱이라고 안내합니다. 그다음 시스템 설정 › 개인정보 보호 및 보안에서 아래로 내려 <strong>그래도 열기</strong>를 누르세요. 한 번만 하면 됩니다. 앱은 무료 Apple Development 인증서로 서명되어 있지만, 유료 Apple 프로그램이 필요한 공증은 받지 않았습니다.</p>
 
 <h2>다른 앱이 돈을 받는 기능, 여기서는 모두 무료</h2>
 <ul>
@@ -46,5 +57,8 @@
 <pre><code>curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/uninstall.sh | sh</code></pre>
 </main>
 <footer>MIT · <a href="https://github.com/y-minion/savethebattery">GitHub</a> · <a href="https://github.com/y-minion/savethebattery/blob/main/SECURITY.md">보안</a> · <a href="https://github.com/y-minion/savethebattery/issues">문제 알리기</a></footer>
+<script>
+document.getElementById('copy').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(document.getElementById('cmd').textContent);b.textContent=b.dataset.done}catch(_){b.textContent=b.dataset.fail}setTimeout(()=>{b.textContent=b.dataset.label},2500)});
+</script>
 </body>
 </html>

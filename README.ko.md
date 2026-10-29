@@ -1,5 +1,7 @@
 [English](README.md) · **한국어**
 
+<img src="site/icon.png" width="96" alt="Save the Battery icon">
+
 # Save the Battery
 
 **노트북의 수명은 배터리가 좌우합니다. Save the Battery는 내 배터리를 더 오래 건강하게 지켜 주고, 다른 앱이 돈을 받는 기능도 여기서는 모두 무료입니다.**
@@ -48,19 +50,24 @@ curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/i
 
 ## 설치
 
-### 터미널 (경고창 없음)
+### 터미널 (추천, 경고창 없음)
 
 ```sh
 curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh
 ```
 
+1. ⌘ Space를 누르고 **터미널**을 입력한 뒤 Return을 누릅니다.
+2. 위 줄을 ⌘ V로 붙여 넣습니다.
+3. Return을 누릅니다. Save the Battery가 응용 프로그램 폴더에 설치되고 열립니다.
+
 스크립트는 macOS 버전을 확인하고, 같은 릴리스에서 `savethebattery.zip`과 체크섬을 받아 SHA-256을 검증한 뒤, sudo 없이 `/Applications`에 복사합니다. `curl`로 받은 파일에는 격리(quarantine) 표시가 붙지 않아 Gatekeeper 경고가 나오지 않습니다. 앱은 공증을 받지 않았으므로(공증은 유료 Apple 프로그램이 필요합니다), `sh`에 넘기기 전에 스크립트를 직접 읽어 보세요: [scripts/install.sh](scripts/install.sh).
 
 ### 브라우저로 내려받기
 
-1. [최신 릴리스](https://github.com/y-minion/savethebattery/releases/latest)에서 `savethebattery.zip`을 받아 풀고 `Save the Battery.app`을 `/Applications`로 옮깁니다.
-2. 한 번 엽니다. macOS가 앱을 확인할 수 없다고 안내합니다.
-3. **시스템 설정 › 개인정보 보호 및 보안**을 열고 아래로 내려 Save the Battery 옆의 **그래도 열기**를 누른 뒤 확인합니다.
+1. [`savethebattery.dmg`](https://github.com/y-minion/savethebattery/releases/latest/download/savethebattery.dmg)를 내려받아 엽니다.
+2. 열린 창에서 Save the Battery를 응용 프로그램 폴더 위로 끌어 놓습니다.
+3. 응용 프로그램 폴더에서 앱을 엽니다. macOS가 앱을 확인할 수 없다고 안내하면 **완료**를 누릅니다.
+4. **시스템 설정 › 개인정보 보호 및 보안**을 열고 아래로 내려 Save the Battery 옆의 **그래도 열기**를 누른 뒤 확인합니다.
 
 ![개인정보 보호 및 보안의 그래도 열기](docs/images/open-anyway.ko.png)
 

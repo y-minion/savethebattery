@@ -6,16 +6,27 @@
 <title>Save the Battery</title>
 <meta name="description" content="Free, open-source macOS battery care in the menu bar. Charge limit, schedules, health facts and more, all free.">
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="icon.png">
 </head>
 <body>
-<header><span>Save the Battery</span><a href="ko/">한국어</a></header>
+<header><span class="brand"><img src="icon.png" alt="" width="28" height="28">Save the Battery</span><a href="ko/">한국어</a></header>
 <main>
 <h1>A laptop's lifespan is decided by its battery.</h1>
 <p class="lead">Save the Battery keeps yours healthy for longer. Features other apps charge for are all free here. Open source, MIT, no telemetry.</p>
-<p><a class="btn" href="https://github.com/y-minion/savethebattery/releases/latest">Download for Mac</a><a class="btn alt" href="https://github.com/y-minion/savethebattery">View on GitHub</a></p>
-<pre><code>curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh</code></pre>
-<p class="first">First thing: set the limit to 80% (Apple silicon, macOS 26.4 or later).</p>
-<p>Beta 0.2.0, tested so far on one Mac (M4 Pro, macOS 27.0.1). The terminal install opens without a Gatekeeper prompt. If you download the zip in a browser, open the app once, then use System Settings › Privacy &amp; Security › Open Anyway. The app is signed with a free Apple Development certificate and is not notarized.</p>
+<p><a class="btn" href="#install">Install</a><a class="btn alt" href="https://github.com/y-minion/savethebattery">View on GitHub</a></p>
+<p class="first">First thing: set the limit to 80% (Apple silicon, macOS 26.4 or later). The app offers it on first launch.</p>
+<p>Beta 0.2.0, tested so far on one Mac (M4 Pro, macOS 27.0.1).</p>
+
+<h2 id="install">Install</h2>
+<p><strong>Recommended: one line in Terminal.</strong> No security warning, and the app opens by itself.</p>
+<pre><code id="cmd">curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh</code></pre>
+<p><button class="btn" id="copy" type="button" data-label="Copy the command" data-done="Copied" data-fail="Select the line above and copy it">Copy the command</button></p>
+<ol>
+<li>Press <kbd>⌘</kbd> <kbd>Space</kbd>, type <strong>Terminal</strong> and press Return.</li>
+<li>Paste with <kbd>⌘</kbd> <kbd>V</kbd>.</li>
+<li>Press Return. Save the Battery installs into Applications and opens.</li>
+</ol>
+<p><strong>Or download the disk image.</strong> <a href="https://github.com/y-minion/savethebattery/releases/latest/download/savethebattery.dmg">Download savethebattery.dmg</a>, open it and drag Save the Battery to Applications. Open the app once; macOS says it cannot verify it. Then open System Settings › Privacy &amp; Security, scroll down and click <strong>Open Anyway</strong>. You do this once: the app is signed with a free Apple Development certificate but not notarized, which needs a paid Apple program.</p>
 
 <h2>Features other apps charge for — all free here</h2>
 <ul>
@@ -46,5 +57,8 @@
 <pre><code>curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/uninstall.sh | sh</code></pre>
 </main>
 <footer>MIT · <a href="https://github.com/y-minion/savethebattery">GitHub</a> · <a href="https://github.com/y-minion/savethebattery/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/y-minion/savethebattery/issues">Report a problem</a></footer>
+<script>
+document.getElementById('copy').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(document.getElementById('cmd').textContent);b.textContent=b.dataset.done}catch(_){b.textContent=b.dataset.fail}setTimeout(()=>{b.textContent=b.dataset.label},2500)});
+</script>
 </body>
 </html>

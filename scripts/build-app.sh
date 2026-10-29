@@ -38,10 +38,23 @@ for f in Contents/Resources/Metadata.appintents Contents/Resources/install-helpe
     [ -e "$STB_APP/$f" ] || { msg "The build is missing $f." "빌드 결과에 $f 가 없습니다." >&2;exit 1; }
 done
 codesign -dv "$STB_APP/Contents/MacOS/STBChargeHelper" 2>&1 | grep -q '^Identifier=io.github.y-minion.savethebattery.helper$' || { msg "The helper signing identifier does not match." "헬퍼 서명 식별자가 다릅니다." >&2;exit 1; }
+# A drag-to-Applications disk image for browser downloads; the zip stays for install.sh and the in-app update.
+STB_DMG_ROOT="$STB_STAGE/dmg"
+mkdir "$STB_DMG_ROOT"
+ditto --norsrc --noextattr "$STB_APP" "$STB_DMG_ROOT/Save the Battery.app"
+ln -s /Applications "$STB_DMG_ROOT/Applications"
+hdiutil create -quiet -volname "Save the Battery" -srcfolder "$STB_DMG_ROOT" -fs HFS+ -format UDZO -ov "$STB_STAGE/savethebattery.dmg"
+if [ "$STB_SIGN_IDENTITY" != - ]; then
+    codesign --force $STB_TS --sign "$STB_SIGN_IDENTITY" "$STB_STAGE/savethebattery.dmg"
+    if [ "${STB_RELEASE:-}" = 1 ]; then
+        codesign -dvv "$STB_STAGE/savethebattery.dmg" 2>&1 | grep -q '^Timestamp=' || { msg "The disk image signature has no secure timestamp." "디스크 이미지 서명에 보안 타임스탬프가 없습니다." >&2;exit 1; }
+    fi
+fi
 mkdir -p "$STB_OUTPUT_DIR"
 rm -rf "$STB_OUTPUT_DIR/Save the Battery.app"
 ditto --norsrc --noextattr "$STB_APP" "$STB_OUTPUT_DIR/Save the Battery.app"
 ditto -c -k --norsrc --noextattr --keepParent "$STB_APP" "$STB_OUTPUT_DIR/savethebattery.zip"
+cp "$STB_STAGE/savethebattery.dmg" "$STB_OUTPUT_DIR/savethebattery.dmg"
 msg "Architectures: $(lipo -archs "$STB_APP/Contents/MacOS/Save the Battery")" "아키텍처: $(lipo -archs "$STB_APP/Contents/MacOS/Save the Battery")"
 [ "$STB_SIGN_IDENTITY" = - ] && msg "Built with an ad-hoc signature. Actions will not show up in the Shortcuts app." "임시 서명으로 빌드했습니다. 단축어 앱에는 동작이 보이지 않습니다." >&2
 printf '%s\n' "$STB_OUTPUT_DIR/Save the Battery.app"

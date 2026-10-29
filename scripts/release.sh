@@ -20,16 +20,16 @@ STB_RELEASE=1 scripts/build-app.sh
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "dist/Save the Battery.app/Contents/Info.plist")" = "$V" ] || die "The built app is not version $V."
 ARCHS=$(lipo -archs "dist/Save the Battery.app/Contents/MacOS/Save the Battery")
 case " $ARCHS " in *" arm64 "*" x86_64 "*|*" x86_64 "*" arm64 "*) ;; *) die "Binary is not universal: $ARCHS";; esac
-( cd dist && shasum -a 256 savethebattery.zip >savethebattery.zip.sha256 )
+( cd dist && shasum -a 256 savethebattery.zip >savethebattery.zip.sha256 && shasum -a 256 savethebattery.dmg >savethebattery.dmg.sha256 )
 cp scripts/install.sh scripts/uninstall.sh dist/
-printf 'Version: %s\nArchs: %s\nSHA-256: %s\n' "$V" "$ARCHS" "$(cut -d' ' -f1 dist/savethebattery.zip.sha256)"
+printf 'Version: %s\nArchs: %s\nSHA-256 zip: %s\nSHA-256 dmg: %s\n' "$V" "$ARCHS" "$(cut -d' ' -f1 dist/savethebattery.zip.sha256)" "$(cut -d' ' -f1 dist/savethebattery.dmg.sha256)"
 printf 'Publish v%s? [y/N] ' "$V"
 read -r ANSWER </dev/tty || ANSWER=n
 case "$ANSWER" in y|Y) ;; *) die "Not published.";; esac
 git tag -a "v$V" -m "Save the Battery $V"
 git push origin "v$V"
 gh release create "v$V" --title "Save the Battery $V" --notes-file "docs/release-notes/$V.md" \
-    dist/savethebattery.zip dist/savethebattery.zip.sha256 dist/install.sh dist/uninstall.sh || {
+    dist/savethebattery.zip dist/savethebattery.zip.sha256 dist/savethebattery.dmg dist/savethebattery.dmg.sha256 dist/install.sh dist/uninstall.sh || {
     printf 'The tag v%s is pushed but the release failed. Re-run the gh release create command by hand, or delete the tag: git push origin :refs/tags/v%s && git tag -d v%s\n' "$V" "$V" "$V" >&2
     exit 1
 }

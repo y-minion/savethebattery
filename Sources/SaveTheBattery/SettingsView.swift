@@ -107,11 +107,20 @@ struct SettingsView:View {
         Card {
             HStack { Text(tr("Updates","업데이트")).font(.headline);Spacer();Text(tr("Version \(ReleaseClient.bundleVersion)","버전 \(ReleaseClient.bundleVersion)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
             Toggle(tr("Check for new versions","새 버전 확인"),isOn:$model.preferences.checkUpdates).onChange(of:model.preferences.checkUpdates) { _,_ in model.savePreferences();model.scheduleUpdateChecks() }
-            Text(tr("Once a day, Save the Battery asks GitHub for the latest release. Nothing about you or your Mac is sent.","하루에 한 번 GitHub에 최신 릴리스를 물어봅니다. 사용자나 Mac에 관한 정보는 보내지 않습니다.")).font(.callout).foregroundStyle(.secondary)
+            Text(tr("Once a day, Save the Battery asks GitHub for the latest release. The new version is downloaded only when you click Update now. Nothing about you or your Mac is sent.","하루에 한 번 GitHub에 최신 릴리스를 물어봅니다. 새 버전은 '지금 업데이트'를 눌렀을 때만 내려받습니다. 사용자나 Mac에 관한 정보는 보내지 않습니다.")).font(.callout).foregroundStyle(.secondary)
             if let u=model.availableUpdate {
                 Text(tr("New version \(u.version)","새 버전 \(u.version)")).font(.subheadline.weight(.semibold))
+                if let why=model.updateUnavailableReason {
+                    Text(why).font(.caption).foregroundStyle(.secondary)
+                    Button(tr("Copy install command","설치 명령 복사")) { model.copyInstallCommand() }
+                } else {
+                    HStack(spacing:10) {
+                        Button(model.updating ? tr("Updating…","업데이트 중…"):tr("Update now","지금 업데이트")) { Task { await model.installUpdate() } }.buttonStyle(.borderedProminent).disabled(model.updating)
+                        if model.updating { ProgressView().controlSize(.small) }
+                    }
+                    Text(tr("Downloads the new version from GitHub, checks that it is signed by the same team, then restarts the app.","GitHub에서 새 버전을 받아 같은 팀의 서명인지 확인한 뒤 앱을 다시 시작합니다.")).font(.caption).foregroundStyle(.secondary)
+                }
                 Link(tr("Open release page","릴리스 페이지 열기"),destination:u.url)
-                Button(tr("Copy install command","설치 명령 복사")) { model.copyInstallCommand() }
             }
         }
         Card {

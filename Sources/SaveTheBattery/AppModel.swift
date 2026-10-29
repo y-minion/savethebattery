@@ -398,9 +398,22 @@ import BatteryPlatform
         Task {
             let r=await ReleaseClient.latest()
             guard preferences.checkUpdates else { return }
-            if let r,let v=UpdateCheck.newer(latestTag:r.tag,current:currentVersion) { availableUpdate=(v.description,r.url) }
-            else if r != nil { availableUpdate=nil }
+            if let r,let v=UpdateCheck.newer(latestTag:r.tag,current:currentVersion),let url=URL(string:r.page) { availableUpdate=(v.description,url);latestRelease=r }
+            else if r != nil { availableUpdate=nil;latestRelease=nil }
         }
+    }
+    @Published var updating=false
+    private var latestRelease:LatestRelease?
+    var updateUnavailableReason:String? { AppUpdate.unavailableReason(bundlePath:Bundle.main.bundlePath,signing:CodeSigningIdentity.own,applicationsWritable:AppLocation.applicationsWritable) }
+    /// Downloads and checks the release, swaps it in, then quits so the new version starts. A failure leaves this version installed.
+    func installUpdate() async {
+        guard !updating,updateUnavailableReason==nil,let r=latestRelease,case .team(let team)=CodeSigningIdentity.own else { return }
+        updating=true;defer { updating=false }
+        do {
+            let cleanup=try await AppUpdater.install(r,current:currentVersion,team:team)
+            try Relauncher.openAfterExit(URL(fileURLWithPath:HelperPolicy.appPath),removing:cleanup)
+            NSApp.terminate(nil)
+        } catch { message=tr("The update was not installed. \(error.localizedDescription)","업데이트를 설치하지 못했습니다. \(error.localizedDescription)") }
     }
     func copyInstallCommand() {
         NSPasteboard.general.clearContents();NSPasteboard.general.setString(UpdateCheck.installCommand,forType:.string)

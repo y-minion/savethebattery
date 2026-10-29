@@ -43,13 +43,9 @@ STB_DMG_ROOT="$STB_STAGE/dmg"
 mkdir "$STB_DMG_ROOT"
 ditto --norsrc --noextattr "$STB_APP" "$STB_DMG_ROOT/Save the Battery.app"
 ln -s /Applications "$STB_DMG_ROOT/Applications"
+# The image itself stays unsigned: Gatekeeper refuses to open a signed image that is not notarized,
+# while an unsigned one mounts and only the (signed) app inside is checked when it first opens.
 hdiutil create -quiet -volname "Save the Battery" -srcfolder "$STB_DMG_ROOT" -fs HFS+ -format UDZO -ov "$STB_STAGE/savethebattery.dmg"
-if [ "$STB_SIGN_IDENTITY" != - ]; then
-    codesign --force $STB_TS --sign "$STB_SIGN_IDENTITY" "$STB_STAGE/savethebattery.dmg"
-    if [ "${STB_RELEASE:-}" = 1 ]; then
-        codesign -dvv "$STB_STAGE/savethebattery.dmg" 2>&1 | grep -q '^Timestamp=' || { msg "The disk image signature has no secure timestamp." "디스크 이미지 서명에 보안 타임스탬프가 없습니다." >&2;exit 1; }
-    fi
-fi
 mkdir -p "$STB_OUTPUT_DIR"
 rm -rf "$STB_OUTPUT_DIR/Save the Battery.app"
 ditto --norsrc --noextattr "$STB_APP" "$STB_OUTPUT_DIR/Save the Battery.app"

@@ -41,4 +41,6 @@ hdiutil attach -quiet -readonly -nobrowse -mountpoint "$T/mnt" dist/savethebatte
 [ "$(readlink "$T/mnt/Applications")" = /Applications ] || fail "disk image has no Applications link"
 codesign --verify --strict "$T/mnt/Save the Battery.app" || fail "app signature inside the disk image"
 hdiutil detach -quiet "$T/mnt"
+# A signed but unnotarized image would be refused by Gatekeeper when a browser-downloaded copy is opened.
+if codesign -dv dist/savethebattery.dmg >/dev/null 2>&1; then fail "disk image must stay unsigned"; fi
 echo "install tests passed"

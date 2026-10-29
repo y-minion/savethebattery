@@ -9,8 +9,8 @@ public struct SessionRecord: Codable, Identifiable {
 }
 public enum AppPaths {
     public static var directory:URL {
-        if let custom=ProcessInfo.processInfo.environment["VIBEBATTERY_DATA_DIR"] { return URL(fileURLWithPath:custom) }
-        return FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("VibeBattery")
+        if let custom=ProcessInfo.processInfo.environment["STB_DATA_DIR"] { return URL(fileURLWithPath:custom) }
+        return FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("savethebattery")
     }
     public static var sessions:SessionStore { SessionStore(directory:directory.appendingPathComponent("sessions")) }
     public static var health:URL { directory.appendingPathComponent("health.json") }

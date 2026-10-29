@@ -3,7 +3,7 @@ import Foundation
 @testable import BatteryCore
 @testable import BatteryPlatform
 struct HealthStoreTests {
-    func dir() -> URL { let u=FileManager.default.temporaryDirectory.appendingPathComponent("vb-health-\(UUID().uuidString)");return u }
+    func dir() -> URL { let u=FileManager.default.temporaryDirectory.appendingPathComponent("stb-health-\(UUID().uuidString)");return u }
     func snap(_ t:Double,_ p:Int=50) -> BatterySnapshot { var s=BatterySnapshot();s.timestamp=Date(timeIntervalSince1970:1_790_000_000+t);s.percent=p;s.healthPrecise=90;return s }
     @Test func corruptFileIsMovedAside() throws {
         let d=dir();try FileManager.default.createDirectory(at:d,withIntermediateDirectories:true)

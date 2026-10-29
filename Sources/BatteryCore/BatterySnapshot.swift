@@ -13,7 +13,7 @@ public struct BatterySnapshot: Codable, Sendable {
     public var healthPrecise: Double?
     public var designCapacity: Int?
     public var designCycles: Int?
-    /// Kept out of JSON so pasted `vbctl status --json` output and history files carry no device identifier.
+    /// Kept out of JSON so pasted `stb status --json` output and history files carry no device identifier.
     public var batteryID: String?
     /// Raw RemainingCapacity / FullChargeCapacity, the percentage the battery hardware itself reports (macOS's `percent` is smoothed).
     public var hardwarePercent: Int?

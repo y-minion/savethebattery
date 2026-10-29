@@ -5,7 +5,7 @@ import BatteryCore
 
 struct ControlChannelTests {
     /// Unix socket paths must stay under 104 bytes.
-    func path() -> URL { URL(fileURLWithPath:"/tmp/vb-\(UUID().uuidString.prefix(8)).sock") }
+    func path() -> URL { URL(fileURLWithPath:"/tmp/stb-\(UUID().uuidString.prefix(8)).sock") }
     let queue=DispatchQueue(label:"control-tests")
     func server(_ p:URL,_ handler:@escaping (ChargeCommand)->ControlResponse) throws -> ControlServer {
         let s=ControlServer(path:p,handler:handler,queue:queue);try s.start();return s
@@ -75,7 +75,7 @@ struct ControlChannelTests {
             #expect(mode==0o600)
         }
     }
-    /// `vbctl charge status` only checks that the app listens and hangs up; answering it must not kill the app with SIGPIPE.
+    /// `stb charge status` only checks that the app listens and hangs up; answering it must not kill the app with SIGPIPE.
     @Test func hangUpWithoutRequestKeepsServing() throws {
         try AppLanguage.$forced.withValue(.ko) { () throws in
             let p=path()

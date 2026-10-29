@@ -112,7 +112,7 @@ import BatteryPlatform
     static func chargeMessage(_ c:ChargeCommand,_ s:ChargeLimitState) -> String {
         c == .startTopUp ? tr("Top-up requested. macOS decides when the limit comes back.","한 번 완충을 요청했습니다. 원래 상한으로 돌아가는 시점은 macOS가 정합니다."):tr("Applied and confirmed. \(ChargeText.limit(s))","적용을 확인했습니다. \(ChargeText.limit(s))")
     }
-    /// A request from vbctl or Shortcuts; applied like a user change and logged with its source.
+    /// A request from stb or Shortcuts; applied like a user change and logged with its source.
     func perform(_ c:ChargeCommand,source:ChargeWrite.Source) -> ControlResponse {
         switch chargeController.apply(c,source:source) {
         case .success(let s):charge=s;return ControlResponse(ok:true,message:Self.chargeMessage(c,s),state:s)
@@ -126,7 +126,7 @@ import BatteryPlatform
         let server=ControlServer(path:AppPaths.controlSocket) { [weak self] c in
             MainActor.assumeIsolated { self?.perform(c,source:.cli) ?? ControlResponse(ok:false,message:tr("The app is not available.","앱을 사용할 수 없습니다."),state:nil) }
         }
-        // Without the channel only vbctl writes are unavailable; the app itself keeps working.
+        // Without the channel only stb writes are unavailable; the app itself keeps working.
         do { try server.start();controlServer=server } catch { controlServer=nil }
     }
     /// `pmset` runs off the main actor, and only on start, a power-state change, a menu window opening or a switch, not on the 5 s tick.
@@ -168,7 +168,7 @@ import BatteryPlatform
     private var ledGeneration=0
     private var ledError:String?
     private var ledCancellable:AnyCancellable?
-    private static let ledDirtyKey="vb.led.dirty"
+    private static let ledDirtyKey="stb.led.dirty"
     /// True after any non-system write, so a crash or a changed mode still returns the LED to macOS.
     private var ledDirty:Bool {
         get { UserDefaults.standard.bool(forKey:Self.ledDirtyKey) }
@@ -248,7 +248,7 @@ import BatteryPlatform
         // Restarting the schedule checks now and keeps the daily timer from firing again soon after.
         if preferences.checkUpdates && UpdateCheck.isDue(last:lastUpdateCheck,now:Date()) { scheduleUpdateChecks() }
     }
-    var helperInstallCommand:String { "sudo /Applications/VibeBattery.app/Contents/Resources/install-helper.sh" }
+    var helperInstallCommand:String { "sudo '/Applications/Save the Battery.app/Contents/Resources/install-helper.sh'" }
     /// Asks for the administrator password in the system dialog, then installs the root helper. Returns the text to show, or nil when the user cancelled.
     func installHelper() async -> String? { await runHelperScript("install-helper.sh",install:true) }
     func uninstallHelper() async -> String? { await runHelperScript("uninstall-helper.sh",install:false) }
@@ -257,7 +257,7 @@ import BatteryPlatform
         guard !helperBusy else { return nil }
         helperBusy=true;defer { helperBusy=false }
         // Fixed path and language code only; no user input reaches the shell command.
-        let command="VB_LANG=\(AppLanguage.current.rawValue) '/Applications/VibeBattery.app/Contents/Resources/\(name)'"
+        let command="STB_LANG=\(AppLanguage.current.rawValue) '/Applications/Save the Battery.app/Contents/Resources/\(name)'"
         let quoted=command.replacingOccurrences(of:"\\",with:"\\\\").replacingOccurrences(of:"\"",with:"\\\"")
         let source="do shell script \"\(quoted)\" with administrator privileges"
         let outcome=await Task.detached { () -> ScriptOutcome in
@@ -354,7 +354,7 @@ import BatteryPlatform
         timer=Timer.scheduledTimer(withTimeInterval:5,repeats:true) { [weak self] _ in Task { @MainActor in self?.tick() } }
     }
     /// Checks GitHub for a newer release at launch, then daily and on wake once a day has passed, while the setting is on.
-    private var currentVersion:String { ProcessInfo.processInfo.environment["VB_FAKE_CURRENT_VERSION"] ?? ReleaseClient.bundleVersion }
+    private var currentVersion:String { ProcessInfo.processInfo.environment["STB_FAKE_CURRENT_VERSION"] ?? ReleaseClient.bundleVersion }
     func scheduleUpdateChecks() {
         updateTimer?.invalidate();updateTimer=nil
         guard preferences.checkUpdates else { availableUpdate=nil;return }
@@ -415,7 +415,7 @@ import BatteryPlatform
     func checkNotifications() { notifier.access { [weak self] in self?.notificationAccess=$0 } }
     func requestNotifications() { notifier.request { [weak self] in self?.notificationAccess=$0 } }
     func sendTestNotification() {
-        notifier.deliver(AlertEvent(id:"test",title:tr("VibeBattery test notification","VibeBattery 테스트 알림"),body:tr("Notifications are working. Click to open Settings.","알림이 정상적으로 표시됩니다. 누르면 설정 화면이 열립니다."),section:"settings",thread:"test"))
+        notifier.deliver(AlertEvent(id:"test",title:tr("Save the Battery test notification","Save the Battery 테스트 알림"),body:tr("Notifications are working. Click to open Settings.","알림이 정상적으로 표시됩니다. 누르면 설정 화면이 열립니다."),section:"settings",thread:"test"))
     }
     func openNotificationSettings() { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.notifications")!) }
     func show(_ s:String) { section=s;openMain?();NSApp.activate(ignoringOtherApps:true) }
@@ -447,7 +447,7 @@ import BatteryPlatform
     func openBatterySettings() {
         NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.battery")!)
     }
-    var cliPath:String { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/vbctl").path }
+    var cliPath:String { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/stb").path }
     func command(for executable:String) -> String {
         var parts=[ShellQuote.quote(cliPath),"run","--hours",String(format:"%g",preferences.hours)]
         if preferences.screenOff { parts.append("--screen-off") }

@@ -33,7 +33,7 @@ struct HelperV2Tests {
     }
     @Test func oldHelperIsOutdatedButCanSetLimit() {
         AppLanguage.$forced.withValue(.ko) {
-            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{ true },version:{ nil }) == .outdated)
+            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/Save the Battery.app",probe:{ true },version:{ nil }) == .outdated)
             #expect(HelperStatus.outdated.canSetLimit)
             #expect(!HelperStatus.unreachable.canSetLimit)
         }
@@ -41,7 +41,7 @@ struct HelperV2Tests {
     @Test func currentHelperIsReady() {
         AppLanguage.$forced.withValue(.ko) {
             #expect(HelperPolicy.protocolVersion==3)
-            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{ true },version:{ 3 }) == .ready)
+            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/Save the Battery.app",probe:{ true },version:{ 3 }) == .ready)
             #expect(HelperStatus.ready.canSetLimit)
         }
     }

@@ -45,7 +45,7 @@ public enum HeatEvent: Equatable, Sendable {
 public struct SessionSummary: Equatable, Sendable {
     public var id:UUID;public var command:String;public var outcome:SessionOutcome
     public var started:Date;public var ended:Date?;public var exitCode:Int32?
-    /// The user asked VibeBattery to release this session's protection.
+    /// The user asked Save the Battery to release this session's protection.
     public var released:Bool
     public init(id:UUID,command:String,outcome:SessionOutcome,started:Date,ended:Date?=nil,exitCode:Int32?=nil,released:Bool=false) {
         self.id=id;self.command=command;self.outcome=outcome;self.started=started;self.ended=ended;self.exitCode=exitCode;self.released=released
@@ -57,7 +57,7 @@ public struct NotificationInput: Sendable {
     public var battery:BatterySnapshot
     public var limit=ChargeLimitState()
     public var lastWritten:Int?
-    /// Bumped on every charge write VibeBattery attempts, including its own heat-hold restores.
+    /// Bumped on every charge write Save the Battery attempts, including its own heat-hold restores.
     public var chargeWrites=0
     public var topUpRequested:Date?
     public var heatEnabled=false, heatHolding=false

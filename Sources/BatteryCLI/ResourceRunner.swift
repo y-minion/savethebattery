@@ -5,7 +5,7 @@ import BatteryPlatform
 func runResource(_ args:[String]) throws -> Int32 {
     var arguments=args;let keep=arguments.first=="--keep"
     if keep { arguments.removeFirst() }
-    guard arguments.first=="--",arguments.count>1,let raw=ProcessInfo.processInfo.environment["VIBEBATTERY_SESSION"],let id=UUID(uuidString:raw),
+    guard arguments.first=="--",arguments.count>1,let raw=ProcessInfo.processInfo.environment["STB_SESSION"],let id=UUID(uuidString:raw),
           let initial=AppPaths.sessions.load(id),initial.outcome == .running,let owner=initial.owner,
           ProcessReader.one(owner.pid)?.identity==owner else { throw PlatformError.message(tr("Use resource as '-- command' inside a running managed session.","resource는 실행 중인 관리 세션 안에서 -- 명령 형식으로 사용하세요.")) }
     vb_watch_signals()

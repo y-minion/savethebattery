@@ -1,5 +1,5 @@
 import Foundation
-/// One charge request from `vbctl` to the running app, sent as a single JSON line.
+/// One charge request from `stb` to the running app, sent as a single JSON line.
 public struct ControlRequest: Codable, Equatable, Sendable {
     public var command:String;public var value:Int?
     public init(command:String,value:Int?) { self.command=command;self.value=value }

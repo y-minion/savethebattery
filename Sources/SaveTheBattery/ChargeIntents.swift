@@ -73,7 +73,7 @@ struct GetBatteryStatusIntent: AppIntent {
         return .result(value:BatteryStatusEntity(s),dialog:"\(s.summary)")
     }
 }
-struct VibeBatteryShortcuts: AppShortcutsProvider {
+struct SaveTheBatteryShortcuts: AppShortcutsProvider {
     static var appShortcuts:[AppShortcut] {
         AppShortcut(intent:SetChargeLimitIntent(),phrases:["\(.applicationName) limit 80%"],shortTitle:"Set Charge Limit",systemImageName:"battery.75percent")
         AppShortcut(intent:StartTopUpIntent(),phrases:["\(.applicationName) one-time full charge"],shortTitle:"One-Time Full Charge",systemImageName:"battery.100percent.bolt")

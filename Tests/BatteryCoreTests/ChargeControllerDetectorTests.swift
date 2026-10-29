@@ -20,9 +20,9 @@ struct ChargeControllerDetectorTests {
     }
     @Test func ownHelperAndUnrelatedItemsAreIgnored() {
         AppLanguage.$forced.withValue(.ko) {
-            let r=ChargeControllerDetector.detect(runningBundleIDs:["io.github.y-minion.vibebattery"],systemItems:[
-                "/Library/LaunchDaemons/io.github.y-minion.vibebattery.helper.plist",
-                "/Library/PrivilegedHelperTools/io.github.y-minion.vibebattery.helper",
+            let r=ChargeControllerDetector.detect(runningBundleIDs:["io.github.y-minion.savethebattery"],systemItems:[
+                "/Library/LaunchDaemons/io.github.y-minion.savethebattery.helper.plist",
+                "/Library/PrivilegedHelperTools/io.github.y-minion.savethebattery.helper",
                 "/Library/LaunchDaemons/com.docker.vmnetd.plist"])
             #expect(r.isEmpty)
         }
@@ -34,7 +34,7 @@ struct ChargeControllerDetectorTests {
             #expect(ChargeControllerDetector.detect(runningBundleIDs:["co.palokaj.battery"],systemItems:[]).map(\.name)==["battery"])
             #expect(ChargeControllerDetector.detect(runningBundleIDs:[],systemItems:["/Applications/Battery Toolkit.app"]).map(\.name)==["Battery Toolkit"])
             #expect(ChargeControllerDetector.detect(runningBundleIDs:["me.mhaeuser.BatteryToolkit"],systemItems:[]).map(\.name)==["Battery Toolkit"])
-            #expect(ChargeControllerDetector.detect(runningBundleIDs:[],systemItems:["/Applications/VibeBattery.app","/Applications/AlDente.app.bak/x"]).isEmpty)
+            #expect(ChargeControllerDetector.detect(runningBundleIDs:[],systemItems:["/Applications/Save the Battery.app","/Applications/AlDente.app.bak/x"]).isEmpty)
         }
     }
 }

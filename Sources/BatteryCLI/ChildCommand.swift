@@ -24,4 +24,4 @@ final class ChildCommand {
         _=vb_signal(pid,identity.started,number)
     }
 }
-func note(_ text:String) { FileHandle.standardError.write(Data(("[VibeBattery] "+text+"\n").utf8)) }
+func note(_ text:String) { FileHandle.standardError.write(Data(("[Save the Battery] "+text+"\n").utf8)) }

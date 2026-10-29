@@ -1,7 +1,7 @@
 import Foundation
 import Darwin
 import BatteryCore
-/// Same-user Unix socket through which `vbctl` asks the running app to change the charge limit.
+/// Same-user Unix socket through which `stb` asks the running app to change the charge limit.
 /// The app stays the only writer, so the helper, the write log and change detection keep working.
 public final class ControlServer {
     public static let maxLine=1024
@@ -24,7 +24,7 @@ public final class ControlServer {
         guard bound==0,chmod(path.path,0o600)==0,listen(s,8)==0 else { close(s);unlink(path.path);throw POSIXError(.EACCES) }
         lock.lock();fd=s;running=true;lock.unlock()
         let t=Thread { [weak self] in self?.acceptLoop(s) }
-        t.name="VibeBattery control";t.start()
+        t.name="Save the Battery control";t.start()
     }
     public func stop() {
         lock.lock();let s=fd;let was=running;running=false;fd = -1;lock.unlock()
@@ -60,7 +60,7 @@ public enum ControlClient {
         let line=try JSONEncoder().encode(r)+Data("\n".utf8)
         return try exchange(line,path:path,connectTimeout:connectTimeout,responseTimeout:responseTimeout)
     }
-    /// Whether an app is listening, for `vbctl charge status`.
+    /// Whether an app is listening, for `stb charge status`.
     public static func isListening(path:URL) -> Bool {
         guard let s=try? connect(path:path,timeout:1) else { return false }
         close(s);return true

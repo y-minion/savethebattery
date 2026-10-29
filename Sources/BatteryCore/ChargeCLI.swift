@@ -1,22 +1,22 @@
 import Foundation
-/// `vbctl charge …` arguments. Writes go to the running app; `status` reads directly.
+/// `stb charge …` arguments. Writes go to the running app; `status` reads directly.
 public enum ChargeCLI {
     public enum Action: Equatable { case status(json:Bool), request(ControlRequest) }
     public struct UsageError: Error, Equatable { public let text:String }
     public static var usage:String { tr("""
     Usage:
-      vbctl charge status [--json]
-      vbctl charge set <50-100>   (steps of 5)
-      vbctl charge off
-      vbctl charge topup
-      vbctl charge end
+      stb charge status [--json]
+      stb charge set <50-100>   (steps of 5)
+      stb charge off
+      stb charge topup
+      stb charge end
     ""","""
     사용법:
-      vbctl charge status [--json]
-      vbctl charge set <50-100>   (5 단위)
-      vbctl charge off
-      vbctl charge topup
-      vbctl charge end
+      stb charge status [--json]
+      stb charge set <50-100>   (5 단위)
+      stb charge off
+      stb charge topup
+      stb charge end
     """) }
     /// `args` are the words after `charge`; the failure is the usage text.
     public static func parse(_ args:[String]) -> Result<Action,UsageError> {

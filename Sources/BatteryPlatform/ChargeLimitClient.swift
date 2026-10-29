@@ -23,12 +23,12 @@ public struct PowerUIChargeBackend: ChargeLimitBackend {
     }
 }
 public enum ChargeText {
-    /// Why the limit is what it is now. VibeBattery's own last change is shown only while it still explains the current value.
+    /// Why the limit is what it is now. Save the Battery's own last change is shown only while it still explains the current value.
     public static func currentReason(record:ChargeRecord,state:ChargeLimitState,now:Date,calendar:Calendar) -> String? {
         let mine=record.lastChange.map { reason($0,now:now,calendar:calendar) }
         if record.topUpRequested != nil { return mine }
         switch state.origin(lastWritten:record.lastWritten) {
-        case .vibeBattery:return mine
+        case .saveTheBattery:return mine
         case .external:return tr("Changed by another app or System Settings","다른 앱 또는 시스템 설정에서 바뀜")
         case .none:return record.lastChange?.command=="clearLimit" ? mine:tr("Turned off by another app or System Settings","다른 앱 또는 시스템 설정에서 꺼짐")
         case .unknown:return nil

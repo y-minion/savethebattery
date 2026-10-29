@@ -29,11 +29,11 @@ struct UpdateCheckTests {
     }
     @Test func trustedReleaseURL() {
         let ok={ (s:String) in UpdateCheck.isTrustedReleaseURL(URL(string:s)!) }
-        #expect(ok("https://github.com/y-minion/vibebattery/releases/tag/v0.2.0"))
-        #expect(ok("https://GitHub.com/y-minion/vibebattery/releases/tag/v0.2.0"))
-        #expect(!ok("http://github.com/y-minion/vibebattery/releases/tag/v0.2.0"))
-        #expect(!ok("https://evil.com/y-minion/vibebattery/releases/x"))
-        #expect(!ok("https://github.com.evil.com/y-minion/vibebattery/releases/x"))
+        #expect(ok("https://github.com/y-minion/savethebattery/releases/tag/v0.2.0"))
+        #expect(ok("https://GitHub.com/y-minion/savethebattery/releases/tag/v0.2.0"))
+        #expect(!ok("http://github.com/y-minion/savethebattery/releases/tag/v0.2.0"))
+        #expect(!ok("https://evil.com/y-minion/savethebattery/releases/x"))
+        #expect(!ok("https://github.com.evil.com/y-minion/savethebattery/releases/x"))
         #expect(!ok("https://github.com/other/repo/releases/x"))
     }
 }

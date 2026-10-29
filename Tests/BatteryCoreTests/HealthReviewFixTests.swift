@@ -6,7 +6,7 @@ struct HealthReviewFixTests {
     let c:Calendar={ var c=Calendar(identifier:.gregorian);c.timeZone=TimeZone(identifier:"UTC")!;return c }()
     let t0=Date(timeIntervalSince1970:1_790_000_000)
     func snap(_ t:Date,ac:Bool=true,temp:Double=36,id:String?=nil) -> BatterySnapshot { var s=BatterySnapshot();s.timestamp=t;s.percent=60;s.temperature=temp;s.onAC=ac;s.healthPrecise=90;s.batteryID=id;return s }
-    func dir() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("vb-fix-\(UUID().uuidString)") }
+    func dir() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("stb-fix-\(UUID().uuidString)") }
     @Test func olderFilesWithMissingKeysStillLoad() throws {
         try AppLanguage.$forced.withValue(.ko) { () throws in
             let d=try JSONDecoder().decode(DailyUsage.self,from:Data(#"{"day":0,"observed":30}"#.utf8))

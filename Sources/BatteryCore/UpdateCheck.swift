@@ -30,10 +30,10 @@ public enum UpdateCheck {
     public static let interval:TimeInterval=86_400
     /// A timer does not fire during sleep, so a wake checks again once a full interval has passed since the last attempt.
     public static func isDue(last:Date?,now:Date) -> Bool { last.map { now.timeIntervalSince($0) >= interval } ?? true }
-    public static let installCommand="curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/install.sh | sh"
+    public static let installCommand="curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh"
     /// Only releases of this repository on github.com may be opened from the update notice.
     public static func isTrustedReleaseURL(_ url:URL) -> Bool {
-        url.scheme=="https" && url.host?.lowercased()=="github.com" && url.path.hasPrefix("/y-minion/vibebattery/releases/")
+        url.scheme=="https" && url.host?.lowercased()=="github.com" && url.path.hasPrefix("/y-minion/savethebattery/releases/")
     }
     /// The latest version when it is newer than `current`; nil for unparsable tags or no upgrade.
     public static func newer(latestTag:String,current:String) -> SemVer? {

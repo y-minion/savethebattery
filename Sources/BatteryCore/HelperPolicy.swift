@@ -1,8 +1,8 @@
 import Foundation
 public enum HelperPolicy {
-    public static let label="io.github.y-minion.vibebattery.helper"
-    public static let appIdentifier="io.github.y-minion.vibebattery"
-    public static let helperIdentifier="io.github.y-minion.vibebattery.helper"
+    public static let label="io.github.y-minion.savethebattery.helper"
+    public static let appIdentifier="io.github.y-minion.savethebattery"
+    public static let helperIdentifier="io.github.y-minion.savethebattery.helper"
     /// Code signing requirement for a peer. With a team it must also be Apple-anchored and signed by that team;
     /// ad-hoc builds have no team, so they pin only the identifier. An unreadable signature matches nothing.
     public static func requirement(identifier:String,signing:SigningTeam) -> String {
@@ -16,8 +16,8 @@ public enum HelperPolicy {
     public static func clientRequirement(_ signing:SigningTeam) -> String { requirement(identifier:appIdentifier,signing:signing) }
     /// What the app demands of the helper.
     public static func helperRequirement(_ signing:SigningTeam) -> String { requirement(identifier:helperIdentifier,signing:signing) }
-    public static let appPrefix="/Applications/VibeBattery.app/"
-    public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.vibebattery.helper.plist"
+    public static let appPrefix="/Applications/Save the Battery.app/"
+    public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.savethebattery.helper.plist"
     /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED. 3: replies are `HelperReply` codes and the helper is team-pinned.
     public static let protocolVersion=3
     public static func allows(clientUID:UInt32,consoleUID:UInt32?,clientPath:String?) -> Bool {

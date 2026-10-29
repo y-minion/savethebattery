@@ -19,13 +19,13 @@ body:
   - type: input
     id: version
     attributes:
-      label: VibeBattery version
+      label: Save the Battery version
       description: Shown in the app's Settings, on the Updates card (for example 0.2.0).
   - type: textarea
     id: status
     attributes:
-      label: Output of `vbctl charge status`
-      description: Run /Applications/VibeBattery.app/Contents/MacOS/vbctl charge status and paste the output.
+      label: Output of `stb charge status`
+      description: Run "/Applications/Save the Battery.app/Contents/MacOS/stb" charge status and paste the output.
       render: shell
     validations:
       required: true

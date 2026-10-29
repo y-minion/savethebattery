@@ -46,9 +46,9 @@ struct NotificationSettingsTests {
     }
     @Test func inProcessFieldsAreNotSaved() throws {
         try AppLanguage.$forced.withValue(.ko) { () throws in
-            var m=NotificationMemory();m.evaluated=Date();m.wasCharging=true;m.origin = .vibeBattery
+            var m=NotificationMemory();m.evaluated=Date();m.wasCharging=true;m.origin = .saveTheBattery
             let back=try JSONDecoder().decode(NotificationMemory.self,from:JSONEncoder().encode(m))
-            #expect(back.evaluated==nil);#expect(back.wasCharging==nil);#expect(back.origin == .vibeBattery)
+            #expect(back.evaluated==nil);#expect(back.wasCharging==nil);#expect(back.origin == .saveTheBattery)
         }
     }
     @Test func clickedNotificationsOpenOnlyKnownScreens() {

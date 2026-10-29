@@ -8,9 +8,9 @@ public struct ReleaseClient {
         let cfg=URLSessionConfiguration.ephemeral
         cfg.timeoutIntervalForRequest=10;cfg.httpShouldSetCookies=false;cfg.httpCookieStorage=nil;cfg.urlCache=nil
         cfg.requestCachePolicy = .reloadIgnoringLocalCacheData
-        var req=URLRequest(url:URL(string:"https://api.github.com/repos/y-minion/vibebattery/releases/latest")!,timeoutInterval:10)
+        var req=URLRequest(url:URL(string:"https://api.github.com/repos/y-minion/savethebattery/releases/latest")!,timeoutInterval:10)
         req.setValue("application/vnd.github+json",forHTTPHeaderField:"Accept")
-        req.setValue("VibeBattery/\(bundleVersion)",forHTTPHeaderField:"User-Agent")
+        req.setValue("SaveTheBattery/\(bundleVersion)",forHTTPHeaderField:"User-Agent")
         guard let (data,resp)=try? await URLSession(configuration:cfg).data(for:req),
               (resp as? HTTPURLResponse)?.statusCode==200,
               let r=try? JSONDecoder().decode(Release.self,from:data),

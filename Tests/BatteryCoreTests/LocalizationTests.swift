@@ -62,7 +62,7 @@ struct LocalizationTests {
     /// Every compile-time App Intents key is English and has a Korean entry in ko.lproj.
     @Test func koreanStringsCoverIntents() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let src = try String(contentsOf: root.appendingPathComponent("Sources/VibeBattery/ChargeIntents.swift"), encoding: .utf8)
+        let src = try String(contentsOf: root.appendingPathComponent("Sources/SaveTheBattery/ChargeIntents.swift"), encoding: .utf8)
         func table(_ name: String) throws -> [String: String] {
             let data = try Data(contentsOf: root.appendingPathComponent("Resources/ko.lproj/\(name).strings"))
             return try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String])

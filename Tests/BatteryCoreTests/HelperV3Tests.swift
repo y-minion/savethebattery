@@ -5,15 +5,15 @@ import Foundation
 
 struct HelperV3Tests {
     @Test func pinnedRequirement() {
-        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.vibebattery",signing:.team("JQWWU7443A")) ==
-          "identifier \"io.github.y-minion.vibebattery\" and anchor apple generic and certificate leaf[subject.OU] = \"JQWWU7443A\"")
-        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.vibebattery",signing:.adHoc) == "identifier \"io.github.y-minion.vibebattery\"")
-        #expect(HelperPolicy.clientRequirement(.adHoc) == "identifier \"io.github.y-minion.vibebattery\"")
-        #expect(HelperPolicy.helperRequirement(.team("JQWWU7443A")).hasPrefix("identifier \"io.github.y-minion.vibebattery.helper\" and anchor apple generic"))
+        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.savethebattery",signing:.team("JQWWU7443A")) ==
+          "identifier \"io.github.y-minion.savethebattery\" and anchor apple generic and certificate leaf[subject.OU] = \"JQWWU7443A\"")
+        #expect(HelperPolicy.requirement(identifier:"io.github.y-minion.savethebattery",signing:.adHoc) == "identifier \"io.github.y-minion.savethebattery\"")
+        #expect(HelperPolicy.clientRequirement(.adHoc) == "identifier \"io.github.y-minion.savethebattery\"")
+        #expect(HelperPolicy.helperRequirement(.team("JQWWU7443A")).hasPrefix("identifier \"io.github.y-minion.savethebattery.helper\" and anchor apple generic"))
     }
     /// An unreadable signature must never fall back to identifier-only pinning.
     @Test func unknownSigningMatchesNothing() {
-        #expect(HelperPolicy.helperRequirement(.unknown(-67050)) == "identifier \"io.github.y-minion.vibebattery.helper\" and never")
+        #expect(HelperPolicy.helperRequirement(.unknown(-67050)) == "identifier \"io.github.y-minion.savethebattery.helper\" and never")
         #expect(HelperPolicy.clientRequirement(.unknown(0)).hasSuffix(" and never"))
     }
     @Test func signingTeamFromSignatureInfo() {
@@ -38,7 +38,7 @@ struct HelperV3Tests {
         #expect(MagSafeLEDPolicy.outcome(reply:"이 맥에서는 MagSafe LED를 바꿀 수 없습니다.") == (true,true))
         #expect(MagSafeLEDPolicy.outcome(reply:"led.failed") == (false,false))
     }
-    @Test func v2HelperIsOutdated() { #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{true},version:{2}) == .outdated) }
+    @Test func v2HelperIsOutdated() { #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/Save the Battery.app",probe:{true},version:{2}) == .outdated) }
     @Test func ownSigningDoesNotCrashWhenUnsigned() {
         switch CodeSigningIdentity.own {
         case .adHoc:break
@@ -47,7 +47,7 @@ struct HelperV3Tests {
         }
     }
     @Test func reinstallReasonMentionsOfficialApp() {
-        AppLanguage.$forced.withValue(.en) { #expect(LowPowerText.unavailable(.outdated) == "Reinstall the helper: this version only accepts the official VibeBattery app.") }
+        AppLanguage.$forced.withValue(.en) { #expect(LowPowerText.unavailable(.outdated) == "Reinstall the helper: this version only accepts the official Save the Battery app.") }
     }
     /// A successful script run is confirmed only when the helper ends up in the state the script was for.
     @Test func confirmationAfterScript() {

@@ -33,7 +33,7 @@ struct SettingsView:View {
             flag(tr("Schedule ran","일정 실행됨"),tr("Every time a schedule runs","일정이 실행될 때마다"),\.scheduleRan)
             flag(tr("Low battery","배터리 부족"),tr("When the battery drops to the level below while in use","배터리 사용 중 아래 기준 이하로 내려가면"),\.lowBattery)
             Stepper(tr("Low battery threshold \(model.preferences.notifications.lowAt)%","배터리 부족 기준 \(model.preferences.notifications.lowAt)%"),value:$model.preferences.notifications.lowAt,in:NotificationSettings.lowRange,step:5).onChange(of:model.preferences.notifications.lowAt) { _,_ in model.savePreferences() }
-            flag(tr("Charge limit turned off or changed","충전 상한이 꺼지거나 바뀜"),tr("When the limit VibeBattery set is changed elsewhere","VibeBattery가 설정한 상한을 다른 곳에서 바꾸면"),\.limitChanged)
+            flag(tr("Charge limit turned off or changed","충전 상한이 꺼지거나 바뀜"),tr("When the limit Save the Battery set is changed elsewhere","Save the Battery가 설정한 상한을 다른 곳에서 바꾸면"),\.limitChanged)
             flag(tr("Charge control unavailable","충전 제어 불가"),tr("When macOS no longer offers charge limiting","macOS가 충전 상한 기능을 더 이상 제공하지 않으면"),\.controlUnavailable)
             Text(tr("Protection alerts","보호 경고")).font(.subheadline.weight(.semibold))
             flag(tr("Battery too hot","배터리 고온"),tr("At or above the level below (+2°C while on battery)","아래 기준 이상(배터리 사용 중에는 +2°C)이면"),\.highTemperature)
@@ -92,21 +92,21 @@ struct SettingsView:View {
             Text(tr("Command line and Shortcuts","명령줄과 단축어")).font(.headline)
             Text(tr("While the app is running, you can change the charge limit from Terminal or Shortcuts.","앱이 실행 중이면 터미널이나 단축어에서 충전 상한을 바꿀 수 있습니다.")).foregroundStyle(.secondary)
             VStack(alignment:.leading,spacing:4) {
-                ForEach(["vbctl charge set 70","vbctl charge topup","vbctl charge status --json"],id:\.self) { Text($0).font(.system(.callout,design:.monospaced)).textSelection(.enabled) }
+                ForEach(["stb charge set 70","stb charge topup","stb charge status --json"],id:\.self) { Text($0).font(.system(.callout,design:.monospaced)).textSelection(.enabled) }
             }
-            Button(tr("Copy vbctl path","vbctl 경로 복사")) { model.copyText(Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/vbctl").path) }
-            Text(tr("Search for 'VibeBattery' in the Shortcuts app to find its actions. You can also put vbctl commands in a Run Shell Script action.","단축어 앱에서 'VibeBattery'를 검색하면 전용 동작을 쓸 수 있습니다. 셸 스크립트 실행에 vbctl 명령을 넣어도 됩니다.")).font(.caption).foregroundStyle(.secondary)
+            Button(tr("Copy stb path","stb 경로 복사")) { model.copyText(ShellQuote.quote(model.cliPath)) }
+            Text(tr("Search for 'Save the Battery' in the Shortcuts app to find its actions. You can also put stb commands in a Run Shell Script action.","단축어 앱에서 'Save the Battery'를 검색하면 전용 동작을 쓸 수 있습니다. 셸 스크립트 실행에 stb 명령을 넣어도 됩니다.")).font(.caption).foregroundStyle(.secondary)
         }
         Card {
             Text(tr("Startup and energy mode","시작과 에너지 모드")).font(.headline)
-            Toggle(tr("Launch VibeBattery at login","로그인 시 VibeBattery 실행"),isOn:Binding(get:{ model.loginItem },set:{ model.setLoginItem($0) }))
+            Toggle(tr("Launch Save the Battery at login","로그인 시 Save the Battery 실행"),isOn:Binding(get:{ model.loginItem },set:{ model.setLoginItem($0) }))
             Text(tr("Choose Low Power, Automatic or High Power mode in macOS battery settings.","저전력·자동·고전력 모드는 macOS 배터리 설정에서 선택합니다.")).foregroundStyle(.secondary)
             Button(tr("Open system battery settings","시스템 배터리 설정 열기")) { model.openBatterySettings() }
         }
         Card {
             HStack { Text(tr("Updates","업데이트")).font(.headline);Spacer();Text(tr("Version \(ReleaseClient.bundleVersion)","버전 \(ReleaseClient.bundleVersion)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
             Toggle(tr("Check for new versions","새 버전 확인"),isOn:$model.preferences.checkUpdates).onChange(of:model.preferences.checkUpdates) { _,_ in model.savePreferences();model.scheduleUpdateChecks() }
-            Text(tr("Once a day, VibeBattery asks GitHub for the latest release. Nothing about you or your Mac is sent.","하루에 한 번 GitHub에 최신 릴리스를 물어봅니다. 사용자나 Mac에 관한 정보는 보내지 않습니다.")).font(.callout).foregroundStyle(.secondary)
+            Text(tr("Once a day, Save the Battery asks GitHub for the latest release. Nothing about you or your Mac is sent.","하루에 한 번 GitHub에 최신 릴리스를 물어봅니다. 사용자나 Mac에 관한 정보는 보내지 않습니다.")).font(.callout).foregroundStyle(.secondary)
             if let u=model.availableUpdate {
                 Text(tr("New version \(u.version)","새 버전 \(u.version)")).font(.subheadline.weight(.semibold))
                 Link(tr("Open release page","릴리스 페이지 열기"),destination:u.url)
@@ -125,7 +125,7 @@ struct SettingsView:View {
             Text(tr("Verified and in-development features","검증된 기능과 개발 중인 기능")).font(.headline)
             Text(tr("Available now: battery and temperature readings, CPU activity list, quit on request, history, terminal task protection with limited resource cleanup, charge limit 50-100%, one-time top-up, charge schedules, command-line charge control, health analysis, notifications, a live menu bar icon and menu window, power flow, hardware charge level, a Low Power Mode switch, MagSafe LED.","현재 제공: 배터리·온도 조회, CPU 활동 목록, 선택 종료, 이력, 터미널 작업 보호와 제한된 리소스 정리, 충전 상한 50~100%, 한 번 완충, 충전 일정, 명령줄 충전 제어, 건강 분석, 알림, 실시간 메뉴 막대 아이콘과 메뉴 창, 전력 흐름, 하드웨어 잔량, 저전력 모드 스위치, MagSafe LED.")).foregroundStyle(.secondary)
             Text(tr("Checked on real hardware on this Mac: charge limit, one-time top-up, notifications. Heat hold in a real high-temperature situation is not yet verified. Not available: sailing lower limit, forced discharge, calibration (firmware limits).","이 Mac에서 실기기 확인: 충전 상한, 한 번 완충, 알림. 실제 고온 상황의 과열 보류는 아직 확인 전입니다. 미제공: 항해 하한 지정·강제 방전·교정(펌웨어 제약).")).foregroundStyle(.secondary)
-            Link(tr("View source and progress on GitHub","GitHub에서 소스와 진행 상황 보기"),destination:URL(string:"https://github.com/y-minion/vibebattery")!)
+            Link(tr("View source and progress on GitHub","GitHub에서 소스와 진행 상황 보기"),destination:URL(string:"https://github.com/y-minion/savethebattery")!)
         }
     }
 }

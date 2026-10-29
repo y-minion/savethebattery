@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VibeBattery</title>
+<title>Save the Battery</title>
 <meta name="description" content="Free, open-source macOS battery care in the menu bar. Charge limit, schedules, health facts and more, all free.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><span>VibeBattery</span><a href="ko/">한국어</a></header>
+<header><span>Save the Battery</span><a href="ko/">한국어</a></header>
 <main>
 <h1>A laptop's lifespan is decided by its battery.</h1>
-<p class="lead">VibeBattery keeps yours healthy for longer. Features other apps charge for are all free here. Open source, MIT, no telemetry.</p>
-<p><a class="btn" href="https://github.com/y-minion/vibebattery/releases/latest">Download for Mac</a><a class="btn alt" href="https://github.com/y-minion/vibebattery">View on GitHub</a></p>
-<pre><code>curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/install.sh | sh</code></pre>
+<p class="lead">Save the Battery keeps yours healthy for longer. Features other apps charge for are all free here. Open source, MIT, no telemetry.</p>
+<p><a class="btn" href="https://github.com/y-minion/savethebattery/releases/latest">Download for Mac</a><a class="btn alt" href="https://github.com/y-minion/savethebattery">View on GitHub</a></p>
+<pre><code>curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh</code></pre>
 <p class="first">First thing: set the limit to 80% (Apple silicon, macOS 26.4 or later).</p>
 <p>Beta 0.2.0, tested so far on one Mac (M4 Pro, macOS 27.0.1). The terminal install opens without a Gatekeeper prompt. If you download the zip in a browser, open the app once, then use System Settings › Privacy &amp; Security › Open Anyway. The app is signed with a free Apple Development certificate and is not notarized.</p>
 
@@ -24,12 +24,12 @@
 <li>Power flow and the hardware battery percentage</li>
 <li>Low Power Mode switch and MagSafe LED modes</li>
 <li>Health history with measured facts: hours at high charge and heat, cycles, estimated health</li>
-<li>Terminal sessions that keep the Mac awake while a coding agent works (<code>vbctl run</code>)</li>
+<li>Terminal sessions that keep the Mac awake while a coding agent works (<code>stb run</code>)</li>
 <li>Shortcuts actions, notifications, English and Korean UI</li>
 </ul>
 
 <h2>Why a charge limit helps</h2>
-<p>Lithium-ion cells age faster at a high charge, and faster still when warm. Apple documents a Charge Limit for this reason (<a href="https://support.apple.com/102338">support.apple.com/102338</a>); Battery University explains the stress curve (<a href="https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries">BU-808</a>). VibeBattery promises no months or years. It shows what it measured on your Mac.</p>
+<p>Lithium-ion cells age faster at a high charge, and faster still when warm. Apple documents a Charge Limit for this reason (<a href="https://support.apple.com/102338">support.apple.com/102338</a>); Battery University explains the stress curve (<a href="https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries">BU-808</a>). Save the Battery promises no months or years. It shows what it measured on your Mac.</p>
 
 <h2>Requirements</h2>
 <table>
@@ -40,11 +40,11 @@
 </table>
 
 <h2>Safe by design</h2>
-<p>VibeBattery changes nothing while AlDente, batt, battery or Battery Toolkit is installed or running. The optional root helper accepts only fixed requests, writes one SMC key (the MagSafe LED) and runs no shell. The only network request is a daily version check, which you can turn off.</p>
+<p>Save the Battery changes nothing while AlDente, batt, battery or Battery Toolkit is installed or running. The optional root helper accepts only fixed requests, writes one SMC key (the MagSafe LED) and runs no shell. The only network request is a daily version check, which you can turn off.</p>
 
 <h2>Uninstall</h2>
-<pre><code>curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/uninstall.sh | sh</code></pre>
+<pre><code>curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/uninstall.sh | sh</code></pre>
 </main>
-<footer>MIT · <a href="https://github.com/y-minion/vibebattery">GitHub</a> · <a href="https://github.com/y-minion/vibebattery/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/y-minion/vibebattery/issues">Report a problem</a></footer>
+<footer>MIT · <a href="https://github.com/y-minion/savethebattery">GitHub</a> · <a href="https://github.com/y-minion/savethebattery/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/y-minion/savethebattery/issues">Report a problem</a></footer>
 </body>
 </html>

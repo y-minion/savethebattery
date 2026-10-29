@@ -5,7 +5,7 @@ import BatteryCore
 
 struct ScheduleRunnerTests {
     typealias T=ChargeScheduleTests
-    func file() -> JSONFile<ScheduleState> { JSONFile(url:FileManager.default.temporaryDirectory.appendingPathComponent("vb-sched-\(UUID().uuidString)").appendingPathComponent("schedule.json")) }
+    func file() -> JSONFile<ScheduleState> { JSONFile(url:FileManager.default.temporaryDirectory.appendingPathComponent("stb-sched-\(UUID().uuidString)").appendingPathComponent("schedule.json")) }
     let cal=T.calendar()
 
     @Test func firstCheckOnlySetsBaseline() {

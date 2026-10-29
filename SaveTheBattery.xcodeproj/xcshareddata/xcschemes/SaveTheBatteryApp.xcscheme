@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B4D51A98BA88AB80367BD3C9"
-               BuildableName = "VibeBatteryApp.app"
-               BlueprintName = "VibeBatteryApp"
-               ReferencedContainer = "container:VibeBattery.xcodeproj">
+               BlueprintIdentifier = "A5E96A647414C2D77BF846FA"
+               BuildableName = "SaveTheBatteryApp.app"
+               BlueprintName = "SaveTheBatteryApp"
+               ReferencedContainer = "container:SaveTheBattery.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B4D51A98BA88AB80367BD3C9"
-            BuildableName = "VibeBatteryApp.app"
-            BlueprintName = "VibeBatteryApp"
-            ReferencedContainer = "container:VibeBattery.xcodeproj">
+            BlueprintIdentifier = "A5E96A647414C2D77BF846FA"
+            BuildableName = "SaveTheBatteryApp.app"
+            BlueprintName = "SaveTheBatteryApp"
+            ReferencedContainer = "container:SaveTheBattery.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -57,10 +57,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B4D51A98BA88AB80367BD3C9"
-            BuildableName = "VibeBatteryApp.app"
-            BlueprintName = "VibeBatteryApp"
-            ReferencedContainer = "container:VibeBattery.xcodeproj">
+            BlueprintIdentifier = "A5E96A647414C2D77BF846FA"
+            BuildableName = "SaveTheBatteryApp.app"
+            BlueprintName = "SaveTheBatteryApp"
+            ReferencedContainer = "container:SaveTheBattery.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -76,10 +76,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B4D51A98BA88AB80367BD3C9"
-            BuildableName = "VibeBatteryApp.app"
-            BlueprintName = "VibeBatteryApp"
-            ReferencedContainer = "container:VibeBattery.xcodeproj">
+            BlueprintIdentifier = "A5E96A647414C2D77BF846FA"
+            BuildableName = "SaveTheBatteryApp.app"
+            BlueprintName = "SaveTheBatteryApp"
+            ReferencedContainer = "container:SaveTheBattery.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>

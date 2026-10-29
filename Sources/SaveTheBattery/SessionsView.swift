@@ -32,7 +32,7 @@ struct SessionsView:View {
         }
         Card {
             Text(tr("What cleanup covers","자동 정리의 범위")).font(.headline)
-            Text(tr("Only temporary servers you registered inside a task with the vbctl resource -- command are cleaned up. Ordinary background processes and tasks of unclear origin are left alone. Use --keep for servers you want to keep.","작업 안에서 vbctl resource -- 명령으로 직접 등록한 임시 서버만 정리합니다. 일반 백그라운드 프로세스나 출처가 불분명한 작업은 건드리지 않습니다. 유지할 서버는 --keep을 사용하세요.")).foregroundStyle(.secondary)
+            Text(tr("Only temporary servers you registered inside a task with the stb resource -- command are cleaned up. Ordinary background processes and tasks of unclear origin are left alone. Use --keep for servers you want to keep.","작업 안에서 stb resource -- 명령으로 직접 등록한 임시 서버만 정리합니다. 일반 백그라운드 프로세스나 출처가 불분명한 작업은 건드리지 않습니다. 유지할 서버는 --keep을 사용하세요.")).foregroundStyle(.secondary)
         }
     }
 }

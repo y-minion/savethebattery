@@ -1,7 +1,7 @@
 import Foundation
 import BatteryCore
 import BatteryPlatform
-@main struct VibeCLI {
+@main struct BatteryCLI {
     static func main() {
         let args=Array(CommandLine.arguments.dropFirst())
         do {
@@ -30,27 +30,27 @@ import BatteryPlatform
                     print(try AppLanguage.json { String(data:try e.encode(report()),encoding:.utf8)! })
                 } else { HealthText.lines(report(),calendar:.current).forEach { print($0) } }
             default:print(tr("""
-            VibeBattery — battery and terminal task management
-              vbctl status [--json]
-              vbctl charge status [--json]
-              vbctl charge set <50-100> | off | topup | end   (app must be running)
-              vbctl health [--json]
-              vbctl run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
-              vbctl resource [--keep] -- command args   (inside a managed session)
-              vbctl sessions
-              vbctl release UUID
+            Save the Battery — battery and terminal task management
+              stb status [--json]
+              stb charge status [--json]
+              stb charge set <50-100> | off | topup | end   (app must be running)
+              stb health [--json]
+              stb run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
+              stb resource [--keep] -- command args   (inside a managed session)
+              stb sessions
+              stb release UUID
             Automatic cleanup applies only to temporary tasks you register with resource.
             When --hours runs out, only the protection is released. The command keeps running, but macOS may sleep.
             """, """
-            VibeBattery — 배터리와 터미널 작업 관리
-              vbctl status [--json]
-              vbctl charge status [--json]
-              vbctl charge set <50-100> | off | topup | end   (앱 실행 중)
-              vbctl health [--json]
-              vbctl run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
-              vbctl resource [--keep] -- command args   (관리 세션 내부)
-              vbctl sessions
-              vbctl release UUID
+            Save the Battery — 배터리와 터미널 작업 관리
+              stb status [--json]
+              stb charge status [--json]
+              stb charge set <50-100> | off | topup | end   (앱 실행 중)
+              stb health [--json]
+              stb run [--hours 4] [--screen-off] [--cleanup] [--allow-battery] -- command args
+              stb resource [--keep] -- command args   (관리 세션 내부)
+              stb sessions
+              stb release UUID
             자동 정리는 resource로 직접 등록한 임시 작업에만 적용됩니다.
             --hours 만료 시 보호만 해제됩니다. 명령은 계속 실행되지만 macOS가 잠들 수 있습니다.
             """))

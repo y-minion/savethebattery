@@ -1,6 +1,6 @@
 <!-- r/macapps draft (English). Check the subreddit's current self-promotion and flair rules before posting; post it yourself. -->
 
-**Title:** VibeBattery: a free, open-source battery care app for the menu bar (charge limit, schedules, health facts), everything free
+**Title:** Save the Battery: a free, open-source battery care app for the menu bar (charge limit, schedules, health facts), everything free
 
 **Body:**
 
@@ -13,7 +13,7 @@ What it does:
 - Low Power Mode switch and MagSafe LED modes
 - Health history with measured facts: hours at 90/95% and above, hours at 35/40 C and above, cycles, a capacity-based health estimate
 - Shortcuts actions and notifications; English and Korean UI
-- Terminal sessions (`vbctl run`) that keep the Mac awake while a coding agent runs
+- Terminal sessions (`stb run`) that keep the Mac awake while a coding agent runs
 
 What it deliberately does not do: promise months or years of extra life. A lithium-ion battery ages faster at high charge and heat (Apple's Charge Limit article and Battery University BU-808 explain why), so the app shows what it actually measured on your Mac and nothing more. No telemetry; the only network request is a daily version check you can turn off.
 
@@ -28,9 +28,9 @@ First thing after installing: set the limit to 80% (Apple silicon, macOS 26.4 or
 Install (the script is in the repo, read it first):
 
 ```
-curl -fsSL https://github.com/y-minion/vibebattery/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh
 ```
 
-Repo: https://github.com/y-minion/vibebattery
+Repo: https://github.com/y-minion/savethebattery
 
 Bug reports and feedback very welcome.

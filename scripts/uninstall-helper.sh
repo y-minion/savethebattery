@@ -1,10 +1,10 @@
 #!/bin/sh
 # Removes the helper. The current charge limit is left as it is.
 set -eu
-vb_lang() { case "${VB_LANG:-$(defaults read -g AppleLanguages 2>/dev/null | sed -n '2s/[^a-z]*\([a-z]*\).*/\1/p')}" in ko*) echo ko;; *) echo en;; esac; }
-msg() { if [ "$(vb_lang)" = ko ]; then printf '%s\n' "$2"; else printf '%s\n' "$1"; fi; }
+stb_lang() { case "${STB_LANG:-$(defaults read -g AppleLanguages 2>/dev/null | sed -n '2s/[^a-z]*\([a-z]*\).*/\1/p')}" in ko*) echo ko;; *) echo en;; esac; }
+msg() { if [ "$(stb_lang)" = ko ]; then printf '%s\n' "$2"; else printf '%s\n' "$1"; fi; }
 [ "$(id -u)" = 0 ] || { msg "Administrator rights are required: sudo $0" "관리자 권한이 필요합니다: sudo $0" >&2; exit 1; }
-LABEL=io.github.y-minion.vibebattery.helper
+LABEL=io.github.y-minion.savethebattery.helper
 DEST=/Library/PrivilegedHelperTools/$LABEL
 # Hand the MagSafe LED back to macOS. A version 1 helper ignores arguments and keeps
 # running, so the wait is bounded.

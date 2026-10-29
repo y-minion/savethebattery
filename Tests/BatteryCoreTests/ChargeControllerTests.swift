@@ -333,7 +333,7 @@ struct ChargeControllerTests {
             #expect(reason(ChargeLimitState(supported:true,enabled:false,limit:100),off)=="22:30 명령줄로 바뀜")
             var top=r;top.topUpRequested=Self.seoulAt(22,40);top.log.append(ChargeWrite(date:Self.seoulAt(22,40),command:"startTopUp",source:.user,ok:true))
             #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:100),top)=="22:40 직접 바꿈")
-            // Never written by VibeBattery: the value came from somewhere else.
+            // Never written by Save the Battery: the value came from somewhere else.
             #expect(reason(ChargeLimitState(supported:true,enabled:true,limit:70),ChargeRecord())=="다른 앱 또는 시스템 설정에서 바뀜")
             #expect(reason(ChargeLimitState(supported:true,enabled:nil,limit:nil),r)==nil)
         }
@@ -355,11 +355,11 @@ struct ChargeControllerTests {
         AppLanguage.$forced.withValue(.ko) {
             var probes=0
             let probe={ probes+=1;return true }
-            #expect(HelperStatus.evaluate(installed:false,appPath:"/Applications/VibeBattery.app",probe:probe) == .notInstalled)
-            #expect(HelperStatus.evaluate(installed:true,appPath:"/Users/u/dist/VibeBattery.app",probe:probe) == .wrongLocation)
+            #expect(HelperStatus.evaluate(installed:false,appPath:"/Applications/Save the Battery.app",probe:probe) == .notInstalled)
+            #expect(HelperStatus.evaluate(installed:true,appPath:"/Users/u/dist/Save the Battery.app",probe:probe) == .wrongLocation)
             #expect(probes==0)
-            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app",probe:{ false }) == .unreachable)
-            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/VibeBattery.app/",probe:probe) == .ready)
+            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/Save the Battery.app",probe:{ false }) == .unreachable)
+            #expect(HelperStatus.evaluate(installed:true,appPath:"/Applications/Save the Battery.app/",probe:probe) == .ready)
             #expect(probes==1)
         }
     }

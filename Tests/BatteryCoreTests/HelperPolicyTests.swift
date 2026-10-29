@@ -2,16 +2,16 @@ import Testing
 import Foundation
 import BatteryCore
 struct HelperPolicyTests {
-    let app="/Applications/VibeBattery.app/Contents/MacOS/VibeBattery"
+    let app="/Applications/Save the Battery.app/Contents/MacOS/Save the Battery"
     @Test func onlyConsoleUserRunningInstalledAppIsAllowed() {
         #expect(HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:app))
         #expect(!HelperPolicy.allows(clientUID:502,consoleUID:501,clientPath:app))
         #expect(!HelperPolicy.allows(clientUID:0,consoleUID:0,clientPath:app))
         #expect(!HelperPolicy.allows(clientUID:501,consoleUID:nil,clientPath:app))
         #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:nil))
-        #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:"/tmp/VibeBattery.app/Contents/MacOS/VibeBattery"))
-        #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:"/Applications/VibeBattery.app/../Evil.app/x"))
-        #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:"/Applications/VibeBattery.appx/y"))
+        #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:"/tmp/Save the Battery.app/Contents/MacOS/Save the Battery"))
+        #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:"/Applications/Save the Battery.app/../Evil.app/x"))
+        #expect(!HelperPolicy.allows(clientUID:501,consoleUID:501,clientPath:"/Applications/Save the Battery.appx/y"))
     }
     @Test func domainWritesAreBoundedAndKeepExistingFeatureState() {
         let fresh=TopoffDomain.writes(limit:79,existingFeature:nil)

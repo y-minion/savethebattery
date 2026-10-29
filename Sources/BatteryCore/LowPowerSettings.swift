@@ -27,7 +27,7 @@ public struct LowPowerSettings: Equatable, Sendable {
 }
 /// Screen text for the Low Power Mode switch.
 public enum LowPowerText {
-    public static var needsUpdate:String { tr("Reinstall the helper: this version only accepts the official VibeBattery app.","헬퍼를 다시 설치해 주세요. 이 버전은 공식 VibeBattery 앱만 받아들입니다.") }
+    public static var needsUpdate:String { tr("Reinstall the helper: this version only accepts the official Save the Battery app.","헬퍼를 다시 설치해 주세요. 이 버전은 공식 Save the Battery 앱만 받아들입니다.") }
     public static var failed:String { tr("Could not change Low Power Mode.","저전력 모드를 바꾸지 못했습니다.") }
     public static var conditional:String { tr("It is currently set differently for battery and power adapter. Changing it here makes it always on or always off.","지금은 배터리/전원 어댑터에 따라 다르게 설정되어 있습니다. 여기서 바꾸면 항상 켜짐 또는 항상 꺼짐이 됩니다.") }
     /// Why the switch is unavailable; nil when the helper is ready.

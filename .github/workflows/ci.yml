@@ -13,8 +13,8 @@ jobs:
         run: swift test --disable-xctest
       - name: Smoke test scoped terminal sessions
         env:
-          VB_LANG: en
-        run: python3 scripts/smoke-sessions.py .build/debug/vbctl
+          STB_LANG: en
+        run: python3 scripts/smoke-sessions.py .build/debug/stb
       - name: Build app bundle
         run: scripts/build-app.sh
       - name: Check helper scripts
@@ -23,13 +23,13 @@ jobs:
         run: sh scripts/test-install.sh
       - name: Read charge limit (read-only, runner may report unsupported)
         env:
-          VB_LANG: en
-        run: dist/VibeBattery.app/Contents/MacOS/vbctl charge status
+          STB_LANG: en
+        run: '"dist/Save the Battery.app/Contents/MacOS/stb" charge status'
       - name: Read health report (read-only, runner may have no battery)
         env:
-          VB_LANG: en
-        run: dist/VibeBattery.app/Contents/MacOS/vbctl health && dist/VibeBattery.app/Contents/MacOS/vbctl health --json
+          STB_LANG: en
+        run: '"dist/Save the Battery.app/Contents/MacOS/stb" health && "dist/Save the Battery.app/Contents/MacOS/stb" health --json'
       - name: Smoke test embedded release tool
         env:
-          VB_LANG: en
-        run: python3 scripts/smoke-sessions.py dist/VibeBattery.app/Contents/MacOS/vbctl
+          STB_LANG: en
+        run: python3 scripts/smoke-sessions.py "dist/Save the Battery.app/Contents/MacOS/stb"

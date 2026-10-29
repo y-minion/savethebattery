@@ -4,7 +4,7 @@ import Foundation
 public enum AppLanguage: String, Sendable, CaseIterable {
     case en, ko
 
-    /// `VB_LANG` of `ko`/`en` wins; else the first preferred language starting with `ko`; else English.
+    /// `STB_LANG` of `ko`/`en` wins; else the first preferred language starting with `ko`; else English.
     public static func resolve(env: String?, preferred: [String]) -> AppLanguage {
         if let env, let l = AppLanguage(rawValue: env) { return l }
         if let first = preferred.first, first.hasPrefix("ko") { return .ko }
@@ -12,7 +12,7 @@ public enum AppLanguage: String, Sendable, CaseIterable {
     }
 
     @TaskLocal public static var forced: AppLanguage?
-    public static let system: AppLanguage = resolve(env: ProcessInfo.processInfo.environment["VB_LANG"], preferred: Locale.preferredLanguages)
+    public static let system: AppLanguage = resolve(env: ProcessInfo.processInfo.environment["STB_LANG"], preferred: Locale.preferredLanguages)
     public static var current: AppLanguage { forced ?? system }
 
     /// `--json` output is never translated: runs `body`, including any reads it makes, in English.

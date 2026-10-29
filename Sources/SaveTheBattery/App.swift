@@ -2,11 +2,11 @@ import SwiftUI
 import AppKit
 import BatteryCore
 import BatteryPlatform
-@main struct VibeBatteryApp: App {
+@main struct SaveTheBatteryApp: App {
     @StateObject private var model=AppModel.shared
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     var body:some Scene {
-        WindowGroup("VibeBattery",id:"main") { RootView().environmentObject(model).frame(minWidth:900,minHeight:650).tint(.mint) }
+        WindowGroup("Save the Battery",id:"main") { RootView().environmentObject(model).frame(minWidth:900,minHeight:650).tint(.mint) }
             .defaultSize(width:1050,height:740)
         MenuBarExtra {
             MenuWindow().environmentObject(model)
@@ -33,7 +33,7 @@ struct RootView:View {
     var body:some View {
         HStack(spacing:0) {
             VStack(alignment:.leading,spacing:26) {
-                HStack { Image(systemName:"leaf.fill").foregroundStyle(.mint); Text("VibeBattery").font(.title3.bold()) }.padding(.top,24)
+                HStack { Image(systemName:"leaf.fill").foregroundStyle(.mint); Text("Save the Battery").font(.title3.bold()) }.padding(.top,24)
                 VStack(spacing:8) {
                     ForEach(items,id:\.0) { item in
                         Button { model.section=item.0 } label: {
@@ -59,7 +59,7 @@ struct RootView:View {
                     }
                 }.padding(30).frame(maxWidth:.infinity,alignment:.leading)
             }.background(Color(nsColor:.windowBackgroundColor))
-        }.alert("VibeBattery",isPresented:Binding(get:{model.message != nil},set:{if !$0 {model.message=nil}})) { Button(tr("OK","확인")) { model.message=nil } } message: { Text(model.message ?? "") }
+        }.alert("Save the Battery",isPresented:Binding(get:{model.message != nil},set:{if !$0 {model.message=nil}})) { Button(tr("OK","확인")) { model.message=nil } } message: { Text(model.message ?? "") }
     }
 }
 struct Card<Content:View>:View {

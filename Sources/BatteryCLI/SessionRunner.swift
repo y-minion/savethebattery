@@ -10,11 +10,11 @@ func runSession(_ options:RunOptions) throws -> Int32 {
     record.deadline=Date().addingTimeInterval(options.hours*3600)
     record.cleanup=options.cleanup ? .safe:.observe
     let onAC=BatteryReader.read().onAC
-    if onAC || options.allowBattery { try lease.acquire(reason:"VibeBattery: \(record.command)");record.protected=true }
+    if onAC || options.allowBattery { try lease.acquire(reason:"Save the Battery: \(record.command)");record.protected=true }
     defer { lease.release() }
     try store.save(record)
     note(tr("Session \(record.id.uuidString) · protected for \(options.hours)h · cleanup: \(options.cleanup ? "allowed resources only" : "observe only")","세션 \(record.id.uuidString) · 보호 시간 \(options.hours)h · 정리 \(options.cleanup ? "허용된 리소스만" : "관찰")"))
-    var env=ProcessInfo.processInfo.environment;env["VIBEBATTERY_SESSION"]=record.id.uuidString
+    var env=ProcessInfo.processInfo.environment;env["STB_SESSION"]=record.id.uuidString
     vb_watch_signals()
     let child:ChildCommand
     do { child=try ChildCommand(options.command,environment:env) }

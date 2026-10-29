@@ -24,7 +24,7 @@ struct PlatformTests {
         #expect(!p.canTerminate(current:nil,user:501,name:"worker"))
         #expect(!p.canTerminate(current:p,user:501,name:"zsh"))
         #expect(!p.canTerminate(current:p,user:501,name:"Finder"))
-        #expect(!p.canTerminate(current:p,user:501,name:"vbctl"))
+        #expect(!p.canTerminate(current:p,user:501,name:"stb"))
         #expect(p.canTerminate(current:p,user:501,name:"temporary-worker"))
     }
     @Test func historyRetainsFreshSamplesAndDeletes() throws {

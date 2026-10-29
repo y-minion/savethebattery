@@ -5,7 +5,7 @@ import BatteryPlatform
 import MacBridge
 // Root daemon. Accepts only fixed requests (a bounded limit write, a state read, the
 // protocol version, Low Power Mode on/off and an allow-listed MagSafe LED value) from the
-// console user's /Applications/VibeBattery.app; no generic defaults, keys or commands.
+// console user's /Applications/Save the Battery.app; no generic defaults, keys or commands.
 /// The only SMC key the CLI reads; the write path has the key fixed inside MacBridge.
 let ledKey="ACLC"
 let pmset="/usr/bin/pmset"
@@ -85,8 +85,8 @@ final class Gate:NSObject,NSXPCListenerDelegate {
 /// An unreadable signature must not fall back to identifier-only, so the helper exits and launchd retries.
 let signing=CodeSigningIdentity.own
 switch signing {
-case .unknown(let status):NSLog("VibeBattery helper: cannot read own code signature (OSStatus %d), exiting",status);exit(1)
-case .adHoc:NSLog("VibeBattery helper: self-built (ad-hoc), not team-pinned")
+case .unknown(let status):NSLog("Save the Battery helper: cannot read own code signature (OSStatus %d), exiting",status);exit(1)
+case .adHoc:NSLog("Save the Battery helper: self-built (ad-hoc), not team-pinned")
 case .team:break
 }
 let clientRequirement=HelperPolicy.clientRequirement(signing)

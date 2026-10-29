@@ -11,7 +11,7 @@ public enum ChargeError: Error, Equatable, LocalizedError {
         switch self {
         case .invalid:return tr("The charge limit can be set from 50 to 100% in steps of 5%.","충전 상한은 50~100% 사이에서 5% 단위로 고를 수 있습니다.")
         case .conflict(let names):return tr("\(names.joined(separator:", ")) is managing charging. Quit or remove that app to take control.","\(names.joined(separator:", "))이(가) 충전을 관리하고 있습니다. 해당 앱을 종료하거나 삭제하면 제어할 수 있습니다.")
-        case .helperRequired:return tr("Limits below 80% need the VibeBattery helper.","80% 미만 상한에는 VibeBattery 헬퍼 설치가 필요합니다.")
+        case .helperRequired:return tr("Limits below 80% need the Save the Battery helper.","80% 미만 상한에는 Save the Battery 헬퍼 설치가 필요합니다.")
         case .unavailable:return tr("Could not confirm charge limit control on this macOS.","이 macOS에서 충전 상한 제어를 확인하지 못했습니다.")
         case .rejected(let m):return m
         case .notApplied:return tr("Not applied: the value read back differs from the request. It will not retry automatically.","적용 실패: 다시 읽은 값이 요청과 다릅니다. 자동으로 재시도하지 않습니다.")
@@ -33,7 +33,7 @@ public struct ChargeRecord: Codable, Equatable {
     /// Owner of the limit a hold replaced, so restoring it keeps the original origin.
     public var lastWrittenBeforeHold:Int?
     public var topUpObservedOff=false
-    /// Count of writes VibeBattery attempted, so its own changes are never reported as someone else's.
+    /// Count of writes Save the Battery attempted, so its own changes are never reported as someone else's.
     public var writes=0
     public var log:[ChargeWrite]=[]
     public static let logLimit=20
@@ -92,7 +92,7 @@ public final class ChargeController {
         return r
     }
     /// macOS re-enables the limit at its own stored value, which never holds a
-    /// helper-written limit below 80%; put back the limit VibeBattery last set.
+    /// helper-written limit below 80%; put back the limit Save the Battery last set.
     private func reapplyAfterTopUp(_ s:ChargeLimitState) -> Result<ChargeLimitState,ChargeError>? {
         guard let want=record.lastWritten,s.enabled==true,s.limit != want else { return nil }
         return apply(.setLimit(want),byUser:false,source:.topUp)

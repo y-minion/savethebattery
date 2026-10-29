@@ -18,7 +18,7 @@ static id<VBSmartChargeClient> vb_client(SEL selector) {
         if (![[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/PowerUI.framework"] load]) return;
         Class type=NSClassFromString(@"PowerUISmartChargeClient");
         if (type && [type instancesRespondToSelector:@selector(initWithClientName:)])
-            client=[(id<VBSmartChargeClient>)[type alloc] initWithClientName:@"io.github.y-minion.vibebattery"];
+            client=[(id<VBSmartChargeClient>)[type alloc] initWithClientName:@"io.github.y-minion.savethebattery"];
     });
     return [(id)client respondsToSelector:selector] ? client : nil;
 }

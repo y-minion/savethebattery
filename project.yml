@@ -37,6 +37,7 @@ targets:
         buildPhase: resources
       - path: Resources/ko.lproj/AppShortcuts.strings
         buildPhase: resources
+      - path: Resources/Assets.xcassets
     dependencies:
       - { package: SaveTheBatteryKit, product: BatteryCore }
       - { package: SaveTheBatteryKit, product: BatteryPlatform }

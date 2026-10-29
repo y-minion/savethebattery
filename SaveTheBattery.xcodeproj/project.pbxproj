@@ -27,6 +27,7 @@
 		7301E48AF5910652C33478A0 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF305FD0A9FCC7FF91CD32E /* SystemConfiguration.framework */; };
 		778404DEE37171C86A71C18A /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BEA6C2B1D337D206565BDAB /* HealthView.swift */; };
 		7A83AD3532A836675C263230 /* BatteryPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = B6EF05E574E8AFAFB1D1EADB /* BatteryPlatform */; };
+		7F5E4915DD82AA3327D7F7A1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 064490E481FFCA4AA8A6061A /* Assets.xcassets */; };
 		7FBB9E6C60A344A6245D7FF9 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 684533C8EFAC3C0E6F6CE323 /* Main.swift */; };
 		83177920D14BF2654D958DB6 /* BatteryCore in Frameworks */ = {isa = PBXBuildFile; productRef = B38428EBF0757C31412EED98 /* BatteryCore */; };
 		8C94EE9C7A6A457F8A07A35D /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECBACE42AA82090575D016B /* DashboardView.swift */; };
@@ -79,6 +80,7 @@
 		031D3C93AF122F9CD940444C /* ResourceRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceRunner.swift; sourceTree = "<group>"; };
 		04C71120913552A1CBB194C9 /* STBChargeHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = STBChargeHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		05AD7E31FED51C7F49C5EC22 /* ChargeControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeControlView.swift; sourceTree = "<group>"; };
+		064490E481FFCA4AA8A6061A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2076CDDF997956B552BA71CF /* ChargeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargeView.swift; sourceTree = "<group>"; };
 		23A1373BA71643713ADF9DD5 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		36ADCE3BD7492ECB61825D5E /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
@@ -249,6 +251,7 @@
 		FD88D09ED522D7096848BBE4 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				064490E481FFCA4AA8A6061A /* Assets.xcassets */,
 				777559E69F976F06A3C5C963 /* ko.lproj */,
 			);
 			path = Resources;
@@ -376,6 +379,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DBBB7D69FC47CFBF14F5CC6 /* AppShortcuts.strings in Resources */,
+				7F5E4915DD82AA3327D7F7A1 /* Assets.xcassets in Resources */,
 				0D335F1535E925C52FF4A48E /* Localizable.strings in Resources */,
 				1CBD9C2297AF47865D0B431F /* install-helper.sh in Resources */,
 				2935B7BB9FD7C3924245DDC0 /* uninstall-helper.sh in Resources */,

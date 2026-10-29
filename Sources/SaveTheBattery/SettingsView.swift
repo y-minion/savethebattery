@@ -84,10 +84,11 @@ struct SettingsView:View {
                 }
             }
             if model.ledUnsupported { Text(HelperReply.ledUnsupported.text).font(.caption).foregroundStyle(.secondary) }
+            else if model.helperStatus != .ready && AppModel.runsFromApplications { Text(LowPowerText.installsOnFirstUse).font(.caption).foregroundStyle(.secondary) }
             else if let caption=LowPowerText.caption(model.helperStatus) { Text(caption).font(.caption).foregroundStyle(.secondary) }
             else if !model.chargeConflicts.isEmpty { Text(tr("Another charge manager is present, so the LED is left alone.","다른 충전 관리 앱이 있어 LED를 바꾸지 않습니다.")).font(.caption).foregroundStyle(.secondary) }
             Text(tr("Works only when connected with a MagSafe cable. It has no effect when charging over USB-C.","MagSafe 케이블로 연결했을 때만 켜집니다. USB-C 단자로 충전하면 효과가 없습니다.")).font(.caption).foregroundStyle(.secondary)
-        }.disabled(model.helperStatus != .ready || model.ledUnsupported)
+        }.disabled(model.ledUnsupported || model.helperBusy || (model.helperStatus != .ready && !AppModel.runsFromApplications))
         Card {
             Text(tr("Command line and Shortcuts","명령줄과 단축어")).font(.headline)
             Text(tr("While the app is running, you can change the charge limit from Terminal or Shortcuts.","앱이 실행 중이면 터미널이나 단축어에서 충전 상한을 바꿀 수 있습니다.")).foregroundStyle(.secondary)

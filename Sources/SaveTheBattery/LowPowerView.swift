@@ -8,7 +8,10 @@ struct LowPowerView:View {
     @State private var error:String?
     var body:some View {
         VStack(alignment:.leading,spacing:6) {
-            if let caption=LowPowerText.caption(model.helperStatus) {
+            if model.helperStatus != .ready && AppModel.runsFromApplications {
+                Toggle(tr("Low Power Mode","저전력 모드"),isOn:Binding(get:{ model.lowPower },set:{ on in Task { await model.installHelper { error=await model.setLowPower(on) } } })).disabled(model.lowPowerBusy || model.helperBusy)
+                Text(LowPowerText.installsOnFirstUse).font(.caption).foregroundStyle(.secondary)
+            } else if let caption=LowPowerText.caption(model.helperStatus) {
                 HStack {
                     if showsSettingsButton { Button(tr("Open Battery settings","배터리 설정 열기")) { model.openBatterySettings() }.buttonStyle(.bordered).controlSize(.small) }
                     Text(caption).font(.caption).foregroundStyle(.secondary)

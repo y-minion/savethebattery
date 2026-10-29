@@ -34,6 +34,8 @@ public enum LowPowerText {
     public static func caption(_ s:HelperStatus) -> String? {
         switch s { case .ready:nil; case .outdated:tr("Helper update needed","헬퍼 업데이트가 필요합니다"); default:tr("Install the helper to change this here.","헬퍼를 설치하면 여기서 바로 바꿀 수 있습니다") }
     }
+    /// Under a control that installs the helper on first use.
+    public static var installsOnFirstUse:String { tr("The first change asks for your password once to install the helper.","처음 바꿀 때 암호를 한 번 넣으면 헬퍼가 설치됩니다.") }
     public static var highPower:String { tr("Turning it off here switches to Automatic instead of High Power.","여기서 끄면 고성능 대신 자동으로 바뀝니다.") }
     /// Captions to show under the switch.
     public static func notes(_ s:LowPowerSettings) -> [String] { (s.isConditional ? [conditional]:[])+(s.isHighPower ? [highPower]:[]) }

@@ -16,16 +16,17 @@ enum ChargeHelperText {
 struct HelperInstallControls:View {
     @EnvironmentObject var model:AppModel
     private static let selfBuilt=CodeSigningIdentity.own == .adHoc
-    private static let inApplications=(Bundle.main.bundlePath as NSString).standardizingPath == "/Applications/Save the Battery.app"
     private var installed:Bool { model.helperStatus != .notInstalled }
     var body:some View {
         VStack(alignment:.leading,spacing:6) {
             HStack(spacing:12) {
                 Button(installed ? tr("Reinstall helper…","헬퍼 다시 설치…"):tr("Install helper…","헬퍼 설치…")) { run { await model.installHelper() } }
                 if installed { Button(tr("Remove helper…","헬퍼 제거…")) { run { await model.uninstallHelper() } } }
-            }.disabled(model.helperBusy || !Self.inApplications)
-            if !Self.inApplications { Text(tr("Move Save the Battery to /Applications to install the helper.","헬퍼를 설치하려면 Save the Battery를 /Applications로 옮기세요.")).font(.caption).foregroundStyle(.orange) }
-            Text(tr("Or run in Terminal: \(model.helperInstallCommand)","또는 터미널에서 실행: \(model.helperInstallCommand)")).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+            }.disabled(model.helperBusy || !AppModel.runsFromApplications)
+            if !AppModel.runsFromApplications { Text(tr("Move Save the Battery to /Applications to install the helper.","헬퍼를 설치하려면 Save the Battery를 /Applications로 옮기세요.")).font(.caption).foregroundStyle(.orange) }
+            DisclosureGroup(tr("Install from Terminal instead","터미널로 설치")) {
+                Text(model.helperInstallCommand).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)
+            }.font(.caption)
             if Self.selfBuilt { Text(tr("Self-built copy: the installed helper will not be team-pinned.","직접 빌드한 앱: 설치되는 헬퍼가 팀 서명으로 묶이지 않습니다.")).font(.caption).foregroundStyle(.secondary) }
         }
     }
@@ -38,6 +39,8 @@ struct ChargeControlCard:View {
     @State private var target=80
     var canWrite:Bool { model.charge.supported==true && model.chargeConflicts.isEmpty }
     var needsHelper:Bool { target<ChargeCommand.userFloor && !model.helperStatus.canSetLimit }
+    /// A limit below 80% without the helper installs it first, then applies, when this copy can install it.
+    var installsHelper:Bool { needsHelper && AppModel.runsFromApplications }
     var helperText:String { ChargeHelperText.status(model) }
     var originText:String {
         switch model.chargeOrigin {
@@ -57,10 +60,14 @@ struct ChargeControlCard:View {
             }
             HStack(spacing:12) {
                 Stepper(tr("Limit \(target)%\(target==80 ? " (recommended)":"")","상한 \(target)%\(target==80 ? " (권장)":"")"),value:$target,in:ChargeCommand.range,step:5).frame(maxWidth:180)
-                Button(tr("Apply","적용")) { model.applyCharge(.setLimit(target)) }.buttonStyle(.borderedProminent).disabled(!canWrite || needsHelper)
+                Button(installsHelper ? tr("Install helper and apply…","헬퍼 설치 후 적용…"):tr("Apply","적용")) {
+                    let limit=target
+                    if installsHelper { Task { await model.installHelper { model.applyCharge(.setLimit(limit)) } } } else { model.applyCharge(.setLimit(limit)) }
+                }.buttonStyle(.borderedProminent).disabled(!canWrite || (needsHelper && !installsHelper) || model.helperBusy)
                 Button(tr("Turn off limit","상한 끄기")) { model.applyCharge(.clearLimit) }.disabled(!canWrite)
             }
-            if needsHelper { Text(tr("Limits below 80% are unavailable. \(helperText)","80% 미만 상한을 쓸 수 없습니다. \(helperText)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled);HelperInstallControls() }
+            if installsHelper { Text(tr("Limits below 80% use the helper. Applying asks for your password once to install it.","80% 미만 상한은 헬퍼를 씁니다. 적용할 때 암호를 한 번 넣으면 설치됩니다.")).font(.caption).foregroundStyle(.secondary) }
+            else if needsHelper { Text(tr("Limits below 80% are unavailable. \(helperText)","80% 미만 상한을 쓸 수 없습니다. \(helperText)")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled);HelperInstallControls() }
             HStack(spacing:12) {
                 Button(tr("Charge to 100% once","한 번 100% 충전")) { model.applyCharge(.startTopUp) }.disabled(!canWrite)
                 if model.topUpActive { Button(tr("End top-up","완충 종료")) { model.applyCharge(.endTopUp) }.disabled(!canWrite) }

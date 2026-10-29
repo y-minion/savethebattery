@@ -198,7 +198,12 @@ import BatteryPlatform
         }
     }
     private func resetLEDCache() { ledGeneration+=1;lastLED=nil }
-    func ledChanged() { savePreferences();applyLED() }
+    /// A color choice without the helper installs it first; going back to the macOS default needs no helper.
+    func ledChanged() {
+        savePreferences()
+        if helperStatus == .ready || preferences.led.mode == .system || !Self.runsFromApplications || !chargeConflicts.isEmpty { applyLED();return }
+        Task { await installHelper { self.applyLED() } }
+    }
     /// The cable can reset the key, and the state may have changed since the last tick.
     private func watchPower() {
         ledCancellable=$battery.map(\.onAC).removeDuplicates().dropFirst().sink { [weak self] _ in
@@ -252,14 +257,24 @@ import BatteryPlatform
     /// Asks for the administrator password in the system dialog, then installs the root helper. Returns the text to show, or nil when the user cancelled.
     func installHelper() async -> String? { await runHelperScript("install-helper.sh",install:true) }
     func uninstallHelper() async -> String? { await runHelperScript("uninstall-helper.sh",install:false) }
+    /// Installs the helper, then runs `apply` once it answers. `apply` reports its own result, so the install confirmation is skipped.
+    func installHelper(then apply:@escaping @MainActor () async -> Void) async {
+        let text=await installHelper()
+        if helperStatus == .ready { await apply() } else if let text { message=text }
+    }
+    /// The helper serves only this path, so installing it from a copy anywhere else would only fail.
+    static let runsFromApplications=((Bundle.main.bundlePath as NSString).standardizingPath+"/")==HelperPolicy.appPrefix
     private enum ScriptOutcome { case done,cancelled,failed(String) }
     private func runHelperScript(_ name:String,install:Bool) async -> String? {
         guard !helperBusy else { return nil }
         helperBusy=true;defer { helperBusy=false }
         // Fixed path and language code only; no user input reaches the shell command.
         let command="STB_LANG=\(AppLanguage.current.rawValue) '/Applications/Save the Battery.app/Contents/Resources/\(name)'"
-        let quoted=command.replacingOccurrences(of:"\\",with:"\\\\").replacingOccurrences(of:"\"",with:"\\\"")
-        let source="do shell script \"\(quoted)\" with administrator privileges"
+        func literal(_ s:String) -> String { "\""+s.replacingOccurrences(of:"\\",with:"\\\\").replacingOccurrences(of:"\"",with:"\\\"")+"\"" }
+        let prompt=install
+            ? tr("Save the Battery needs your password once to install its helper. It is used for limits below 80%, Low Power Mode and the MagSafe LED.","Save the Battery가 헬퍼를 설치하려면 암호가 한 번 필요합니다. 헬퍼는 80% 미만 상한, 저전력 모드, MagSafe LED에 쓰입니다.")
+            : tr("Save the Battery needs your password to remove its helper.","Save the Battery가 헬퍼를 제거하려면 암호가 필요합니다.")
+        let source="do shell script \(literal(command)) with prompt \(literal(prompt)) with administrator privileges"
         let outcome=await Task.detached { () -> ScriptOutcome in
             let p=Process(),err=Pipe()
             p.executableURL=URL(fileURLWithPath:"/usr/bin/osascript");p.arguments=["-e",source];p.standardError=err;p.standardOutput=FileHandle.nullDevice

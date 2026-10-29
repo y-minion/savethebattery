@@ -267,6 +267,15 @@ import BatteryPlatform
     var showsMoveCard:Bool { !moveCardDismissed && Bundle.main.bundleURL.pathExtension=="app" && FirstRun.needsMove(bundlePath:Bundle.main.bundlePath) }
     var suggestsLimit:Bool { ChargeSupport.current && FirstRun.suggestsLimit(charge,conflicts:!chargeConflicts.isEmpty,dismissed:preferences.limitTipDismissed) }
     func dismissLimitTip() { preferences.limitTipDismissed=true;savePreferences() }
+    func askToMoveIfNeeded() {
+        guard showsMoveCard,AppLocation.applicationsWritable else { return }
+        let a=NSAlert()
+        a.messageText=tr("Move Save the Battery to the Applications folder?","Save the Battery를 응용 프로그램 폴더로 옮길까요?")
+        a.informativeText=tr("The helper and in-app updates only work from there. The app restarts from Applications; a copy in Downloads goes to the Trash and the disk image is left alone.","헬퍼와 앱 안 업데이트는 그곳에서만 동작합니다. 앱이 응용 프로그램 폴더에서 다시 시작되고, 다운로드 폴더의 사본은 휴지통으로 옮기며 디스크 이미지는 그대로 둡니다.")
+        a.addButton(withTitle:tr("Move to Applications","응용 프로그램으로 옮기기"));a.addButton(withTitle:tr("Not now","나중에"))
+        NSApp.activate(ignoringOtherApps:true)
+        if a.runModal() == .alertFirstButtonReturn { moveToApplications() }
+    }
     /// Copies this app into Applications, trashes a writable original, then quits so the copy there starts.
     func moveToApplications() {
         let original=AppLocation.original(),installed=URL(fileURLWithPath:HelperPolicy.appPath)

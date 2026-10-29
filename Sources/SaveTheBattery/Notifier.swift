@@ -63,4 +63,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification:Notification) {
         if NotificationRuntime.bundled { UNUserNotificationCenter.current().delegate=NotificationRouter.shared }
     }
+    /// A dashboard card is easy to miss, so a copy outside Applications asks once at launch; the card stays for "Not now".
+    func applicationDidFinishLaunching(_ notification:Notification) {
+        Task { @MainActor in AppModel.shared.askToMoveIfNeeded() }
+    }
 }

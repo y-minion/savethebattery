@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0D335F1535E925C52FF4A48E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4E10D036D2AA47609F00E636 /* Localizable.strings */; };
+		0DF72441EA2A35494EAEB413 /* FirstRunCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51692B3EA70241BD42D80050 /* FirstRunCards.swift */; };
 		1752A6624DD5BEB559E98ECD /* ChargeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2076CDDF997956B552BA71CF /* ChargeView.swift */; };
 		1CBD9C2297AF47865D0B431F /* install-helper.sh in Resources */ = {isa = PBXBuildFile; fileRef = B1CE3AD8E1C58B2D6F269687 /* install-helper.sh */; };
 		267C152741AFE684C0E2CBF4 /* ChargeControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AD7E31FED51C7F49C5EC22 /* ChargeControlView.swift */; };
@@ -87,6 +88,7 @@
 		3ECBACE42AA82090575D016B /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		4E10D036D2AA47609F00E636 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		50CA60BF2BC009ADB1F855F1 /* SessionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsView.swift; sourceTree = "<group>"; };
+		51692B3EA70241BD42D80050 /* FirstRunCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunCards.swift; sourceTree = "<group>"; };
 		530D7BF68CF6B8B33C12764D /* SaveTheBatteryApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SaveTheBatteryApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5BEA6C2B1D337D206565BDAB /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
 		65D359F47CEAACEAFFC13E0E /* ChildCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildCommand.swift; sourceTree = "<group>"; };
@@ -197,6 +199,7 @@
 				DF81C5867D4F215C540C5FAA /* ChargeIntents.swift */,
 				2076CDDF997956B552BA71CF /* ChargeView.swift */,
 				3ECBACE42AA82090575D016B /* DashboardView.swift */,
+				51692B3EA70241BD42D80050 /* FirstRunCards.swift */,
 				5BEA6C2B1D337D206565BDAB /* HealthView.swift */,
 				A77236A820FA75F1AE5E73D0 /* LowPowerView.swift */,
 				A681645864EB5568D6E45D37 /* MenuBarIcon.swift */,
@@ -399,6 +402,7 @@
 				2CA9A7DF977CB13C7C1ACDA2 /* ChargeIntents.swift in Sources */,
 				1752A6624DD5BEB559E98ECD /* ChargeView.swift in Sources */,
 				8C94EE9C7A6A457F8A07A35D /* DashboardView.swift in Sources */,
+				0DF72441EA2A35494EAEB413 /* FirstRunCards.swift in Sources */,
 				778404DEE37171C86A71C18A /* HealthView.swift in Sources */,
 				2B7D12C8D38CEA93C010831D /* LowPowerView.swift in Sources */,
 				E07FA06ABCC0A29EFD5D3B7B /* MenuBarIcon.swift in Sources */,

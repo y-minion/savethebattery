@@ -262,6 +262,23 @@ import BatteryPlatform
         let text=await installHelper()
         if helperStatus == .ready { await apply() } else if let text { message=text }
     }
+    // First run: a copy outside Applications is offered a move, and a Mac without a limit is offered 80%.
+    @Published var moveCardDismissed=false
+    var showsMoveCard:Bool { !moveCardDismissed && Bundle.main.bundleURL.pathExtension=="app" && FirstRun.needsMove(bundlePath:Bundle.main.bundlePath) }
+    var suggestsLimit:Bool { ChargeSupport.current && FirstRun.suggestsLimit(charge,conflicts:!chargeConflicts.isEmpty,dismissed:preferences.limitTipDismissed) }
+    func dismissLimitTip() { preferences.limitTipDismissed=true;savePreferences() }
+    /// Copies this app into Applications, trashes a writable original, then quits so the copy there starts.
+    func moveToApplications() {
+        let original=AppLocation.original(),installed=URL(fileURLWithPath:HelperPolicy.appPath)
+        let old:URL?
+        do { old=try BundleSwap.install(original,at:installed) } catch { message=error.localizedDescription;return }
+        let relaunch={ @MainActor [weak self] in
+            do { try Relauncher.openAfterExit(installed,removing:old.map { [$0] } ?? []);NSApp.terminate(nil) }
+            catch { self?.message=error.localizedDescription }
+        }
+        guard FirstRun.trashesOriginal(path:original.path,readOnlyVolume:AppLocation.onReadOnlyVolume(original)) else { relaunch();return }
+        NSWorkspace.shared.recycle([original]) { _,_ in Task { @MainActor in relaunch() } }
+    }
     /// The helper serves only this path, so installing it from a copy anywhere else would only fail.
     static let runsFromApplications=((Bundle.main.bundlePath as NSString).standardizingPath+"/")==HelperPolicy.appPrefix
     private enum ScriptOutcome { case done,cancelled,failed(String) }

@@ -16,7 +16,9 @@ public enum HelperPolicy {
     public static func clientRequirement(_ signing:SigningTeam) -> String { requirement(identifier:appIdentifier,signing:signing) }
     /// What the app demands of the helper.
     public static func helperRequirement(_ signing:SigningTeam) -> String { requirement(identifier:helperIdentifier,signing:signing) }
-    public static let appPrefix="/Applications/Save the Battery.app/"
+    /// The only copy the helper serves, and the one the installer, Move and Update put in place.
+    public static let appPath="/Applications/Save the Battery.app"
+    public static let appPrefix=appPath+"/"
     public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.savethebattery.helper.plist"
     /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED. 3: replies are `HelperReply` codes and the helper is team-pinned.
     public static let protocolVersion=3

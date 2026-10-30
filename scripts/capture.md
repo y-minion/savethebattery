@@ -1,14 +1,14 @@
 # Captures for the README, site and posts
 
-There are no images yet. The owner records them on their own Mac. Save everything under `docs/images/`; the READMEs already point at these names. Record each shot in English (macOS set to English) and in Korean (macOS set to Korean, or launch with `STB_LANG=ko`), and keep personal data out of frame (account names, serial numbers).
+The owner records these on their own Mac and saves them under `docs/images/`. In use now: `menu-window.png`, `menu-window.ko.png` and `open-anyway.ko.png` (the English README describes Open Anyway in text, because System Settings could not be switched to English for one app). The other rows are for the site and posts. Record each shot in English (macOS set to English) and in Korean (macOS set to Korean, or launch with `STB_LANG=ko`), and keep personal data out of frame (account names, serial numbers).
 
 | File | What to show |
 |---|---|
-| `menu-window.gif` / `menu-window.ko.gif` | The menu window: open it from the menu bar, change the quick limit to 80%. 5 to 8 seconds, under 3 MB. |
+| `menu-window.png` / `menu-window.ko.png` | The menu window, opened from the menu bar (⌘⇧4, Space, Option-click the window). A GIF needs ffmpeg or similar. |
 | `dashboard-power-flow.png` / `.ko.png` | The dashboard power flow bar with the adapter connected. |
 | `health-card.png` / `.ko.png` | The health card with the measured facts (hours at high charge and heat, cycles, estimate). |
 | `settings-led.png` / `.ko.png` | Settings, MagSafe LED modes. |
-| `open-anyway.png` / `.ko.png` | System Settings › Privacy & Security with the "Open Anyway" button for Save the Battery, after opening the browser-downloaded app once. |
+| `open-anyway.ko.png` | System Settings › Privacy & Security with the "Open Anyway" button for Save the Battery, after opening the browser-downloaded app once, cropped to the Security section. |
 
 ## Commands
 

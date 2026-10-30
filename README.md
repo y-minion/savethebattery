@@ -8,7 +8,7 @@
 
 Free and open source (MIT). A macOS menu bar app for battery care, with helpers for long terminal coding sessions.
 
-![Save the Battery menu window](docs/images/menu-window.gif)
+![Save the Battery menu window](docs/images/menu-window.png)
 
 ```sh
 curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh
@@ -68,8 +68,6 @@ The script checks your macOS version, downloads `savethebattery.zip` and its che
 2. Drag Save the Battery onto the Applications folder in that window.
 3. Open the app from Applications. macOS says it cannot verify the app; click **Done**.
 4. Open **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to Save the Battery, then confirm. If step 3 showed no warning, go straight here.
-
-![Open Anyway in Privacy & Security](docs/images/open-anyway.png)
 
 You do this once. The app is signed with a free Apple Development certificate, so the signature is valid; it is just not notarized. If you open the app straight from the disk image or from Downloads, it offers to move itself into Applications.
 

@@ -8,7 +8,7 @@
 
 무료 오픈소스(MIT) macOS 메뉴 막대 배터리 관리 앱입니다. 터미널로 오래 코딩할 때 쓰는 도구도 들어 있습니다.
 
-![Save the Battery 메뉴 창](docs/images/menu-window.ko.gif)
+![Save the Battery 메뉴 창](docs/images/menu-window.ko.png)
 
 ```sh
 curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh

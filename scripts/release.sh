@@ -19,7 +19,8 @@ git ls-remote --exit-code --tags origin "refs/tags/v$V" >/dev/null 2>&1 && die "
 STB_RELEASE=1 scripts/build-app.sh
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "dist/Save the Battery.app/Contents/Info.plist")" = "$V" ] || die "The built app is not version $V."
 ARCHS=$(lipo -archs "dist/Save the Battery.app/Contents/MacOS/Save the Battery")
-case " $ARCHS " in *" arm64 "*" x86_64 "*|*" x86_64 "*" arm64 "*) ;; *) die "Binary is not universal: $ARCHS";; esac
+# Each architecture on its own: a single pattern cannot share the space between them.
+for A in arm64 x86_64; do case " $ARCHS " in *" $A "*) ;; *) die "Binary is not universal: $ARCHS";; esac; done
 ( cd dist && shasum -a 256 savethebattery.zip >savethebattery.zip.sha256 && shasum -a 256 savethebattery.dmg >savethebattery.dmg.sha256 )
 cp scripts/install.sh scripts/uninstall.sh dist/
 printf 'Version: %s\nArchs: %s\nSHA-256 zip: %s\nSHA-256 dmg: %s\n' "$V" "$ARCHS" "$(cut -d' ' -f1 dist/savethebattery.zip.sha256)" "$(cut -d' ' -f1 dist/savethebattery.dmg.sha256)"

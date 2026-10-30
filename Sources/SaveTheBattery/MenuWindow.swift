@@ -42,15 +42,19 @@ struct MenuWindow:View {
         VStack(alignment:.leading,spacing:14) {
             ForEach(model.preferences.menuBar.sections.filter(\.visible),id:\.section) { s in section(s.section) }
             Divider()
-            VStack(alignment:.leading,spacing:6) {
-                Button(tr("Open dashboard","대시보드 열기")) { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
-                Button(tr("Copy Claude launch command","Claude 실행 명령 복사")) { model.copyCommand("claude") }
-                Button(tr("Copy Codex launch command","Codex 실행 명령 복사")) { model.copyCommand("codex") }
-                if let u=model.availableUpdate { Button(tr("Update \(u.version)","업데이트 \(u.version)")) { model.show("settings") }.foregroundStyle(.tint) }
-                Button(tr("Quit app","앱 종료")) { NSApp.terminate(nil) }
-            }.buttonStyle(.plain)
-        }.padding(16).frame(width:300).onAppear { model.menuWindowOpen=true }.onDisappear { model.menuWindowOpen=false }
+            VStack(alignment:.leading,spacing:0) {
+                action(tr("Open dashboard","대시보드 열기")) { openWindow(id:"main");NSApp.activate(ignoringOtherApps:true) }
+                action(tr("Copy Claude launch command","Claude 실행 명령 복사")) { model.copyCommand("claude") }
+                action(tr("Copy Codex launch command","Codex 실행 명령 복사")) { model.copyCommand("codex") }
+                if let u=model.availableUpdate { action(tr("Update \(u.version)","업데이트 \(u.version)")) { model.show("settings") }.foregroundStyle(.tint) }
+                action(tr("Quit app","앱 종료")) { NSApp.terminate(nil) }
+            }.buttonStyle(HoverRowStyle(cornerRadius:6)).padding(.horizontal,-8)
+        }.buttonStyle(PageButtonStyle()).padding(16).frame(width:300).onAppear { model.menuWindowOpen=true }.onDisappear { model.menuWindowOpen=false }
             .background(KeyWindowObserver { model.menuWindowOpen=$0 })
+    }
+    /// A full-width row; the negative padding on the list keeps the text aligned with the sections above.
+    func action(_ title:String,_ run:@escaping () -> Void) -> some View {
+        Button(action:run) { Text(title).padding(.vertical,5).padding(.horizontal,8) }
     }
     @ViewBuilder func section(_ s:MenuSection) -> some View {
         switch s {
@@ -86,10 +90,10 @@ struct MenuWindow:View {
                 ForEach(MenuQuick.limits,id:\.self) { l in
                     let on=current==l
                     Button("\(l)") { model.applyCharge(.setLimit(l)) }
-                        .buttonStyle(.bordered).tint(on ? .mint:nil).fontWeight(on ? .bold:.regular)
+                        .buttonStyle(PageButtonStyle(prominent:on))
                         .disabled(!canWrite || (l<ChargeCommand.userFloor && !model.helperStatus.canSetLimit))
                 }
-                Button(tr("Off","끄기")) { model.applyCharge(.clearLimit) }.buttonStyle(.bordered).disabled(!canWrite)
+                Button(tr("Off","끄기")) { model.applyCharge(.clearLimit) }.buttonStyle(PageButtonStyle()).disabled(!canWrite)
             }.controlSize(.small)
             if let b=writeBlock { Text(b).font(.caption).foregroundStyle(model.chargeConflicts.isEmpty ? Color.secondary:Color.orange) }
             else if !model.helperStatus.canSetLimit { Text(tr("Limits below 80% need the helper","80% 미만은 헬퍼가 필요합니다")).font(.caption).foregroundStyle(.secondary) }

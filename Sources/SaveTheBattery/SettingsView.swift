@@ -115,7 +115,7 @@ struct SettingsView:View {
                     Button(tr("Copy install command","설치 명령 복사")) { model.copyInstallCommand() }
                 } else {
                     HStack(spacing:10) {
-                        Button(model.updating ? tr("Updating…","업데이트 중…"):tr("Update now","지금 업데이트")) { Task { await model.installUpdate() } }.buttonStyle(.borderedProminent).disabled(model.updating)
+                        Button(model.updating ? tr("Updating…","업데이트 중…"):tr("Update now","지금 업데이트")) { Task { await model.installUpdate() } }.buttonStyle(PageButtonStyle(prominent:true)).disabled(model.updating)
                         if model.updating { ProgressView().controlSize(.small) }
                     }
                     Text(tr("Downloads the new version from GitHub, checks that it is signed by the same team, then restarts the app.","GitHub에서 새 버전을 받아 같은 팀의 서명인지 확인한 뒤 앱을 다시 시작합니다.")).font(.caption).foregroundStyle(.secondary)

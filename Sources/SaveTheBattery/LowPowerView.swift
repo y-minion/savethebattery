@@ -13,7 +13,7 @@ struct LowPowerView:View {
                 Text(LowPowerText.installsOnFirstUse).font(.caption).foregroundStyle(.secondary)
             } else if let caption=LowPowerText.caption(model.helperStatus) {
                 HStack {
-                    if showsSettingsButton { Button(tr("Open Battery settings","배터리 설정 열기")) { model.openBatterySettings() }.buttonStyle(.bordered).controlSize(.small) }
+                    if showsSettingsButton { Button(tr("Open Battery settings","배터리 설정 열기")) { model.openBatterySettings() }.buttonStyle(PageButtonStyle()).controlSize(.small) }
                     Text(caption).font(.caption).foregroundStyle(.secondary)
                 }
             } else {

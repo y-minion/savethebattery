@@ -27,8 +27,8 @@ struct DashboardView:View {
                 }
                 Spacer()
                 VStack(spacing:8) {
-                    Button(tr("Refresh","새로고침")) { model.refresh() }.buttonStyle(.bordered)
-                    Button(tr("Open battery settings","배터리 설정 열기")) { model.openBatterySettings() }.buttonStyle(.bordered)
+                    Button(tr("Refresh","새로고침")) { model.refresh() }.buttonStyle(PageButtonStyle())
+                    Button(tr("Open battery settings","배터리 설정 열기")) { model.openBatterySettings() }.buttonStyle(PageButtonStyle())
                 }
             }
             Divider()
@@ -42,7 +42,7 @@ struct DashboardView:View {
         Card {
             HStack {
                 Label(tr("Charge","충전"),systemImage:"bolt.batteryblock").font(.headline);Spacer()
-                Button(tr("Open charge management","충전 관리 열기")) { model.section="charge" }.buttonStyle(.bordered)
+                Button(tr("Open charge management","충전 관리 열기")) { model.section="charge" }.buttonStyle(PageButtonStyle())
             }
             Text(ChargeText.limit(model.charge)).font(.title2.weight(.semibold))
             if let why=model.lastChangeText { Text(why).foregroundStyle(.secondary) }
@@ -52,7 +52,7 @@ struct DashboardView:View {
             HStack {
                 Label(tr("Health analysis","건강 분석"),systemImage:"heart.text.square").font(.headline)
                 Spacer()
-                Button(tr("Details","자세히")) { model.section="health" }.buttonStyle(.bordered)
+                Button(tr("Details","자세히")) { model.section="health" }.buttonStyle(PageButtonStyle())
             }
             if let r=model.healthReport {
                 Text(tr("This week vs. last week","이번 주와 지난주 비교")).font(.caption).foregroundStyle(.secondary)

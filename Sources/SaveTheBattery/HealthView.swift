@@ -86,7 +86,7 @@ struct HealthView:View {
                     HStack(alignment:.top) {
                         Text(s.message);Spacer()
                         let t=target(s.kind)
-                        Button(t.1) { model.section=t.0 }.buttonStyle(.bordered)
+                        Button(t.1) { model.section=t.0 }.buttonStyle(PageButtonStyle())
                     }
                 }
                 Toggle(tr("Notify me of new suggestions (the same one at most every 7 days)","새 제안이 생기면 알림 (같은 제안은 7일에 한 번)"),isOn:Binding(get:{ model.preferences.notifications.suggestions },set:{ model.preferences.notifications.suggestions=$0;model.savePreferences() }))

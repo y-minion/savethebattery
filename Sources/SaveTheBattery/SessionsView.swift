@@ -7,7 +7,7 @@ struct SessionsView:View {
         Card {
             Label(tr("Start in iTerm2 or Ghostty","iTerm2 · Ghostty에서 시작"),systemImage:"terminal.fill").font(.headline)
             Text(tr("Copy a command below and run it in Terminal. It uses your existing login and chat tools.","아래 명령을 복사해 터미널에서 실행하세요. 기존 로그인과 대화 도구를 그대로 사용합니다.")).foregroundStyle(.secondary)
-            HStack { Button(tr("Copy Claude command","Claude 명령 복사")) { model.copyCommand("claude") };Button(tr("Copy Codex command","Codex 명령 복사")) { model.copyCommand("codex") } }.buttonStyle(.borderedProminent)
+            HStack { Button(tr("Copy Claude command","Claude 명령 복사")) { model.copyCommand("claude") };Button(tr("Copy Codex command","Codex 명령 복사")) { model.copyCommand("codex") } }.buttonStyle(PageButtonStyle(prominent:true))
             Text(model.command(for:"claude")).font(.system(.caption,design:.monospaced)).textSelection(.enabled).padding(12).frame(maxWidth:.infinity,alignment:.leading).background(Color.primary.opacity(0.04),in:RoundedRectangle(cornerRadius:8))
             Text(tr("Screen lock, closing the lid and your own sleep settings still apply. An AI waiting for your input is not a finished task.","화면 잠금·덮개 닫기·사용자 잠자기 설정은 유지됩니다. 대화형 AI가 입력을 기다리는 상태는 작업 완료가 아닙니다.")).font(.caption).foregroundStyle(.secondary)
         }

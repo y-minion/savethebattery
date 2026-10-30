@@ -33,8 +33,8 @@ struct ScheduleCard:View {
                 ForEach(ChargeScheduleRule.templates(now:Date())) { t in
                     Button { model.addSchedule(t) } label: {
                         HStack { VStack(alignment:.leading,spacing:2) { Text(t.name).font(.body.weight(.medium));Text(ScheduleText.sentence(t)).font(.caption).foregroundStyle(.secondary) };Spacer();Image(systemName:"plus.circle.fill").foregroundStyle(.mint) }
-                            .padding(10).background(Color.mint.opacity(0.08),in:RoundedRectangle(cornerRadius:10))
-                    }.buttonStyle(.plain)
+                            .padding(10)
+                    }.buttonStyle(HoverRowStyle(idle:Color.mint.opacity(0.08)))
                 }
             } else {
                 ForEach(rules) { r in
@@ -44,8 +44,8 @@ struct ScheduleCard:View {
                                 Text(r.name).font(.body.weight(.medium))
                                 Text(ScheduleText.sentence(r)).font(.callout).foregroundStyle(.secondary)
                                 if r.enabled,let n=next(r) { Text(n).font(.caption).foregroundStyle(.tertiary) }
-                            }.frame(maxWidth:.infinity,alignment:.leading).contentShape(Rectangle())
-                        }.buttonStyle(.plain)
+                            }.padding(.vertical,6).padding(.horizontal,8)
+                        }.buttonStyle(HoverRowStyle(cornerRadius:8)).padding(.horizontal,-8)
                         Toggle("",isOn:Binding(get:{ r.enabled },set:{ var c=r;c.enabled=$0;model.updateSchedule(c) })).labelsHidden().toggleStyle(.switch)
                     }
                     .contextMenu { Button(tr("Delete","삭제"),role:.destructive) { model.removeSchedule(id:r.id) } }
@@ -108,13 +108,13 @@ struct ScheduleEditor:View {
                 Text(tr("Days","요일")).font(.headline)
                 HStack {
                     ForEach([(tr("Every day","매일"),Set(1...7)),(tr("Weekdays","평일"),Set(2...6)),(tr("Weekends","주말"),Set([1,7]))],id:\.0) { label,set in
-                        Button(label) { days=set }.buttonStyle(.bordered).tint(days==set ? .mint:.secondary)
+                        Button(label) { days=set }.buttonStyle(PageButtonStyle()).tint(days==set ? .mint:.secondary)
                     }
                 }
                 HStack(spacing:6) {
                     ForEach(dayOrder,id:\.self) { d in
                         Button(dayNames[d]!) { if days.contains(d) { days.remove(d) } else { days.insert(d) } }
-                            .buttonStyle(.borderedProminent).tint(days.contains(d) ? .mint:Color.secondary.opacity(0.35))
+                            .buttonStyle(PageButtonStyle(prominent:true)).tint(days.contains(d) ? .mint:Color.secondary.opacity(0.35))
                     }
                 }
             }
@@ -135,7 +135,7 @@ struct ScheduleEditor:View {
                 if let onDelete { Button(tr("Delete","삭제"),role:.destructive) { onDelete();dismiss() } }
                 Spacer()
                 Button(tr("Cancel","취소")) { dismiss() }.keyboardShortcut(.cancelAction)
-                Button(tr("Save","저장")) { onSave(draft);dismiss() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+                Button(tr("Save","저장")) { onSave(draft);dismiss() }.keyboardShortcut(.defaultAction).buttonStyle(PageButtonStyle(prominent:true))
                     .disabled(days.isEmpty || (rule==nil && others.count>=SchedulePolicy.maxRules))
             }
         }

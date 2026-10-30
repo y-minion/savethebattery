@@ -63,7 +63,7 @@ struct ChargeControlCard:View {
                 Button(installsHelper ? tr("Install helper and apply…","헬퍼 설치 후 적용…"):tr("Apply","적용")) {
                     let limit=target
                     if installsHelper { Task { await model.installHelper { model.applyCharge(.setLimit(limit)) } } } else { model.applyCharge(.setLimit(limit)) }
-                }.buttonStyle(.borderedProminent).disabled(!canWrite || (needsHelper && !installsHelper) || model.helperBusy)
+                }.buttonStyle(PageButtonStyle(prominent:true)).disabled(!canWrite || (needsHelper && !installsHelper) || model.helperBusy)
                 Button(tr("Turn off limit","상한 끄기")) { model.applyCharge(.clearLimit) }.disabled(!canWrite)
             }
             if installsHelper { Text(tr("Limits below 80% use the helper. Applying asks for your password once to install it.","80% 미만 상한은 헬퍼를 씁니다. 적용할 때 암호를 한 번 넣으면 설치됩니다.")).font(.caption).foregroundStyle(.secondary) }

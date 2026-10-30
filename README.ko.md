@@ -14,7 +14,7 @@
 curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh
 ```
 
-**가장 먼저 할 일: 충전 상한을 80%로 맞추세요(Apple Silicon, macOS 26.4 이상).** 메뉴 창에서 충전 상한을 80%로 고르면, Save the Battery가 꺼져 있어도 macOS가 그 값에서 충전을 멈춥니다.
+**가장 먼저 할 일: 충전 상한을 80%로 맞추세요(Apple Silicon, macOS 26.4 이상).** 앱을 처음 열면 **80%로 설정**을 제안하며, 메뉴 창에서 80%를 골라도 됩니다. 그러면 Save the Battery가 꺼져 있어도 macOS가 그 값에서 충전을 멈춥니다.
 
 베타(0.2.0)입니다. 지금까지 Mac 한 대(M4 Pro, macOS 27.0.1)에서 테스트했습니다. 문제는 [이슈로 알려 주세요](https://github.com/y-minion/savethebattery/issues).
 
@@ -67,11 +67,15 @@ curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/i
 1. [`savethebattery.dmg`](https://github.com/y-minion/savethebattery/releases/latest/download/savethebattery.dmg)를 내려받아 엽니다.
 2. 열린 창에서 Save the Battery를 응용 프로그램 폴더 위로 끌어 놓습니다.
 3. 응용 프로그램 폴더에서 앱을 엽니다. macOS가 앱을 확인할 수 없다고 안내하면 **완료**를 누릅니다.
-4. **시스템 설정 › 개인정보 보호 및 보안**을 열고 아래로 내려 Save the Battery 옆의 **그래도 열기**를 누른 뒤 확인합니다.
+4. **시스템 설정 › 개인정보 보호 및 보안**을 열고 아래로 내려 Save the Battery 옆의 **그래도 열기**를 누른 뒤 확인합니다. 3번에서 경고가 뜨지 않았다면 바로 여기로 오세요.
 
 ![개인정보 보호 및 보안의 그래도 열기](docs/images/open-anyway.ko.png)
 
-한 번만 하면 됩니다. 앱은 무료 Apple Development 인증서로 서명되어 서명 자체는 유효하고, 공증만 받지 않은 것입니다.
+한 번만 하면 됩니다. 앱은 무료 Apple Development 인증서로 서명되어 서명 자체는 유효하고, 공증만 받지 않은 것입니다. 디스크 이미지나 다운로드 폴더에서 앱을 바로 열면, 앱이 응용 프로그램 폴더로 스스로 옮기겠다고 제안합니다.
+
+### 업데이트
+
+새 버전이 나오면 **설정 › 업데이트**에 **지금 업데이트** 버튼이 보입니다. 앱이 GitHub에서 새 버전을 받은 뒤, 체크섬이 맞고 같은 팀(`JQWWU7443A`)으로 서명되었으며 안내된 새 버전일 때만 설치하고 다시 시작합니다. 터미널도 Gatekeeper 경고도 필요 없고, 헬퍼도 그대로 남습니다. 직접 빌드한 사본이나 응용 프로그램 폴더 밖의 사본에는 설치 명령을 대신 보여 줍니다.
 
 ## 안전
 
@@ -82,7 +86,7 @@ curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/i
 
 ## 선택 헬퍼
 
-80% 이상 상한, 일정, 한 번 완충은 추가 권한이 필요 없습니다. 80% 미만 상한, 저전력 모드 스위치, MagSafe LED에는 작은 루트 헬퍼가 필요합니다. 그런 기능을 고를 때만 앱 화면에서 macOS 관리자 암호 창으로 설치하며, 몰래 설치하지 않습니다.
+80% 이상 상한, 일정, 한 번 완충은 추가 권한이 필요 없습니다. 80% 미만 상한, 저전력 모드 스위치, MagSafe LED에는 작은 루트 헬퍼가 필요합니다. 그런 기능을 고를 때만 macOS 관리자 암호 창으로 설치합니다. 80% 미만 상한을 고르면 **헬퍼 설치 후 적용** 버튼이 나오고, 저전력 모드 스위치와 LED는 처음 쓸 때 설치합니다. 몰래 설치하지 않으며, 업데이트해도 그대로 남습니다. 헬퍼 프로토콜 버전이 바뀔 때만 다시 설치하면 됩니다.
 
 - 정해진 요청만 받습니다: 상한 값 쓰기, 상태 읽기, 버전 읽기, 저전력 모드 전환, 네 가지 값 중 하나로 LED 설정. 셸을 실행하지 않고 SMC 키 하나(`ACLC`, 값 0·1·3·4)만 씁니다.
 - 현재 로그인 사용자가 실행한 `/Applications/Save the Battery.app`의 요청만 받고, 공식 빌드는 서명 팀 `JQWWU7443A`로 고정됩니다. 직접 빌드한(임시 서명) 사본은 팀 고정이 없으며 그렇게 알려 줍니다.
@@ -130,7 +134,7 @@ stb run --hours 4 --screen-off -- claude
 
 ## 개인정보
 
-원격 측정도 계정도 없습니다. 기록과 세션은 `~/Library/Application Support/savethebattery`에만 저장합니다. 네트워크 요청은 새 버전을 확인하려고 하루 한 번 `api.github.com`을 부르는 것뿐이며, 식별 정보는 보내지 않습니다. 설정에서 끌 수 있습니다. 네트워크 실패는 조용히 넘어가고, 자동으로 설치하는 것은 없습니다.
+원격 측정도 계정도 없습니다. 기록과 세션은 `~/Library/Application Support/savethebattery`에만 저장합니다. 새 버전을 확인하려고 하루 한 번 `api.github.com`을 부르며, 식별 정보는 보내지 않습니다. 설정에서 끌 수 있습니다. 새 버전은 '지금 업데이트'를 눌렀을 때만 GitHub에서 내려받습니다. 네트워크 실패는 조용히 넘어가고, 자동으로 설치하는 것은 없습니다.
 
 ## 더 보기
 

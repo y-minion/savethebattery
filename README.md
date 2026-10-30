@@ -14,7 +14,7 @@ Free and open source (MIT). A macOS menu bar app for battery care, with helpers 
 curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/install.sh | sh
 ```
 
-**First thing: set the limit to 80% (Apple silicon, macOS 26.4 or later).** Open the menu window and pick 80% as the charge limit. macOS then stops charging there, even when Save the Battery is not running.
+**First thing: set the limit to 80% (Apple silicon, macOS 26.4 or later).** The app offers **Set 80%** when you first open it, or pick 80% in the menu window. macOS then stops charging there, even when Save the Battery is not running.
 
 This is a beta (0.2.0). It has been tested on one Mac so far (an M4 Pro with macOS 27.0.1). Please [report problems](https://github.com/y-minion/savethebattery/issues).
 
@@ -67,11 +67,15 @@ The script checks your macOS version, downloads `savethebattery.zip` and its che
 1. Download [`savethebattery.dmg`](https://github.com/y-minion/savethebattery/releases/latest/download/savethebattery.dmg) and open it.
 2. Drag Save the Battery onto the Applications folder in that window.
 3. Open the app from Applications. macOS says it cannot verify the app; click **Done**.
-4. Open **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to Save the Battery, then confirm.
+4. Open **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to Save the Battery, then confirm. If step 3 showed no warning, go straight here.
 
 ![Open Anyway in Privacy & Security](docs/images/open-anyway.png)
 
-You do this once. The app is signed with a free Apple Development certificate, so the signature is valid; it is just not notarized.
+You do this once. The app is signed with a free Apple Development certificate, so the signature is valid; it is just not notarized. If you open the app straight from the disk image or from Downloads, it offers to move itself into Applications.
+
+### Updates
+
+When a new version is out, **Settings › Updates** shows **Update now**. The app downloads the release from GitHub and installs it only if the checksum matches, the app is signed by the same team (`JQWWU7443A`) and it is the announced newer version. Then it restarts. There is no Terminal step and no Gatekeeper prompt, and the helper stays installed. A self-built copy, or a copy outside Applications, shows the install command instead.
 
 ## Safety
 
@@ -82,7 +86,7 @@ You do this once. The app is signed with a free Apple Development certificate, s
 
 ## The optional helper
 
-A limit of 80% or more, schedules and the one-time full charge need no extra rights. Limits below 80%, the Low Power Mode switch and the MagSafe LED need a small root helper. The app installs it from its own screen with the standard macOS administrator-password dialog, and only if you choose such a feature. It is never installed silently.
+A limit of 80% or more, schedules and the one-time full charge need no extra rights. Limits below 80%, the Low Power Mode switch and the MagSafe LED need a small root helper. The app installs it with the standard macOS administrator-password dialog, only when you choose such a feature: picking a limit below 80% offers **Install helper and apply**, and the Low Power Mode switch and LED install it on first use. It is never installed silently, and updates keep it; it needs reinstalling only when its protocol version changes.
 
 - It accepts only fixed requests: write a limit, read state, read version, switch Low Power Mode, set the LED to one of four values. It runs no shell and writes one SMC key (`ACLC`, values 0, 1, 3, 4).
 - It serves only `/Applications/Save the Battery.app`, run by the logged-in user, and official builds are pinned to the signing team `JQWWU7443A`. A self-built (ad-hoc) copy is not team-pinned, and says so.
@@ -130,7 +134,7 @@ Exit codes: 0 success, 1 failed or unverified, 2 usage error, 3 app not running.
 
 ## Privacy
 
-There is no telemetry and no account. History and sessions are stored only in `~/Library/Application Support/savethebattery`. The one network request is a daily check of `api.github.com` for a new version, with no identifying data; you can turn it off in Settings. Network failures are silent, and nothing is installed automatically.
+There is no telemetry and no account. History and sessions are stored only in `~/Library/Application Support/savethebattery`. The app makes a daily check of `api.github.com` for a new version, with no identifying data; you can turn it off in Settings. It downloads a new version from GitHub only when you click Update now. Network failures are silent, and nothing is installed automatically.
 
 ## More
 

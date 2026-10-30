@@ -97,10 +97,51 @@ Not claimed as validated: real high-temperature heat hold, physical display beha
 
 ## Free distribution (2026-10-28)
 
-Build facts: Apple's timestamp server accepted the development certificate (`codesign -dvv` shows `Timestamp=` and `TeamIdentifier=JQWWU7443A`); the build is universal (x86_64 arm64). The five validation steps from the design are not yet checked on a device.
+Build facts: Apple's timestamp server accepted the development certificate (`codesign -dvv` shows `Timestamp=` and `TeamIdentifier=JQWWU7443A`); the build is universal (x86_64 arm64).
 
-1. Install from a clean state: the one-liner, then the browser zip with the "Open Anyway" flow. Not yet checked.
-2. Language: switch macOS to English and check the UI, notifications, Shortcuts and `stb`, then switch back. Not yet checked.
-3. Helper pinning: reinstall the helper; an ad-hoc-signed copy of the app is refused by the pinned helper; the official build works (limit 70, Low Power Mode, LED). Not yet checked.
-4. Version notice: point the version check at a fake older version and confirm the notice appears. Not yet checked.
-5. Uninstall: run `uninstall.sh`; the app, helper and LaunchDaemon are gone and the data is kept or removed per the answer. Not yet checked.
+On-device results (M4 Pro, macOS 27.0.1, 2026-10-29 to 2026-10-31; the user did the clicks):
+
+1. **Install from a clean state.**
+   - The installer replaced the running app from a local release (`STB_RELEASE_BASE=file://…`).
+   - A browser-style download passed:
+     - the zip with a `com.apple.quarantine` flag, unzipped and dragged to Applications;
+     - "Open Anyway" in System Settings;
+     - the app ran with the approved quarantine flag (`01c3`).
+   - The one-liner against a real GitHub release can only be checked after the first release.
+2. **Language.** In English, the UI, notifications, Shortcuts and `stb` passed. In Korean, Shortcuts passed after the rename.
+3. **Helper pinning.**
+   - Reinstalling from the in-app button showed a confirmation.
+   - An ad-hoc copy was refused by the team-pinned helper (exit 1).
+   - The official build set 70%, switched Low Power Mode and set the LED.
+4. **Version notice and update.** "Update now" ran against a local feed (`STB_RELEASE_FEED`) with a team-signed 0.2.1 build. The app:
+   - downloaded it, verified it and swapped it in;
+   - restarted as 0.2.1 with no password and no Gatekeeper prompt;
+   - left no quarantine flag;
+   - had the old copy and temp files removed;
+   - kept the helper answering (`stb charge set 70`).
+
+   The GitHub path can only be checked after the first release.
+5. **Uninstall.** `uninstall.sh` answered N, then the password, then N. The app, the helper and the LaunchDaemon were gone. History (717 KB) and settings were kept, and the 70% limit stayed in force.
+
+## Rename and easy install (2026-10-30 to 2026-10-31)
+
+- **Rename to Save the Battery** (bundle ID `io.github.y-minion.savethebattery`, CLI `stb`):
+  - the data folder was moved to `~/Library/Application Support/savethebattery`;
+  - the old helper was removed and the new one installed from the app;
+  - CI passed on the renamed branch.
+- **Disk image.**
+  - **Signed image refused:** a signed but unnotarized image was refused by Gatekeeper when a quarantined copy was opened (`spctl` "rejected", no mount).
+  - **Unsigned image mounts:** an unsigned image mounted. Since then, `build-app.sh` leaves the image unsigned and `test-install.sh` checks that it stays so.
+  - **No warning shown:** opening the app inside the image showed no warning dialog. "Open Anyway" was in System Settings and worked.
+- **Move to Applications:**
+  - **From the disk image.** The app ran translocated. The dashboard card (at the top; it was scrolled out of view at first) moved it. Then:
+    - the copy in Applications had no quarantine flag;
+    - the image was untouched;
+    - the translocation mount was gone.
+
+    A launch prompt was added afterwards because the card was easy to miss.
+  - **From the build folder.** The launch prompt appeared and moved the app. The original went to the Trash.
+- **Set 80% card.** It appeared after "Turn off limit" and set 80% without the helper.
+- **Install helper and apply.** After the helper was removed, choosing 70% showed "Install helper and apply". One password installed the helper and applied 70%.
+  - The macOS dialog reads "'Save the Battery'이(가) 시작한 스크립트에 대해 관리자 접근 권한을 허용하시겠습니까?". It names the app; the custom `with prompt` text is not shown on this macOS.
+- **App icon.** It ships in the asset catalog (`AppIcon.icns`, `Assets.car`).

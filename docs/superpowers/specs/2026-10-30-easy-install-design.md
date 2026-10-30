@@ -175,3 +175,11 @@ The file work (download, extract, verify, swap) goes in BatteryPlatform. It is t
 - "Install helper and apply" for 70%.
 - Update now, against an `STB_RELEASE_FEED` pointing at a locally built newer version (for example 0.2.1), signed with the team.
 - After the update, there is no quarantine flag and no prompt, and the helper still answers.
+
+## Changes after on-device testing (2026-10-31)
+
+- **The DMG stays unsigned.** Gatekeeper refuses to open a signed but unnotarized disk image downloaded in a browser. An unsigned image mounts, and only the signed app inside is checked.
+- **Move drops the quarantine flag** from the copy instead of keeping it. With the flag, macOS would run the moved copy from a random App Translocation path again. The user already chose to run this app, so this weakens nothing they did not approve.
+- **Move also asks at launch.** The dashboard card was missed on the device (it was scrolled out of view), so a copy outside Applications now shows an alert at launch; the card stays for "Not now".
+- **The password dialog text is set by macOS.** It names the app ("'Save the Battery' … administrator access") and does not show the `with prompt` text on macOS 27.
+

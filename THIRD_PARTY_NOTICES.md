@@ -1,6 +1,6 @@
 # Third-party references
 
-VibeBattery's current implementation is original code under the MIT license. It has no bundled third-party packages. Apple platform SDKs are linked as system frameworks.
+Save the Battery's current implementation is original code under the MIT license. It has no bundled third-party packages. Apple platform SDKs are linked as system frameworks.
 
 The following upstream projects were researched, but their source code or binaries are not bundled:
 

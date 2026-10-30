@@ -10,7 +10,7 @@ public enum ChargeCommand: Equatable, Sendable {
     public var endsTopUp:Bool { switch self { case .setLimit,.clearLimit:return true;default:return false } }
     public var requiresHelper:Bool { if case .setLimit(let p)=self { return p<Self.userFloor };return false }
 }
-public enum LimitOrigin: String, Codable, Sendable { case vibeBattery, external, none, unknown }
+public enum LimitOrigin: String, Codable, Sendable { case saveTheBattery, external, none, unknown }
 public struct ChargeLimitState: Codable, Equatable, Sendable {
     public var supported:Bool?;public var enabled:Bool?;public var limit:Int?
     public init(supported:Bool?=nil,enabled:Bool?=nil,limit:Int?=nil) { self.supported=supported;self.enabled=enabled;self.limit=limit }
@@ -18,7 +18,7 @@ public struct ChargeLimitState: Codable, Equatable, Sendable {
         guard supported==true,let enabled else { return .unknown }
         if !enabled { return .none }
         guard let limit else { return .unknown }
-        return lastWritten==limit ? .vibeBattery:.external
+        return lastWritten==limit ? .saveTheBattery:.external
     }
     /// A one-time full charge as macOS reports it: off, or (observed on the target) on at 100%.
     public var allowsFullCharge:Bool { enabled==false || (enabled==true && limit==100) }

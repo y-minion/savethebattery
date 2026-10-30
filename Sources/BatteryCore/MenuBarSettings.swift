@@ -11,20 +11,20 @@ public enum MenuBarStatus: Equatable, Sendable {
 public enum MenuIconStyle: String, Codable, CaseIterable, Sendable {
     case iconAndPercent, iconOnly, percentOnly
     public var title: String {
-        switch self { case .iconAndPercent: "아이콘 + 잔량"; case .iconOnly: "아이콘만"; case .percentOnly: "잔량만" }
+        switch self { case .iconAndPercent: tr("Icon + percent","아이콘 + 잔량"); case .iconOnly: tr("Icon only","아이콘만"); case .percentOnly: tr("Percent only","잔량만") }
     }
 }
 public enum MenuSection: String, Codable, CaseIterable, Sendable {
     case status, power, limit, topUp, lowPower, battery, sessions
     public var title: String {
         switch self {
-        case .status: "잔량과 상태"
-        case .power: "전력 흐름"
-        case .limit: "충전 상한 바로 바꾸기"
-        case .topUp: "한 번 완충과 다음 일정"
-        case .lowPower: "저전력 모드"
-        case .battery: "배터리 정보"
-        case .sessions: "바이브 코딩 작업"
+        case .status: tr("Charge and status","잔량과 상태")
+        case .power: tr("Power flow","전력 흐름")
+        case .limit: tr("Quick charge limit","충전 상한 바로 바꾸기")
+        case .topUp: tr("Top up once and next schedule","한 번 완충과 다음 일정")
+        case .lowPower: tr("Low Power Mode","저전력 모드")
+        case .battery: tr("Battery info","배터리 정보")
+        case .sessions: tr("Vibe coding tasks","바이브 코딩 작업")
         }
     }
     public var defaultVisible: Bool { self != .topUp }

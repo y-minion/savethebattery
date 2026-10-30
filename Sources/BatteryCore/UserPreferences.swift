@@ -1,11 +1,13 @@
 import Foundation
 public struct UserPreferences: Codable {
-    public var hours=4.0;public var screenOff=true;public var cleanup=false;public var backgroundHistory=true
+    public var hours=4.0;public var screenOff=true;public var cleanup=false;public var backgroundHistory=true;public var checkUpdates=true
     public var heat=HeatSettings()
     public var notifications=NotificationSettings()
     public var schedules:[ChargeScheduleRule]=[]
     public var menuBar=MenuBarSettings()
     public var led=LEDSettings()
+    /// The user closed the first-run "Set 80%" card.
+    public var limitTipDismissed=false
     public init() {}
     // Files written before a field existed must keep the user's other choices.
     public init(from decoder:Decoder) throws {
@@ -14,11 +16,13 @@ public struct UserPreferences: Codable {
         screenOff=try c.decodeIfPresent(Bool.self,forKey:.screenOff) ?? true
         cleanup=try c.decodeIfPresent(Bool.self,forKey:.cleanup) ?? false
         backgroundHistory=try c.decodeIfPresent(Bool.self,forKey:.backgroundHistory) ?? true
+        checkUpdates=try c.decodeIfPresent(Bool.self,forKey:.checkUpdates) ?? true
         heat=try c.decodeIfPresent(HeatSettings.self,forKey:.heat) ?? HeatSettings()
         notifications=try c.decodeIfPresent(NotificationSettings.self,forKey:.notifications) ?? NotificationSettings()
         schedules=(try? c.decodeIfPresent([LossyElement<ChargeScheduleRule>].self,forKey:.schedules))?.compactMap(\.value) ?? []
         menuBar=(try? c.decodeIfPresent(MenuBarSettings.self,forKey:.menuBar)) ?? MenuBarSettings()
         led=(try? c.decodeIfPresent(LEDSettings.self,forKey:.led)) ?? LEDSettings()
+        limitTipDismissed=(try? c.decodeIfPresent(Bool.self,forKey:.limitTipDismissed)) ?? false
     }
     public mutating func validate() { if !hours.isFinite || hours<=0 || hours>168 { hours=4 };heat.validate();notifications.validate()
         schedules=Array(schedules.filter(\.isValid).prefix(SchedulePolicy.maxRules))

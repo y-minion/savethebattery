@@ -1,22 +1,34 @@
 import Foundation
 public enum HelperPolicy {
-    public static let label="io.github.y-minion.vibebattery.helper"
-    public static let appIdentifier="io.github.y-minion.vibebattery"
-    // Ad-hoc builds have no team ID, so the requirement pins only the identifier.
-    // Developer ID signing must add the team (spec section 8).
-    public static let clientRequirement="identifier \"io.github.y-minion.vibebattery\""
-    public static let helperRequirement="identifier \"io.github.y-minion.vibebattery.helper\""
-    public static let appPrefix="/Applications/VibeBattery.app/"
-    public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.vibebattery.helper.plist"
-    /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED.
-    public static let protocolVersion=2
+    public static let label="io.github.y-minion.savethebattery.helper"
+    public static let appIdentifier="io.github.y-minion.savethebattery"
+    public static let helperIdentifier="io.github.y-minion.savethebattery.helper"
+    /// Code signing requirement for a peer. With a team it must also be Apple-anchored and signed by that team;
+    /// ad-hoc builds have no team, so they pin only the identifier. An unreadable signature matches nothing.
+    public static func requirement(identifier:String,signing:SigningTeam) -> String {
+        switch signing {
+        case .team(let team):return "identifier \"\(identifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(team)\""
+        case .adHoc:return "identifier \"\(identifier)\""
+        case .unknown:return "identifier \"\(identifier)\" and never"
+        }
+    }
+    /// What the helper demands of the app.
+    public static func clientRequirement(_ signing:SigningTeam) -> String { requirement(identifier:appIdentifier,signing:signing) }
+    /// What the app demands of the helper.
+    public static func helperRequirement(_ signing:SigningTeam) -> String { requirement(identifier:helperIdentifier,signing:signing) }
+    /// The only copy the helper serves, and the one the installer, Move and Update put in place.
+    public static let appPath="/Applications/Save the Battery.app"
+    public static let appPrefix=appPath+"/"
+    public static let daemonPlist="/Library/LaunchDaemons/io.github.y-minion.savethebattery.helper.plist"
+    /// 1: setLimit and readState. 2: adds version, setLowPowerMode and setMagSafeLED. 3: replies are `HelperReply` codes and the helper is team-pinned.
+    public static let protocolVersion=3
     public static func allows(clientUID:UInt32,consoleUID:UInt32?,clientPath:String?) -> Bool {
         guard let consoleUID,consoleUID != 0,clientUID==consoleUID,let clientPath else { return false }
         return (clientPath as NSString).standardizingPath.hasPrefix(appPrefix)
     }
 }
 public enum HelperStatus: Equatable, Sendable {
-    /// `outdated`: an older helper that still sets limits but lacks the version 2 requests.
+    /// `outdated`: a helper that predates the current protocol; it still sets limits, but the app asks for a reinstall.
     case notInstalled, wrongLocation, unreachable, outdated, ready
     /// The helper only answers the app in /Applications, so probing from elsewhere would only fail.
     /// A helper without a version answer predates version 2.
@@ -27,6 +39,14 @@ public enum HelperStatus: Equatable, Sendable {
         return (version() ?? 1)<HelperPolicy.protocolVersion ? .outdated:.ready
     }
     public var canSetLimit:Bool { self == .ready || self == .outdated }
+    /// Confirmation after the install or remove script exits 0; nil when the helper is not in the state the script was for.
+    public func confirmation(afterInstall install:Bool) -> String? {
+        switch (install,self) {
+        case (true,.ready):return tr("The helper is installed and ready.","헬퍼를 설치했습니다. 바로 사용할 수 있습니다.")
+        case (false,.notInstalled):return tr("The helper is removed.","헬퍼를 제거했습니다.")
+        default:return nil
+        }
+    }
 }
 /// MagSafe 3 LED values the helper may write. `init(rawValue:)` is the allow-list.
 public enum MagSafeLED: Int, Codable, CaseIterable, Sendable {

@@ -9,15 +9,15 @@ public struct RunOptions {
             switch a {
             case "--hours":
                 i+=1
-                guard i<arguments.count,let n=Double(arguments[i]),n.isFinite,n>0,n<=168 else { throw OptionError.invalid("--hours: 0보다 크고 168 이하인 시간을 지정하세요.") }
+                guard i<arguments.count,let n=Double(arguments[i]),n.isFinite,n>0,n<=168 else { throw OptionError.invalid(tr("--hours: give a number of hours above 0 and up to 168.","--hours: 0보다 크고 168 이하인 시간을 지정하세요.")) }
                 result.hours=n
             case "--screen-off":result.screenOff=true
             case "--cleanup":result.cleanup=true
             case "--allow-battery":result.allowBattery=true
-            default:throw OptionError.invalid("알 수 없는 옵션: \(a)")
+            default:throw OptionError.invalid(tr("Unknown option: \(a)","알 수 없는 옵션: \(a)"))
             }; i+=1
         }
-        guard let first=result.command.first,!first.isEmpty else { throw OptionError.invalid("-- 뒤에 실행할 명령을 지정하세요.") }
+        guard let first=result.command.first,!first.isEmpty else { throw OptionError.invalid(tr("Give the command to run after --.","-- 뒤에 실행할 명령을 지정하세요.")) }
         return result
     }
 }

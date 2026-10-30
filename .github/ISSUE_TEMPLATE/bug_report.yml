@@ -1,0 +1,38 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: input
+    id: mac
+    attributes:
+      label: Mac model
+      description: For example MacBook Pro (M4 Pro, 2024). Apple menu › About This Mac.
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: For example 27.0.1
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Save the Battery version
+      description: Shown in the app's Settings, on the Updates card (for example 0.2.0).
+  - type: textarea
+    id: status
+    attributes:
+      label: Output of `stb charge status`
+      description: Run "/Applications/Save the Battery.app/Contents/MacOS/stb" charge status and paste the output.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Steps to reproduce help a lot. Screenshots are welcome.
+    validations:
+      required: true

@@ -17,7 +17,7 @@ struct ChargeControlTests {
     }
     @Test func originDistinguishesOwnExternalAndUnknown() {
         #expect(ChargeLimitState(supported:true,enabled:true,limit:79).origin(lastWritten:nil) == .external)
-        #expect(ChargeLimitState(supported:true,enabled:true,limit:80).origin(lastWritten:80) == .vibeBattery)
+        #expect(ChargeLimitState(supported:true,enabled:true,limit:80).origin(lastWritten:80) == .saveTheBattery)
         #expect(ChargeLimitState(supported:true,enabled:false,limit:80).origin(lastWritten:80) == LimitOrigin.none)
         #expect(ChargeLimitState().origin(lastWritten:80) == .unknown)
         #expect(ChargeLimitState(supported:false,enabled:true,limit:80).origin(lastWritten:80) == .unknown)

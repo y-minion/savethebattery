@@ -27,14 +27,16 @@ public struct LowPowerSettings: Equatable, Sendable {
 }
 /// Screen text for the Low Power Mode switch.
 public enum LowPowerText {
-    public static let needsUpdate="헬퍼를 업데이트하면 여기서 바로 바꿀 수 있습니다."
-    public static let failed="저전력 모드를 바꾸지 못했습니다."
-    public static let conditional="지금은 배터리/전원 어댑터에 따라 다르게 설정되어 있습니다. 여기서 바꾸면 항상 켜짐 또는 항상 꺼짐이 됩니다."
+    public static var needsUpdate:String { tr("Reinstall the helper: this version only accepts the official Save the Battery app.","헬퍼를 다시 설치해 주세요. 이 버전은 공식 Save the Battery 앱만 받아들입니다.") }
+    public static var failed:String { tr("Could not change Low Power Mode.","저전력 모드를 바꾸지 못했습니다.") }
+    public static var conditional:String { tr("It is currently set differently for battery and power adapter. Changing it here makes it always on or always off.","지금은 배터리/전원 어댑터에 따라 다르게 설정되어 있습니다. 여기서 바꾸면 항상 켜짐 또는 항상 꺼짐이 됩니다.") }
     /// Why the switch is unavailable; nil when the helper is ready.
     public static func caption(_ s:HelperStatus) -> String? {
-        switch s { case .ready:nil; case .outdated:"헬퍼 업데이트가 필요합니다"; default:"헬퍼를 설치하면 여기서 바로 바꿀 수 있습니다" }
+        switch s { case .ready:nil; case .outdated:tr("Helper update needed","헬퍼 업데이트가 필요합니다"); default:tr("Install the helper to change this here.","헬퍼를 설치하면 여기서 바로 바꿀 수 있습니다") }
     }
-    public static let highPower="여기서 끄면 고성능 대신 자동으로 바뀝니다."
+    /// Under a control that installs the helper on first use.
+    public static var installsOnFirstUse:String { tr("The first change asks for your password once to install the helper.","처음 바꿀 때 암호를 한 번 넣으면 헬퍼가 설치됩니다.") }
+    public static var highPower:String { tr("Turning it off here switches to Automatic instead of High Power.","여기서 끄면 고성능 대신 자동으로 바뀝니다.") }
     /// Captions to show under the switch.
     public static func notes(_ s:LowPowerSettings) -> [String] { (s.isConditional ? [conditional]:[])+(s.isHighPower ? [highPower]:[]) }
     /// Text for a switch request that cannot go to the helper; never the "update" text for a missing or unreachable helper.
@@ -42,10 +44,10 @@ public enum LowPowerText {
         switch s {
         case .ready:failed
         case .outdated:needsUpdate
-        case .unreachable:"헬퍼에 연결하지 못했습니다. 설정 › 충전에서 다시 확인해 주세요."
-        case .wrongLocation:"앱을 /Applications에 옮겨야 헬퍼를 쓸 수 있습니다."
+        case .unreachable:tr("Could not reach the helper. Check again in Settings › Charge.","헬퍼에 연결하지 못했습니다. 설정 › 충전에서 다시 확인해 주세요.")
+        case .wrongLocation:tr("Move the app to /Applications to use the helper.","앱을 /Applications에 옮겨야 헬퍼를 쓸 수 있습니다.")
         case .notInstalled:caption(s) ?? failed
         }
     }
-    public static func done(_ on:Bool) -> String { on ? "저전력 모드를 켰습니다.":"저전력 모드를 껐습니다." }
+    public static func done(_ on:Bool) -> String { on ? tr("Low Power Mode turned on.","저전력 모드를 켰습니다."):tr("Low Power Mode turned off.","저전력 모드를 껐습니다.") }
 }

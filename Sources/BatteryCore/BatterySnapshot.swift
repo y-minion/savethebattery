@@ -13,7 +13,7 @@ public struct BatterySnapshot: Codable, Sendable {
     public var healthPrecise: Double?
     public var designCapacity: Int?
     public var designCycles: Int?
-    /// Kept out of JSON so pasted `vbctl status --json` output and history files carry no device identifier.
+    /// Kept out of JSON so pasted `stb status --json` output and history files carry no device identifier.
     public var batteryID: String?
     /// Raw RemainingCapacity / FullChargeCapacity, the percentage the battery hardware itself reports (macOS's `percent` is smoothed).
     public var hardwarePercent: Int?
@@ -37,7 +37,7 @@ public struct BatterySnapshot: Codable, Sendable {
         if let design, design > 0, design < 1e9 { result.designCapacity = Int(design) }
         result.designCycles = (values["DesignCycleCount9C"] as? NSNumber)?.intValue
         if let serial = values["Serial"] as? String, !serial.isEmpty { result.batteryID = BatteryIdentity.hash(serial) }
-        if let raw = number("Temperature"), raw > 0, raw / 100 < 100 { result.temperature = raw / 100; result.temperatureSource = "IORegistry 배터리 센서" }
+        if let raw = number("Temperature"), raw > 0, raw / 100 < 100 { result.temperature = raw / 100; result.temperatureSource = tr("IORegistry battery sensor","IORegistry 배터리 센서") }
         if let voltage = number("Voltage"), let current = (values["InstantAmperage"] ?? values["Amperage"]) as? NSNumber {
             let signed = Int64(bitPattern: current.uint64Value)
             if abs(Double(signed)) < 100000, voltage > 0, voltage < 100000 { result.watts = voltage * Double(signed) / 1_000_000 }

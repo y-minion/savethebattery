@@ -3,7 +3,7 @@ import Foundation
 @testable import BatteryCore
 @testable import BatteryPlatform
 struct NotificationStoreTests {
-    func url() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("vb-notify-\(UUID().uuidString)/notify.json") }
+    func url() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("stb-notify-\(UUID().uuidString)/notify.json") }
     @Test func savesPrivatelyAndOnlyWhenChanged() throws {
         let u=url();let store=NotificationStore(url:u)
         var m=store.read();#expect(m==NotificationMemory())

@@ -1,0 +1,3 @@
+"${applicationName} limit 80%" = "${applicationName} 상한 80%";
+"${applicationName} one-time full charge" = "${applicationName} 한 번 완충";
+"${applicationName} battery status" = "${applicationName} 배터리 상태";

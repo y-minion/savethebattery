@@ -47,13 +47,13 @@ public enum NotificationPolicy {
         o.memory.wasCharging=b.charging
         let origin=i.limit.origin(lastWritten:i.lastWritten)
         if origin != .unknown {
-            // Only a change VibeBattery did not write itself: its own writes move `lastWritten`, and top-up and a yielded hold explain themselves.
-            if o.memory.origin == .vibeBattery,origin == .external || origin == .none,o.memory.lastWritten==i.lastWritten,
+            // Only a change Save the Battery did not write itself: its own writes move `lastWritten`, and top-up and a yielded hold explain themselves.
+            if o.memory.origin == .saveTheBattery,origin == .external || origin == .none,o.memory.lastWritten==i.lastWritten,
                o.memory.chargeWrites==i.chargeWrites,!toppingUp,i.heatEvent != .yielded {
                 let t=NotificationText.limitChanged(origin == .none ? nil:i.limit.limit)
                 o.send(s.limitChanged,AlertEvent(id:"charge.limitChanged",title:t.0,body:t.1,section:"dashboard",thread:"charge"))
             }
-            if origin == .vibeBattery,let before=o.memory.origin,before != .vibeBattery { o.remove("charge.limitChanged") }
+            if origin == .saveTheBattery,let before=o.memory.origin,before != .saveTheBattery { o.remove("charge.limitChanged") }
             o.memory.origin=origin;o.memory.lastWritten=i.lastWritten;o.memory.chargeWrites=i.chargeWrites
         }
         if i.limit.supported==true {
@@ -174,7 +174,7 @@ public enum NotificationPolicy {
             let key=g.kind.rawValue
             guard o.memory.suggestionSent[key].map({ now.timeIntervalSince($0)>=suggestionRepeat }) ?? true else { continue }
             o.memory.suggestionSent[key]=now
-            o.send(s.suggestions,AlertEvent(id:"health.suggestion.\(key)",title:"배터리 관리 제안",body:g.message,section:"health",thread:"health"))
+            o.send(s.suggestions,AlertEvent(id:"health.suggestion.\(key)",title:tr("Battery care suggestion","배터리 관리 제안"),body:g.message,section:"health",thread:"health"))
         }
         if let u=i.week,u.observed>0,let w=week(now,i.calendar),now>=w.opens,o.memory.weekKey != w.key {
             o.memory.weekKey=w.key

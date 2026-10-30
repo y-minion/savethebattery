@@ -1,4 +1,5 @@
 import Foundation
+import BatteryCore
 import AppKit
 import MacBridge
 public struct ProcessSample: Identifiable, Sendable {
@@ -37,8 +38,8 @@ public final class ProcessReader {
         guard let app=NSRunningApplication(processIdentifier:sample.id),
               app.activationPolicy == .regular,
               let current=one(sample.id),sample.identity.canTerminate(current:current.identity,user:geteuid(),name:current.name),
-              !app.isTerminated else { throw PlatformError.message("앱이 변경되었거나 보호 대상입니다. 일반 백그라운드 프로세스는 활성 상태 보기에서 확인하세요.") }
-        guard force ? app.forceTerminate():app.terminate() else { throw PlatformError.message("앱이 종료 요청을 수락하지 않았습니다.") }
+              !app.isTerminated else { throw PlatformError.message(tr("The app changed or is protected. Check regular background processes in Activity Monitor.","앱이 변경되었거나 보호 대상입니다. 일반 백그라운드 프로세스는 활성 상태 보기에서 확인하세요.")) }
+        guard force ? app.forceTerminate():app.terminate() else { throw PlatformError.message(tr("The app did not accept the quit request.","앱이 종료 요청을 수락하지 않았습니다.")) }
     }
     public static func canRequestTermination(_ sample:ProcessSample) -> Bool {
         sample.identity.canTerminate(current:sample.identity,user:geteuid(),name:sample.name) && NSRunningApplication(processIdentifier:sample.id)?.activationPolicy == .regular

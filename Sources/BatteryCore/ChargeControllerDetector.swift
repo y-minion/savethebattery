@@ -13,8 +13,8 @@ public enum ChargeControllerDetector {
     public static func detect(runningBundleIDs:[String],systemItems:[String]) -> [OtherChargeController] {
         rules.compactMap { r -> OtherChargeController? in
             func matches(_ s:String) -> Bool { let s=s.lowercased();return r.prefixes.contains { s.hasPrefix($0) } }
-            if let id=runningBundleIDs.first(where:matches) { return .init(name:r.name,evidence:"실행 중: \(id)") }
-            if let item=systemItems.first(where:{ matches(($0 as NSString).lastPathComponent) }) { return .init(name:r.name,evidence:"설치됨: \(item)") }
+            if let id=runningBundleIDs.first(where:matches) { return .init(name:r.name,evidence:tr("Running: \(id)","실행 중: \(id)")) }
+            if let item=systemItems.first(where:{ matches(($0 as NSString).lastPathComponent) }) { return .init(name:r.name,evidence:tr("Installed: \(item)","설치됨: \(item)")) }
             return nil
         }
     }

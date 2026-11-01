@@ -58,7 +58,8 @@ struct RootView:View {
                     default:DashboardView()
                     }
                 }.padding(30).frame(maxWidth:.infinity,alignment:.leading).buttonStyle(PageButtonStyle()).disclosureGroupStyle(HoverDisclosureStyle())
-            }.background(Color(nsColor:.windowBackgroundColor))
+            }.id(model.section) // a fresh scroll view per tab, so every tab opens at the top
+            .background(Color(nsColor:.windowBackgroundColor))
         }.alert("Save the Battery",isPresented:Binding(get:{model.message != nil},set:{if !$0 {model.message=nil}})) { Button(tr("OK","확인")) { model.message=nil } } message: { Text(model.message ?? "") }
     }
 }

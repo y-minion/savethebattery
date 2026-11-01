@@ -41,6 +41,18 @@ struct AppInstallTests {
         #expect(!FileManager.default.fileExists(atPath:d.appendingPathComponent("apps/.App.app.new").path))
         #expect(!FileManager.default.fileExists(atPath:d.appendingPathComponent("apps/.App.app.old").path))
     }
+    @Test func relaunchDropsTestSettings() async throws {
+        let d=try dir();defer { try? FileManager.default.removeItem(at:d) }
+        let dump=d.appendingPathComponent("dump.sh"),out=d.appendingPathComponent("env.txt")
+        try Data("#!/bin/sh\nenv > \"$1\"\n".utf8).write(to:dump)
+        try FileManager.default.setAttributes([.posixPermissions:0o755],ofItemAtPath:dump.path)
+        setenv("STB_TEST_LEAK","1",1);defer { unsetenv("STB_TEST_LEAK") }
+        try Relauncher.openAfterExit(out,removing:[],pid:99_999_999,opener:dump.path)
+        for _ in 0..<40 where !FileManager.default.fileExists(atPath:out.path) { try await Task.sleep(for:.milliseconds(100)) }
+        let env=try String(contentsOf:out,encoding:.utf8)
+        #expect(!env.contains("STB_TEST_LEAK"))
+        #expect(env.contains("PATH="))
+    }
     @Test func relaunchWaitsForTheProcessThenCleansUp() async throws {
         let d=try dir();defer { try? FileManager.default.removeItem(at:d) }
         let waiter=Process();waiter.executableURL=URL(fileURLWithPath:"/bin/sleep");waiter.arguments=["0.6"];try waiter.run()

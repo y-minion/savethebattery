@@ -5,7 +5,7 @@ struct DashboardView:View {
     static var hardwareCaption:String { tr("macOS adjusts the displayed value to protect the battery. This is the remaining capacity the battery itself reports.","macOS는 배터리 보호를 위해 표시 값을 조정합니다. 이 값은 배터리가 직접 보고한 남은 용량입니다.") }
     @EnvironmentObject var model:AppModel
     var body:some View {
-        PageTitle(title:tr("Battery today","배터리의 오늘"),subtitle:tr("Check the state from real readings and charge only as much as you need.","실제 측정값으로 상태를 확인하고, 필요한 만큼만 충전하세요."))
+        PageTitle(title:tr("Battery today","배터리 현황"),subtitle:tr("Check the state from real readings and charge only as much as you need.","실제 측정값으로 상태를 확인하고, 필요한 만큼만 충전하세요."))
         if model.showsMoveCard { MoveToApplicationsCard() }
         if model.suggestsLimit { LimitTipCard() }
         Card {

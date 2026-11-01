@@ -145,3 +145,21 @@ On-device results (M4 Pro, macOS 27.0.1, 2026-10-29 to 2026-10-31; the user did 
 - **Install helper and apply.** After the helper was removed, choosing 70% showed "Install helper and apply". One password installed the helper and applied 70%.
   - The macOS dialog reads "'Save the Battery'이(가) 시작한 스크립트에 대해 관리자 접근 권한을 허용하시겠습니까?". It names the app; the custom `with prompt` text is not shown on this macOS.
 - **App icon.** It ships in the asset catalog (`AppIcon.icns`, `Assets.car`).
+
+## Release 0.2.0 (2026-10-31 to 2026-11-01)
+
+- **Release:** `scripts/release.sh 0.2.0` built and checked the release:
+  - the universal binary, after PR #8 fixed the architecture check;
+  - timestamped team signatures;
+  - checksums.
+
+  The final publish prompt needs a terminal, so the tag and `gh release create` were run by hand with the same arguments. The release is not a prerelease, and it carries 6 assets.
+- **Download links:** every `releases/latest/download/` link answers 200. The latest-release API returns v0.2.0 with its assets.
+- **Site:** GitHub Pages serves the English and Korean pages, both with the copy button.
+- **One-liner from GitHub:** it installed the released build on the target Mac:
+  - the CDHash matches `dist`;
+  - the app is team-signed with a timestamp;
+  - it has no quarantine flag;
+  - the helper still writes 70%.
+- **Update now from GitHub:** with `STB_FAKE_CURRENT_VERSION=0.1.0`, the app downloaded v0.2.0 from the release, verified it, swapped it in and restarted (user-confirmed).
+  - The restarted copy inherited the test variable through `open`. 0.2.1 strips `STB_*` variables before relaunching.

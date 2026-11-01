@@ -49,6 +49,8 @@ public enum Relauncher {
         let p=Process();p.executableURL=URL(fileURLWithPath:"/bin/sh")
         p.arguments=["-c",script,"relaunch",String(pid),opener,app.path]+cleanup.map(\.path)
         p.standardInput=FileHandle.nullDevice;p.standardOutput=FileHandle.nullDevice;p.standardError=FileHandle.nullDevice
+        // The new copy must not inherit test settings such as STB_FAKE_CURRENT_VERSION or STB_RELEASE_FEED.
+        p.environment=ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("STB_") }
         try p.run()
     }
 }

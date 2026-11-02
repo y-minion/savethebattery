@@ -17,7 +17,9 @@ git rev-parse -q --verify "refs/tags/v$V" >/dev/null && die "Tag v$V already exi
 git ls-remote --exit-code --tags origin "refs/tags/v$V" >/dev/null 2>&1 && die "Tag v$V already exists on origin."
 [ -f "docs/release-notes/$V.md" ] || die "docs/release-notes/$V.md is missing."
 STB_RELEASE=1 scripts/build-app.sh
-[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "dist/Save the Battery.app/Contents/Info.plist")" = "$V" ] || die "The built app is not version $V."
+for K in CFBundleShortVersionString CFBundleVersion; do
+    [ "$(/usr/libexec/PlistBuddy -c "Print :$K" "dist/Save the Battery.app/Contents/Info.plist")" = "$V" ] || die "The built app's $K is not $V."
+done
 ARCHS=$(lipo -archs "dist/Save the Battery.app/Contents/MacOS/Save the Battery")
 # Each architecture on its own: a single pattern cannot share the space between them.
 for A in arm64 x86_64; do case " $ARCHS " in *" $A "*) ;; *) die "Binary is not universal: $ARCHS";; esac; done

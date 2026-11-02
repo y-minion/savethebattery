@@ -163,3 +163,16 @@ On-device results (M4 Pro, macOS 27.0.1, 2026-10-29 to 2026-10-31; the user did 
   - the helper still writes 70%.
 - **Update now from GitHub:** with `STB_FAKE_CURRENT_VERSION=0.1.0`, the app downloaded v0.2.0 from the release, verified it, swapped it in and restarted (user-confirmed).
   - The restarted copy inherited the test variable through `open`. 0.2.1 strips `STB_*` variables before relaunching.
+
+## App icon cache (2026-11-01 to 2026-11-02)
+
+- **Symptom:** after updating to 0.2.1, Finder's Applications list and the Dock showed the generic app icon. The bundle itself was fine: `AppIcon.icns` and `Assets.car` were present, and NSWorkspace drew the new icon from the file.
+- **Cause:** Launch Services had cached this Mac's first, icon-less build and saw nothing new afterwards:
+  - every build had `CFBundleVersion` 1;
+  - Xcode keeps the product bundle's first build date, and `ditto` copies that date along, so every installed copy carried the same date.
+- **On this Mac:** `touch`, `lsregister -f` and a Dock restart brought the icon back (user-confirmed).
+- **Fix in 0.2.2:**
+  - `CFBundleVersion` follows `MARKETING_VERSION`, and `release.sh` checks both.
+  - The build, `install.sh` and the app's own swap (Move to Applications, Update now) give the bundle a new date.
+  - `install.sh` and the app register the new copy with Launch Services.
+  - `swapMarksTheCopyAsNew` and `test-install.sh` (fed a bundle dated 2001) check the new date.

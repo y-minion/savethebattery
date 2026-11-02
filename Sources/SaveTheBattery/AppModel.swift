@@ -281,6 +281,7 @@ import BatteryPlatform
         let original=AppLocation.original(),installed=URL(fileURLWithPath:HelperPolicy.appPath)
         let old:URL?
         do { old=try BundleSwap.install(original,at:installed) } catch { message=error.localizedDescription;return }
+        AppLocation.register(installed)
         let relaunch={ @MainActor [weak self] in
             do { try Relauncher.openAfterExit(installed,removing:old.map { [$0] } ?? []);NSApp.terminate(nil) }
             catch { self?.message=error.localizedDescription }

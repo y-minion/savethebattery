@@ -33,6 +33,16 @@ struct AppInstallTests {
         #expect(try BundleSwap.install(src,at:dest)==nil)
         #expect(marker(dest)=="new")
     }
+    @Test func swapMarksTheCopyAsNew() throws {
+        let d=try dir();defer { try? FileManager.default.removeItem(at:d) }
+        let src=d.appendingPathComponent("App.app"),dest=d.appendingPathComponent("apps/App.app")
+        try FileManager.default.createDirectory(at:dest.deletingLastPathComponent(),withIntermediateDirectories:true)
+        try bundle(src,"new")
+        try FileManager.default.setAttributes([.modificationDate:Date(timeIntervalSinceNow:-86_400*30)],ofItemAtPath:src.path)
+        _=try BundleSwap.install(src,at:dest)
+        let date=try FileManager.default.attributesOfItem(atPath:dest.path)[.modificationDate] as? Date
+        #expect(date.map { $0.timeIntervalSinceNow > -60 }==true)
+    }
     @Test func failedCopyLeavesTheInstalledAppAlone() throws {
         let d=try dir();defer { try? FileManager.default.removeItem(at:d) }
         let dest=d.appendingPathComponent("apps/App.app");try bundle(dest,"old")

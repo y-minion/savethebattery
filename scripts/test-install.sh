@@ -9,7 +9,10 @@ trap 'hdiutil detach -quiet "$T/mnt" 2>/dev/null || true; chmod -R u+w "$T" 2>/d
 export STB_LANG=en STB_SKIP_OPEN=1
 fail() { echo "FAIL: $1" >&2; exit 1; }
 REL=$T/release; mkdir "$REL"
-cp dist/savethebattery.zip "$REL/"
+# An old bundle date, as Xcode leaves it: the installed copy must still get a new one.
+mkdir "$T/x"; ditto -x -k dist/savethebattery.zip "$T/x"
+touch -t 200101010000 "$T/x/Save the Battery.app"
+ditto -c -k --keepParent "$T/x/Save the Battery.app" "$REL/savethebattery.zip"
 ( cd "$REL" && shasum -a 256 savethebattery.zip >savethebattery.zip.sha256 )
 
 # 1. good install, twice into the same dir (second run replaces the first)
@@ -18,6 +21,7 @@ for run in 1 2; do
     STB_RELEASE_BASE="file://$REL" STB_INSTALL_DIR="$D" sh "$ROOT/scripts/install.sh" >"$T/out1" 2>&1 || { cat "$T/out1"; fail "install $run failed"; }
     [ -d "$D/Save the Battery.app" ] || fail "app missing after run $run"
     codesign --verify --strict "$D/Save the Battery.app" || fail "signature check after run $run"
+    [ $(( $(date +%s) - $(stat -f %m "$D/Save the Battery.app") )) -lt 600 ] || fail "bundle date not refreshed after run $run"
     [ ! -e "$D/.Save the Battery.app.new" ] && [ ! -e "$D/.Save the Battery.app.old" ] || fail "staging left behind after run $run"
 done
 

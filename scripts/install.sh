@@ -43,6 +43,10 @@ if ! mv "$DIR/.$NAME.new" "$APP"; then
     msg "Could not put the new app in place. The previous version was restored." "새 앱을 설치하지 못했습니다. 이전 버전을 복원했습니다." >&2; exit 1
 fi
 rm -rf "$DIR/.$NAME.old"
+# ditto keeps the download's date; a new one makes Finder and the Dock read the icon again instead of a cached one.
+touch "$APP"
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+[ ! -x "$LSREGISTER" ] || "$LSREGISTER" -f "$APP" >/dev/null 2>&1 || true
 msg "Installed $APP" "$APP 에 설치했습니다."
 [ -n "${STB_SKIP_OPEN:-}" ] || open "$APP"
 msg "To uninstall: curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/uninstall.sh | sh" "제거하려면: curl -fsSL https://github.com/y-minion/savethebattery/releases/latest/download/uninstall.sh | sh"

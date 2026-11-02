@@ -1,4 +1,5 @@
 import Foundation
+import CoreServices
 import BatteryCore
 /// Puts a new copy of the app in place for Move to Applications and the in-app update.
 public enum BundleSwap {
@@ -21,6 +22,8 @@ public enum BundleSwap {
         try? fm.removeItem(at:staged);try? fm.removeItem(at:old)
         guard fm.fileExists(atPath:source.path),run("/usr/bin/ditto",[source.path,staged.path]) else { try? fm.removeItem(at:staged);throw Failure.copy }
         _=run("/usr/bin/xattr",["-d","-r","com.apple.quarantine",staged.path])
+        // ditto keeps the source's date, and Launch Services rereads the icon only for a bundle whose date changed.
+        try? fm.setAttributes([.modificationDate:Date()],ofItemAtPath:staged.path)
         var moved:URL?
         if fm.fileExists(atPath:destination.path) {
             do { try fm.moveItem(at:destination,to:old);moved=old }
@@ -69,4 +72,6 @@ public enum AppLocation {
     /// Unknown counts as read-only, so an unreadable location is never trashed.
     public static func onReadOnlyVolume(_ url:URL) -> Bool { (try? url.resourceValues(forKeys:[.volumeIsReadOnlyKey]))?.volumeIsReadOnly ?? true }
     public static var applicationsWritable:Bool { FileManager.default.isWritableFile(atPath:"/Applications") }
+    /// Has Launch Services read a copy just put in place, so Finder and the Dock show its icon rather than a cached one.
+    public static func register(_ app:URL) { _=LSRegisterURL(app as CFURL,true) }
 }

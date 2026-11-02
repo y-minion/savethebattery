@@ -24,6 +24,8 @@ STB_STAGE=$(mktemp -d "${TMPDIR:-/tmp}/savethebattery-build.XXXXXX")
 trap 'rm -rf "$STB_STAGE"' EXIT
 STB_APP="$STB_STAGE/Save the Battery.app"
 ditto --norsrc --noextattr "$STB_DERIVED/Build/Products/Release/Save the Battery.app" "$STB_APP"
+# Xcode keeps the bundle's first build date, and Launch Services rereads the icon only when that date changes.
+touch "$STB_APP"
 codesign --force $STB_TS --sign "$STB_SIGN_IDENTITY" "$STB_APP/Contents/MacOS/stb"
 # The helper only trusts its own identifier; Xcode signs tools with a generated one.
 codesign --force $STB_TS --sign "$STB_SIGN_IDENTITY" --identifier io.github.y-minion.savethebattery.helper "$STB_APP/Contents/MacOS/STBChargeHelper"

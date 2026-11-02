@@ -40,6 +40,7 @@ public enum AppUpdater {
             guard let v=NSDictionary(contentsOf:app.appendingPathComponent("Contents/Info.plist"))?["CFBundleShortVersionString"] as? String,
                   AppUpdate.acceptsVersion(bundle:v,tag:release.tag,current:current) else { throw Failure.version }
             let old=try BundleSwap.install(app,at:URL(fileURLWithPath:HelperPolicy.appPath))
+            AppLocation.register(URL(fileURLWithPath:HelperPolicy.appPath))
             return (old.map { [$0] } ?? [])+[work]
         } catch { try? fm.removeItem(at:work);throw error }
     }

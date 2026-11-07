@@ -73,7 +73,7 @@ struct DashboardView:View {
         Card {
             Label(tr("Power flow","전력 흐름"),systemImage:"bolt.horizontal").font(.headline)
             // PowerBar carries the headline, adapter text and legend.
-            if let p=PowerSummary.make(model.battery) { PowerBar(summary:p) }
+            if let p=PowerSummary.make(model.battery,limit:model.activeLimit) { PowerBar(summary:p) }
             else { Text(tr("Power flow cannot be read on this Mac","이 맥에서는 전력 흐름을 읽을 수 없습니다")).foregroundStyle(.secondary) }
         }
         Card {

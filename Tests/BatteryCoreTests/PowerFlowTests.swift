@@ -31,6 +31,31 @@ struct PowerFlowTests {
             #expect(s.segments.last?.label=="배터리에서 5 W")
         }
     }
+    @Test func aboveTheLimitExplainsTheBatteryUse() {
+        AppLanguage.$forced.withValue(.ko) {
+            var b=BatterySnapshot();b.onAC=true;b.percent=76;b.watts = -10
+            b.power=PowerReading(adapterWatts:68,inputW:0.3)
+            let s=PowerSummary.make(b,limit:70)!
+            #expect(s.headline=="충전기 연결됨 · 배터리에서 10 W 사용")
+            #expect(s.segments==[.batteryToMac(10)])
+            #expect(s.note=="배터리가 상한 70%보다 높아 충전기 대신 배터리를 씁니다. 70%가 되면 충전기 전원으로 돌아갑니다.")
+            b.power=PowerReading(inputW:0)
+            #expect(PowerSummary.make(b,limit:70)?.segments==[.batteryToMac(10)])
+        }
+    }
+    @Test func noNoteAtOrBelowTheLimitOrWithoutOne() {
+        AppLanguage.$forced.withValue(.ko) {
+            var b=BatterySnapshot();b.onAC=true;b.percent=70;b.watts = -5
+            b.power=PowerReading(inputW:20)
+            #expect(PowerSummary.make(b,limit:70)?.note==nil)
+            b.percent=76
+            #expect(PowerSummary.make(b)?.note==nil)
+            b.watts=0.1
+            #expect(PowerSummary.make(b,limit:70)?.note==nil)
+            var c=BatterySnapshot();c.onAC=true;c.percent=76;c.watts=0.1;c.power=PowerReading(inputW:0)
+            #expect(PowerSummary.make(c,limit:70)==nil)
+        }
+    }
     @Test func onBatteryIgnoresAdapterKeys() {
         AppLanguage.$forced.withValue(.ko) {
             var b=BatterySnapshot();b.onAC=false;b.watts = -7

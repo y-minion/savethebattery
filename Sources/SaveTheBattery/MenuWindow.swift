@@ -32,6 +32,7 @@ struct PowerBar:View {
                 }
             }
             if let a=summary.adapter { Text(a).font(.caption).foregroundStyle(.secondary) }
+            if let n=summary.note { Text(n).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true) }
         }
     }
 }
@@ -60,7 +61,7 @@ struct MenuWindow:View {
         switch s {
         case .status:statusSection
         case .power:
-            if let p=PowerSummary.make(model.battery) { PowerBar(summary:p,compact:true) }
+            if let p=PowerSummary.make(model.battery,limit:model.activeLimit) { PowerBar(summary:p,compact:true) }
         case .limit:limitSection
         case .topUp:topUpSection
         case .lowPower:LowPowerView()

@@ -20,6 +20,8 @@ import BatteryPlatform
     @Published var section="dashboard"
     @Published var sampled=false
     @Published var charge=ChargeLimitState()
+    /// The limit macOS is holding the battery to, nil when none is on.
+    var activeLimit:Int? { charge.enabled==true ? charge.limit:nil }
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled

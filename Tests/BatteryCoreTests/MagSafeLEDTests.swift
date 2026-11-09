@@ -14,6 +14,7 @@ struct MagSafeLEDTests {
         var s=LEDSettings();s.mode = .perState
         #expect(MagSafeLEDPolicy.target(s,status:.charging) == .orange)
         #expect(MagSafeLEDPolicy.target(s,status:.paused) == .green)
+        #expect(MagSafeLEDPolicy.target(s,status:.pluggedDischarging) == .green)
         #expect(MagSafeLEDPolicy.target(s,status:.heatHold) == .orange)
         #expect(MagSafeLEDPolicy.target(s,status:.onBattery) == nil)
     }

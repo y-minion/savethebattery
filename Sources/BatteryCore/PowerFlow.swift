@@ -23,22 +23,54 @@ public enum PowerSegment: Equatable, Sendable {
         }
     }
 }
+public enum BatteryFlow: Equatable, Sendable { case idle, charging(Double), discharging(Double) }
 public struct PowerSummary: Equatable, Sendable {
     public var headline: String
     public var adapter: String?
     public var segments: [PowerSegment]
-    public static func make(_ b: BatterySnapshot) -> PowerSummary? {
+    /// Why the battery is in use while plugged in, when that is the charge limit at work.
+    public var note: String? = nil
+    public var pluggedIn = true
+    /// What the charger supplies, nil when unplugged.
+    public var chargerW: Double? {
+        guard pluggedIn else { return nil }
+        return segments.reduce(0) { sum, s in
+            switch s { case .adapterToMac(let w), .adapterToBattery(let w): return sum + w; case .batteryToMac: return sum }
+        }
+    }
+    /// What the Mac itself draws, from the charger and the battery together.
+    public var macW: Double {
+        segments.reduce(0) { sum, s in
+            switch s { case .adapterToMac(let w), .batteryToMac(let w): return sum + w; case .adapterToBattery: return sum }
+        }
+    }
+    public var battery: BatteryFlow {
+        for s in segments {
+            switch s { case .adapterToBattery(let w): return .charging(w); case .batteryToMac(let w): return .discharging(w); case .adapterToMac: continue }
+        }
+        return .idle
+    }
+    /// `limit` is the charge limit in force, if any.
+    public static func make(_ b: BatterySnapshot, limit: Int? = nil) -> PowerSummary? {
         func w(_ v: Double) -> String { String(format: "%.0f", v) }
         if b.onAC {
-            guard let input = b.power?.inputW, input > 0 else { return nil }
-            guard let battery = b.watts else { return nil }
+            guard let input = b.power?.inputW, let battery = b.watts else { return nil }
+            var note: String?
+            if battery <= -0.5, let limit, let percent = b.percent, percent > limit {
+                note = tr("The battery is above the \(limit)% limit, so it is used instead of the charger. At \(limit)% the Mac goes back to charger power.","배터리가 상한 \(limit)%보다 높아 충전기 대신 배터리를 씁니다. \(limit)%가 되면 충전기 전원으로 돌아갑니다.")
+            }
+            // Under a watt from the charger is noise; the battery alone is running the Mac.
+            if input < 0.5 {
+                guard battery <= -0.5 else { return nil }
+                return PowerSummary(headline: tr("Charger connected · \(w(-battery)) W from battery","충전기 연결됨 · 배터리에서 \(w(-battery)) W 사용"), adapter: adapterText(b.power), segments: [.batteryToMac(-battery)], note: note)
+            }
             let enter = tr("\(w(input)) W in from the charger","충전기에서 \(w(input)) W 들어옴")
             if battery >= 0.5 { return PowerSummary(headline: enter, adapter: adapterText(b.power), segments: [.adapterToMac(max(0, input - battery)), .adapterToBattery(battery)]) }
             if battery > -0.5 { return PowerSummary(headline: enter, adapter: adapterText(b.power), segments: [.adapterToMac(input)]) }
-            return PowerSummary(headline: tr("Charger \(w(input)) W + battery \(w(-battery)) W in use","충전기 \(w(input)) W + 배터리 \(w(-battery)) W 사용"), adapter: adapterText(b.power), segments: [.adapterToMac(input), .batteryToMac(-battery)])
+            return PowerSummary(headline: tr("Charger \(w(input)) W + battery \(w(-battery)) W in use","충전기 \(w(input)) W + 배터리 \(w(-battery)) W 사용"), adapter: adapterText(b.power), segments: [.adapterToMac(input), .batteryToMac(-battery)], note: note)
         }
         guard let battery = b.watts else { return nil }
-        return PowerSummary(headline: tr("Using \(w(abs(battery))) W from battery","배터리에서 \(w(abs(battery))) W 사용"), adapter: nil, segments: [.batteryToMac(abs(battery))])
+        return PowerSummary(headline: tr("Using \(w(abs(battery))) W from battery","배터리에서 \(w(abs(battery))) W 사용"), adapter: nil, segments: [.batteryToMac(abs(battery))], pluggedIn: false)
     }
     private static func adapterText(_ p: PowerReading?) -> String? {
         guard let watts = p?.adapterWatts else { return nil }

@@ -2,39 +2,6 @@ import SwiftUI
 import AppKit
 import BatteryCore
 import BatteryPlatform
-/// Proportional power flow; reused by the dashboard.
-struct PowerBar:View {
-    let summary:PowerSummary
-    var compact=false
-    private func color(_ s:PowerSegment) -> Color {
-        switch s { case .adapterToMac:.green; case .adapterToBattery:.blue; case .batteryToMac:.orange }
-    }
-    private func watts(_ s:PowerSegment) -> Double {
-        switch s { case .adapterToMac(let w),.adapterToBattery(let w),.batteryToMac(let w):w }
-    }
-    var body:some View {
-        VStack(alignment:.leading,spacing:compact ? 6:10) {
-            Text(summary.headline).font(compact ? .callout.weight(.medium):.headline)
-            let total=max(summary.segments.map(watts).reduce(0,+),0.001)
-            // Tiny segments still show at 8% so they are not lost.
-            let shares=summary.segments.map { max(watts($0)/total,0.08) }
-            let sum=shares.reduce(0,+)
-            GeometryReader { g in
-                HStack(spacing:2) {
-                    ForEach(Array(summary.segments.enumerated()),id:\.offset) { i,s in
-                        RoundedRectangle(cornerRadius:3).fill(color(s)).frame(width:max(0,(g.size.width-CGFloat(summary.segments.count-1)*2)*shares[i]/sum))
-                    }
-                }
-            }.frame(height:compact ? 8:12)
-            HStack(spacing:10) {
-                ForEach(Array(summary.segments.enumerated()),id:\.offset) { _,s in
-                    HStack(spacing:4) { Circle().fill(color(s)).frame(width:6,height:6);Text(s.label).font(.caption).foregroundStyle(.secondary) }
-                }
-            }
-            if let a=summary.adapter { Text(a).font(.caption).foregroundStyle(.secondary) }
-        }
-    }
-}
 struct MenuWindow:View {
     @EnvironmentObject var model:AppModel
     @Environment(\.openWindow) var openWindow
@@ -60,7 +27,7 @@ struct MenuWindow:View {
         switch s {
         case .status:statusSection
         case .power:
-            if let p=PowerSummary.make(model.battery) { PowerBar(summary:p,compact:true) }
+            if let p=PowerSummary.make(model.battery,limit:model.activeLimit) { PowerFlowView(summary:p,percent:model.battery.percent,compact:true) }
         case .limit:limitSection
         case .topUp:topUpSection
         case .lowPower:LowPowerView()

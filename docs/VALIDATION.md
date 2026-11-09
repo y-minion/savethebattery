@@ -176,3 +176,8 @@ On-device results (M4 Pro, macOS 27.0.1, 2026-10-29 to 2026-10-31; the user did 
   - The build, `install.sh` and the app's own swap (Move to Applications, Update now) give the bundle a new date.
   - `install.sh` and the app register the new copy with Launch Services.
   - `swapMarksTheCopyAsNew` and `test-install.sh` (fed a bundle dated 2001) check the new date.
+
+## Power flow and menu bar state (2026-11-03 to 2026-11-09)
+
+- **Above the limit while plugged in:** after the Mac had been off, the battery read 76% with a 70% limit. macOS did not charge; it ran the Mac from the battery (about −0.8 A, "Charger 0 W + battery 10 W") until 70%, then held there with about 20 W from the charger and 0 A at the battery. The power flow now explains this state and the menu bar shows it as On battery.
+- **On this Mac (user-confirmed):** the power flow picture in the menu window and on the dashboard, the dashboard order (power flow right under the battery card), and the menu bar showing "🔌 70% 유지" at a size that reads at a glance.

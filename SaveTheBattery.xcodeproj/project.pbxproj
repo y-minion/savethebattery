@@ -22,6 +22,7 @@
 		4BD6FA39C6CD232741C0D19A /* STBChargeHelper in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 04C71120913552A1CBB194C9 /* STBChargeHelper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4FD536F0E7BF3D84CDDC99EB /* SessionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CA60BF2BC009ADB1F855F1 /* SessionsView.swift */; };
 		59EEA59A51ABFEE5861EDD0B /* BatteryPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = 0A31DDB498B073456A49C28A /* BatteryPlatform */; };
+		5DE3867521FEA79C42C898B2 /* PowerFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752CB9CB27372A6E9A1419C5 /* PowerFlowView.swift */; };
 		661DFDF2BBFB2C5BD1D51EC6 /* ProcessesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798EC32A4216C3583FC109E3 /* ProcessesView.swift */; };
 		6ABFF352EF4CD0B228B21EDB /* stb in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = C395AC3194A19EE6BF6A77D3 /* stb */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6AECF67E8712FAA22E7970E2 /* BatteryCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2501B27DDDA02E103076FB16 /* BatteryCore */; };
@@ -93,6 +94,7 @@
 		5BEA6C2B1D337D206565BDAB /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
 		65D359F47CEAACEAFFC13E0E /* ChildCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildCommand.swift; sourceTree = "<group>"; };
 		684533C8EFAC3C0E6F6CE323 /* Main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Main.swift; sourceTree = "<group>"; };
+		752CB9CB27372A6E9A1419C5 /* PowerFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerFlowView.swift; sourceTree = "<group>"; };
 		76C4145F423A7D190FB64B1F /* SessionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRunner.swift; sourceTree = "<group>"; };
 		798EC32A4216C3583FC109E3 /* ProcessesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessesView.swift; sourceTree = "<group>"; };
 		8DB5FEAA95BA5346D03D10B8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 				A681645864EB5568D6E45D37 /* MenuBarIcon.swift */,
 				AD632A9D4BF4A7DB66FF6C46 /* MenuWindow.swift */,
 				B3D0F526B0D7F264748F16DC /* Notifier.swift */,
+				752CB9CB27372A6E9A1419C5 /* PowerFlowView.swift */,
 				798EC32A4216C3583FC109E3 /* ProcessesView.swift */,
 				50CA60BF2BC009ADB1F855F1 /* SessionsView.swift */,
 				AB5526414D2B613308588678 /* SettingsView.swift */,
@@ -408,6 +411,7 @@
 				E07FA06ABCC0A29EFD5D3B7B /* MenuBarIcon.swift in Sources */,
 				BE15238CE30AB8ECA0433884 /* MenuWindow.swift in Sources */,
 				9F2F0A124BD4F9D64B2ACCCB /* Notifier.swift in Sources */,
+				5DE3867521FEA79C42C898B2 /* PowerFlowView.swift in Sources */,
 				661DFDF2BBFB2C5BD1D51EC6 /* ProcessesView.swift in Sources */,
 				4FD536F0E7BF3D84CDDC99EB /* SessionsView.swift in Sources */,
 				D8DDFD1D3CC1D8504C48959A /* SettingsView.swift in Sources */,
@@ -520,7 +524,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.2.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -598,7 +602,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.2.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;

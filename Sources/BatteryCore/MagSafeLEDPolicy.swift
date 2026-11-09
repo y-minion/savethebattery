@@ -30,7 +30,7 @@ public enum MagSafeLEDPolicy {
         case .system: return nil
         case .off: return .off
         case .perState:
-            switch status { case .charging: return s.charging.led; case .paused: return s.paused.led; case .heatHold: return s.heat.led; case .onBattery: return nil }
+            switch status { case .charging: return s.charging.led; case .paused, .pluggedDischarging: return s.paused.led; case .heatHold: return s.heat.led; case .onBattery: return nil }
         }
     }
     /// The value to write now, or nil when nothing changed. `dirty` means an earlier run may have left a non-system value behind.

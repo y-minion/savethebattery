@@ -20,6 +20,8 @@ import BatteryPlatform
     @Published var section="dashboard"
     @Published var sampled=false
     @Published var charge=ChargeLimitState()
+    /// The limit macOS is holding the battery to, nil when none is on.
+    var activeLimit:Int? { charge.enabled==true ? charge.limit:nil }
     @Published var chargeConflicts:[OtherChargeController]=[]
     @Published var loginItem=false
     @Published var helperStatus=HelperStatus.notInstalled
@@ -37,7 +39,7 @@ import BatteryPlatform
     /// When the last update check started, successful or not; in memory only.
     private var lastUpdateCheck:Date?
     var openMain:(()->Void)?
-    var menuStatus:MenuBarStatus { .make(onAC:battery.onAC,charging:battery.charging,heatHolding:chargeController.record.heat.holdLimit != nil) }
+    var menuStatus:MenuBarStatus { .make(onAC:battery.onAC,charging:battery.charging,heatHolding:chargeController.record.heat.holdLimit != nil,batteryWatts:battery.watts) }
     var activeSessions:[SessionRecord] { sessions.filter { $0.ended==nil && ownerAlive($0) } }
     private var menuTimer:Timer?
     /// While the menu window is open the battery is read every 2 s; the 5 s tick is unchanged.

@@ -56,6 +56,23 @@ struct PowerFlowTests {
             #expect(PowerSummary.make(c,limit:70)==nil)
         }
     }
+    @Test func diagramValues() {
+        AppLanguage.$forced.withValue(.ko) {
+            func make(_ ac:Bool,_ watts:Double,_ input:Double?,percent:Int=50,limit:Int?=nil) -> PowerSummary? {
+                var b=BatterySnapshot();b.onAC=ac;b.watts=watts;b.percent=percent;b.power=PowerReading(inputW:input);return PowerSummary.make(b,limit:limit)
+            }
+            let charging=make(true,14,32)!
+            #expect(charging.chargerW==32);#expect(charging.macW==18);#expect(charging.battery == .charging(14))
+            let holding=make(true,0.2,20)!
+            #expect(holding.chargerW==20);#expect(holding.macW==20);#expect(holding.battery == .idle)
+            let both=make(true,-5,20)!
+            #expect(both.chargerW==20);#expect(both.macW==25);#expect(both.battery == .discharging(5))
+            let above=make(true,-10,0.3,percent:76,limit:70)!
+            #expect(above.chargerW==0);#expect(above.macW==10);#expect(above.battery == .discharging(10))
+            let unplugged=make(false,-7,nil)!
+            #expect(unplugged.chargerW==nil);#expect(unplugged.macW==7);#expect(unplugged.battery == .discharging(7))
+        }
+    }
     @Test func onBatteryIgnoresAdapterKeys() {
         AppLanguage.$forced.withValue(.ko) {
             var b=BatterySnapshot();b.onAC=false;b.watts = -7

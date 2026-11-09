@@ -34,6 +34,12 @@ struct DashboardView:View {
             Divider()
             LowPowerView(showsSettingsButton:false)
         }
+        Card {
+            Label(tr("Power flow","전력 흐름"),systemImage:"bolt.horizontal").font(.headline)
+            // PowerFlowView carries the headline, adapter text and note.
+            if let p=PowerSummary.make(model.battery,limit:model.activeLimit) { PowerFlowView(summary:p,percent:model.battery.percent) }
+            else { Text(tr("Power flow cannot be read on this Mac","이 맥에서는 전력 흐름을 읽을 수 없습니다")).foregroundStyle(.secondary) }
+        }
         HStack(alignment:.top,spacing:16) {
             metric(tr("Capacity-based health","용량 기반 건강도"),value:model.battery.health.map { "\($0)%" } ?? "—",footnote:tr("Estimate against design capacity","설계 용량 대비 추정치"),symbol:"heart.fill")
             metric(tr("Battery temperature","배터리 온도"),value:model.battery.temperature.map { String(format:"%.1f°C",$0) } ?? "—",footnote:model.battery.temperatureSource ?? tr("Sensor unavailable","센서 조회 불가"),symbol:"thermometer.medium")
@@ -69,12 +75,6 @@ struct DashboardView:View {
                     ForEach(Array(ChargeLimitExplainer.sources.enumerated()),id:\.offset) { _,s in Link(s.title,destination:s.url).font(.caption) }
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(.top,4)
             }
-        }
-        Card {
-            Label(tr("Power flow","전력 흐름"),systemImage:"bolt.horizontal").font(.headline)
-            // PowerBar carries the headline, adapter text and legend.
-            if let p=PowerSummary.make(model.battery,limit:model.activeLimit) { PowerBar(summary:p) }
-            else { Text(tr("Power flow cannot be read on this Mac","이 맥에서는 전력 흐름을 읽을 수 없습니다")).foregroundStyle(.secondary) }
         }
         Card {
             HStack { Text(tr("Recent charge history","최근 잔량 이력")).font(.headline);Spacer();Text(tr("Stored on this device only","기기에만 저장")).font(.caption).foregroundStyle(.secondary) }

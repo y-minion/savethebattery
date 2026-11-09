@@ -24,9 +24,9 @@ Lithium-ion cells age faster when they sit at a high charge, and faster still wh
 
 ## Features other apps charge for — all free here
 
-- **Menu bar status icon** that shows charging, paused at the limit and heat hold, as icon and percent, icon only, or percent only.
+- **Menu bar status** with an image and a word for each state: charging, holding at the limit, on battery and heat hold. Show icon and percent, icon only or percent only, with or without the word.
 - **Customizable menu window:** choose which sections show and in what order.
-- **Power flow:** adapter input, battery power and what the Mac itself uses. Values it cannot read are hidden, not guessed.
+- **Power flow** drawn as charger, Mac and battery, with moving dots where power flows: adapter input, battery power and what the Mac itself uses. When the battery runs the Mac above the limit while plugged in, it says why. Values it cannot read are hidden, not guessed.
 - **Hardware battery percentage** next to the macOS percentage.
 - **Charge limit** from 50% to 100% (below 80% needs the optional helper), plus **schedules** by weekday and time.
 - **One-time full charge**, then your limit comes back.

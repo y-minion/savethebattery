@@ -19,12 +19,11 @@ struct MenuLabel:View {
     @EnvironmentObject var model:AppModel
     @Environment(\.openWindow) var openWindow
     var body:some View {
-        let style=model.preferences.menuBar.icon,text="\(model.battery.percent.map(String.init) ?? "—")%"
+        let bar=model.preferences.menuBar,status=model.menuStatus
         // Plain sibling views so the menu bar keeps adapting the template icon.
         Group {
-            if style != .percentOnly { Image(nsImage:MenuBarIcon.image(percent:model.battery.percent,status:model.menuStatus)) }
-            if style == .percentOnly { Text(MenuBarIcon.glyphText(model.menuStatus)+text) }
-            else if style == .iconAndPercent { Text(text) }
+            if bar.icon != .percentOnly { Image(nsImage:MenuBarIcon.image(percent:model.battery.percent,status:status)) }
+            if let text=MenuBarText.make(style:bar.icon,showsStatus:bar.showsStatus,percent:model.battery.percent,status:status) { Text(text) }
         }.onAppear { model.openMain={ openWindow(id:"main") } }
     }
 }

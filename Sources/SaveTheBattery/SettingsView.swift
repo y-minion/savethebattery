@@ -56,6 +56,8 @@ struct SettingsView:View {
             Picker(tr("Display","표시 방식"),selection:Binding(get:{ model.preferences.menuBar.icon },set:{ model.preferences.menuBar.icon=$0;model.savePreferences() })) {
                 ForEach(MenuIconStyle.allCases,id:\.self) { Text($0.title).tag($0) }
             }
+            Toggle(tr("Show the status word","상태 글자 표시"),isOn:Binding(get:{ model.preferences.menuBar.showsStatus },set:{ model.preferences.menuBar.showsStatus=$0;model.savePreferences() }))
+            Text(tr("Shows Charging, Holding or On battery beside the percent. On a crowded menu bar, especially next to the notch, turn it off to save room.","잔량 옆에 충전 중·유지·사용 중을 표시합니다. 메뉴 막대가 붐비면(특히 노치 옆) 끄면 자리를 덜 차지합니다.")).font(.caption).foregroundStyle(.secondary)
             Text(tr("Menu window layout","메뉴 창 구성")).font(.subheadline.weight(.semibold))
             let sections=model.preferences.menuBar.sections
             ForEach(Array(sections.enumerated()),id:\.element.section) { i,s in
